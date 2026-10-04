@@ -1,33 +1,77 @@
 # Changelog
 
-## 0.5.0
-- The "villager free" beep is replaced by a short rising "ready" chime, which is easier to understand. It is read from `Sounds/villager_free.wav` (Kenney, CC0) and can be replaced with any WAV file. A built-in fallback sound plays if the file is missing.
-- The setting is now called "sound when a villager becomes free".
-- Mod upload screen: Workshop tags are announced as "selected" or "not selected".
-- Release preparation: English README (French version in `README.fr.md`), MIT license, third-party licenses, release zip script.
+## 0.5.0 – First public release
 
-## 0.4.1
-- Recipes: "missing: Villager" instead of another villager type (dog…), and "(busy)" when the card exists but is already working.
-- Distinctive beep (two rising notes) when a villager finishes their work and becomes free (can be turned off in the mod options).
-- Strange portal: announced when it appears, listed under Locations (U), with the number of enemies it will still spawn; place villagers on it to travel to the Dark Forest.
+First release of Stackland Access, an accessibility mod that makes Stacklands playable for blind and visually impaired players, with the keyboard and a screen reader.
 
-## 0.4.0
-- Game speed on the numeric keypad: 0 pause, 1 to 4 for 0.5, 1, 2, 5 (in addition to minus and plus).
-- Recipes (L): cards already used by another recipe are never taken; one page per idea group (possible ones first, then alphabetical); new "Production buildings" page (sawmill, brickyard, composter, farmland): Enter places the available cards on them.
-- The shop keeps the game's order.
-- F5: merges identical resources and food into full stacks.
-- Ctrl+P: list of villagers and what they are doing (idle first); Enter jumps to the villager.
-- Ctrl+Enter: move a stack on the board with the arrow keys, announcing what is around.
+### Speech
+- Output through your screen reader (NVDA, JAWS and others, via Tolk). The Windows voice (SAPI) is used if no screen reader is running.
+- Important announcements are repeated once if a key press cut them off.
+- Instructions are given only the first 3 times, then the mod stays short.
+- F2 repeats the last message, N opens the message history.
 
-## 0.3.0
-- Backspace without holding anything: takes the selected card and those above it out of the stack (on the bottom card: takes it out alone).
-- All game languages: Dutch, German, Italian, Spanish, Polish, Brazilian Portuguese, Japanese, Korean, Chinese (Simplified and Traditional), in addition to English and French. Translations made with AI, to be reviewed by native speakers.
+### Menus
+- Every menu, option, dialog, popup and cutscene is read.
+- Sliders and choices are announced with their name and value (volume, new game options…).
+- The "update info" popup of the main menu and the key rebinding screen are read.
+- Tooltips and encyclopedia cards are available with I, and R reads the whole screen.
+- Workshop upload screen: tags are announced as "selected" or "not selected".
 
-## 0.2.0
-- Reliability: hand-made stacks are saved in the save file; mod errors are written to the log (Player.log) and announced once; at startup the mod checks that the game internals it uses still exist; recipes: several stacking orders are tried, unavailable ideas or ideas at their maximum on the board are reported, warning if the game does not accept the stack.
-- Listening: instructions given only the first 3 times, important announcements repeated if a key press cut them off, fixed plurals, shorter stack summaries ("Villager, 3 Wood"), stacks sorted by name in each category (configurable).
-- Performance: board list computed once per frame, lighter effect scan.
-- Project: texts moved to `StacklandAccess_strings.tsv` (translatable), board code split into two files, Workshop icon, version 0.2.0.
+### Board
+- Everything on the board is sorted into categories: people, food, resources, buildings, enemies, animals, ideas, locations, equipment, shop, other, all.
+- Left and Right go through the stacks, Page Up and Page Down change category, Up and Down go through the cards of a stack.
+- Each category remembers the last stack visited.
+- One-key shortcuts to each category: P, B, H, F, G, X, A, O, K, U, J, Y. M goes to the card you are holding.
+- Stacks are sorted by name (configurable); the shop keeps the game's order.
+- Ctrl+Enter moves a stack on the board with the arrows and describes what is around it.
+- The camera follows the selection (configurable).
 
-## 0.1.0
-- First version: menus, board browsed by category, picking up and dropping cards, buying and selling, recipes, inventory, event announcements, combat, shortcuts.
+### Cards
+- Enter picks up a card and the cards above it; Enter again drops them on a stack, the sell box, a pack to buy or a villager (to equip an item).
+- Backspace takes the selected card and the cards above it out of the stack; while holding cards, it puts them down alone.
+- Delete, twice, sells cards. C clicks a card (for example, to take coins out of a chest).
+- Enter on a pack opens it one card at a time.
+- Enter on a pack to buy or a travelling merchant pays automatically with your coins, and explains why when it cannot.
+- I gives the details of a card as a list: sell price, stack value, health, combat stats, effects, equipment, current action, description, contents of chests.
+- Right arrow in a villager's details opens their inventory, to take off or move equipment.
+
+### Recipes (L)
+- Page "possible now": Enter sets the recipe up for you, using only cards that are free.
+- Page "production buildings" (sawmill, brickyard, composter, farmland): Enter puts the available cards on the building.
+- One page per group of ideas, possible ideas first, then alphabetical order.
+- Missing cards are named clearly, and cards that exist but are busy are marked "(busy)".
+- Ideas that cannot be made yet, or are already at their maximum on the board, are reported.
+
+### Stacking
+- Identical idle resources and food are stacked automatically (F4 to turn it on or off).
+- Stacks you build yourself are never split; new cards join them. They are kept in the save file.
+- F5 regroups all identical resources and food into full stacks.
+
+### Announcements
+- New cards (grouped), enemies, new ideas, completed quests.
+- Combat: start, each hit with remaining health, end, deaths and lost cards.
+- Recipes starting (with their duration) and finishing.
+- A short rising chime when a villager becomes free (Kenney, CC0). The sound file `Sounds/villager_free.wav` can be replaced.
+- Ctrl+P lists villagers and what they are doing, idle villagers first.
+- The strange portal when it appears, with the number of enemies it will still bring.
+- Status effects, view changes, speed changes, warning before the end of the moon, too many cards.
+
+### Time and status
+- R: resources (coins, food, number of cards…). T: moon, time left, speed. Q: quests.
+- Minus and Plus (also on the numeric keypad) change speed: pause, 0.5, 1, 2, 5. Numeric keypad 0 to 4 sets it directly.
+- Follows the game's "auto pause when using keyboard and mouse" option while you hold a card.
+
+### Keyboard
+- Letters follow the characters printed on your keyboard, so AZERTY and other layouts work.
+- Game keys that clash with the mod's keys are disabled automatically.
+
+### Languages
+- English, French, Dutch, German, Italian, Spanish, Polish, Brazilian Portuguese, Japanese, Korean, Chinese (Simplified and Traditional), following the game's language.
+- Languages other than English and French were translated with AI; corrections are welcome in `StacklandAccess_strings.tsv`.
+
+### Settings
+- In Options > Mods > Stackland Access: new card announcements, combat, each hit, recipes, end-of-moon warning delay, camera follow, automatic stacking, sort by name, "villager free" sound.
+
+### Known limitations
+- DLC content (for example Cities) has not been tested yet.
+- Mod errors are written to `Player.log` and announced once. At startup, the mod checks that the game parts it relies on still exist.
