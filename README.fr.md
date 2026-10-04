@@ -1,112 +1,186 @@
 # Stackland Access
 
-Mod d'accessibilité pour **Stacklands**, pour les joueurs aveugles : tout passe par le lecteur d'écran (NVDA, JAWS… via Tolk, SAPI en secours) et le clavier.
-Le mod parle la langue du jeu : anglais, français, néerlandais, allemand, italien, espagnol, polonais, portugais du Brésil, japonais, coréen, chinois simplifié et traditionnel.
+**Stackland Access** rend [Stacklands](https://store.steampowered.com/app/1948280/Stacklands/) jouable pour les personnes aveugles et malvoyantes.
+On joue uniquement au clavier, et tout est lu par votre lecteur d'écran (NVDA, JAWS…). Sans lecteur d'écran, la voix de Windows est utilisée.
 
 *[English version](README.md)*
 
-## Installation (joueurs)
+- **Steam Workshop :** https://steamcommunity.com/sharedfiles/filedetails/?id=3813252816
+- **Version actuelle :** 0.5.0 (voir [CHANGELOG.md](CHANGELOG.md))
 
-- **Steam Workshop** : s'abonner à « Stackland Access », puis lancer le jeu.
-- **Manuel** : télécharger `StacklandAccess-x.y.z.zip` dans les releases GitHub et le décompresser dans
-  `%USERPROFILE%\AppData\LocalLow\sokpop\Stacklands\Mods\` (il doit en résulter un dossier `Mods\StacklandAccess` contenant `StacklandAccess.dll`).
+## État du projet
 
-Un lecteur d'écran (NVDA, JAWS…) est conseillé ; sans lui, la voix Windows (SAPI) est utilisée.
+- Le jeu de base est entièrement jouable : menus, plateau, achat et vente, recettes, combats, fin de lune.
+- **Le contenu des DLC (par exemple Cités) n'a pas encore été testé.** Il peut fonctionner en partie, mais des annonces peuvent manquer ou des problèmes apparaître. Vos retours sont les bienvenus.
+- Les textes anglais et français sont écrits à la main. Les autres langues ont été traduites par IA et peuvent contenir des erreurs.
 
-## Compilation (développeurs)
+## Installation
 
-1. Compiler le projet (Visual Studio ou `dotnet build`). La compilation copie automatiquement le mod dans
-   `%USERPROFILE%\AppData\LocalLow\sokpop\Stacklands\Mods\StacklandAccess` :
-   `StacklandAccess.dll`, `manifest.json` et le dossier `native` (Tolk.dll, nvdaControllerClient64.dll, SAAPI64.dll).
-2. Lancer le jeu. Au démarrage : « Stackland Access prêt. F1 pour l'aide. »
-3. Le chemin du jeu se règle dans `StacklandAccess.csproj.user` (propriété `stacklands`).
+**Avec Steam (conseillé) :** ouvrez la [page Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3813252816), cliquez sur S'abonner, puis lancez le jeu.
 
-## Menus
+**À la main :**
+1. Téléchargez `StacklandAccess-x.y.z.zip` dans la page Releases de GitHub.
+2. Décompressez-le dans `%USERPROFILE%\AppData\LocalLow\sokpop\Stacklands\Mods\`.
+3. Vérifiez que le fichier `Mods\StacklandAccess\StacklandAccess.dll` existe.
 
-| Touche | Action |
-|---|---|
-| Flèches haut / bas, Tab | élément précédent / suivant |
-| Début / Fin | premier / dernier élément |
-| Entrée | activer (bouton, case, champ de texte) |
-| Gauche / droite | régler un curseur (volume…) ou une liste |
-| I | description de l'élément (infobulle, carte de l'encyclopédie) |
-| R | lire tout le texte de l'écran |
-| Échap | revenir (géré par le jeu) |
+Au démarrage du jeu, vous entendez « Stackland Access prêt. F1 pour l'aide. »
 
-Les fenêtres (pop-up), les écrans et les cinématiques (fin de lune, événements) sont annoncés automatiquement.
-Dans une cinématique, Entrée ou Espace continue.
+## Premiers pas
 
-## Plateau
+1. Dans le menu principal, utilisez les flèches haut et bas et Entrée pour lancer une partie.
+2. Sur le plateau, gauche et droite parcourent les cartes, Page préc. / Page suiv. changent de catégorie.
+3. Entrée sur une carte la prend ; allez sur une autre carte et appuyez de nouveau sur Entrée pour la poser dessus. C'est ainsi que tout se fabrique dans Stacklands.
+4. L donne les recettes possibles maintenant ; Entrée laisse le mod la mettre en place.
+5. F1 à tout moment donne la liste des touches.
 
-Les objets du plateau (piles de cartes, paquets, boîtes d'achat, boîte de vente) sont rangés par catégories :
-Tout, Personnes, Nourriture, Ressources, Bâtiments, Ennemis, Animaux, Idées, Lieux, Équipement, Paquets et boutique, Autres.
+## Commandes
 
-| Touche | Action |
-|---|---|
-| Gauche / droite | pile précédente / suivante |
-| Page préc. / Page suiv. | catégorie précédente / suivante (les catégories vides sont sautées) ; chaque catégorie revient sur la dernière pile visitée |
-| Début / Fin | première / dernière pile |
-| Haut / bas | cartes de la pile, du bas vers le haut |
-| Entrée | prendre la carte (et celles au-dessus), puis Entrée sur la cible : pile, boîte de vente, paquet à acheter |
-| Entrée sur un paquet | l'ouvrir (une carte par appui) |
-| Entrée sur un paquet à acheter | payer automatiquement avec vos pièces |
-| Retour arrière | sortir de la pile la carte sélectionnée et celles au-dessus (sur la carte du bas : la sortir seule) ; en tenant une carte : la poser seule |
-| Échap | annuler la prise |
-| Suppr (deux fois) | vendre la carte et celles au-dessus |
-| C | cliquer la carte (ex. sortir des pièces d'un coffre) |
-| I | détails de la carte sous forme de liste (flèches pour parcourir) : prix de vente, valeur de la pile, santé, combat, effets, équipement, action en cours, description. Flèche droite : inventaire (Entrée prend l'objet, puis Entrée sur un villageois pour le lui donner ou Retour arrière pour le retirer) |
-| P / B / H / F / G / X / A / O / K / U / J / Y | aller directement aux personnes, à la boutique (paquets, achat, vente, marchands ambulants), aux bâtiments, à la nourriture, aux ressources, aux ennemis, aux animaux, à l'équipement, aux idées, aux lieux, aux autres, à tout ; appuyer encore passe au suivant |
-| Entrée sur un marchand ambulant | payer automatiquement (3 pièces par objet) |
-| M | la carte en main (celle que vous tenez) et sa pile |
-| Ctrl+P | liste des villageois et de leur occupation, inactifs d'abord ; Entrée va sur le villageois |
-| Ctrl+Entrée | déplacer la pile sur le plateau avec les flèches (I : ce qui est autour), Entrée ou Échap pour finir |
-| F5 | regrouper les ressources et la nourriture identiques en piles pleines |
-| R | ressources : pièces, nourriture, cartes… |
-| T | lune, temps restant, vitesse |
-| Q | quêtes (liste) |
-| L | recettes, par pages (gauche / droite) : possibles maintenant, bâtiments de production (Entrée y pose les cartes disponibles), puis une page par groupe d'idées, les possibles d'abord ; Entrée met la recette en place, I décrit le résultat. Les cartes déjà utilisées par une autre fabrication ne sont jamais prises |
-| N | historique des messages |
-| F1 | aide |
-| F2 | répéter le dernier message |
-| F3 | activer / couper l'annonce des nouvelles cartes |
-| F4 | activer / couper l'empilement automatique (ressources et nourriture identiques inutilisées ; les piles faites à la main ne sont jamais touchées) |
-| - / + (ou pavé numérique) | ralentir / accélérer : pause, 0,5, 1, 2, 5 |
-| Pavé numérique 0 à 4 | pause, 0,5, 1, 2, 5 directement |
-| Espace, Tab, 1, 2, 3 | pause et vitesse (touches du jeu) |
+Les lettres suivent les caractères imprimés sur le clavier : elles fonctionnent aussi en AZERTY.
 
-Les lettres suivent les caractères imprimés sur le clavier (AZERTY compris) : Q est bien la touche Q.
+### Partout
 
-Dans les listes (détails, recettes, quêtes, historique, aide) : haut / bas pour parcourir, gauche / droite pour changer de page, Entrée pour utiliser, I pour l'information, Échap pour fermer.
+- **F1** : aide (liste des touches).
+- **F2** : répéter le dernier message.
+- **F3** : activer ou couper l'annonce des nouvelles cartes.
+- **F4** : activer ou couper l'empilement automatique.
+
+### Menus
+
+- **Flèches haut / bas** ou **Tab** : élément précédent / suivant.
+- **Début / Fin** : premier / dernier élément.
+- **Entrée** : activer le bouton, la case ou le champ de texte.
+- **Flèches gauche / droite** : régler un curseur (volume…) ou un choix.
+- **I** : description de l'élément.
+- **R** : lire tout le texte de l'écran.
+- **Échap** : revenir.
+- **Entrée** ou **Espace** dans une cinématique : continuer.
+
+### Plateau : se déplacer
+
+- **Flèches gauche / droite** : pile précédente / suivante dans la catégorie.
+- **Page préc. / Page suiv.** : catégorie précédente / suivante. Chaque catégorie revient sur la dernière pile visitée.
+- **Début / Fin** : première / dernière pile de la catégorie.
+- **Flèches haut / bas** : cartes de la pile, du bas vers le haut.
+
+### Plateau : aller directement à une catégorie
+
+Appuyer de nouveau sur la lettre passe à la pile suivante de cette catégorie.
+
+- **P** : personnes et villageois.
+- **B** : boutique (paquets, boîtes d'achat, boîte de vente, marchands ambulants).
+- **H** : bâtiments.
+- **F** : nourriture.
+- **G** : ressources.
+- **X** : ennemis.
+- **A** : animaux.
+- **O** : équipement.
+- **K** : idées.
+- **U** : lieux (dont le portail étrange).
+- **J** : autres cartes.
+- **Y** : tout.
+- **M** : la carte que vous tenez.
+
+### Plateau : cartes
+
+- **Entrée** : prendre la carte sélectionnée et celles au-dessus.
+- **Entrée** en tenant des cartes : les poser sur la pile sélectionnée, la boîte de vente, un paquet à acheter ou un villageois (pour l'équiper).
+- **Échap** en tenant des cartes : annuler.
+- **Retour arrière** : sortir de la pile la carte sélectionnée et celles au-dessus. Sur la carte du bas, seule cette carte sort.
+- **Retour arrière** en tenant des cartes : les poser seules sur le plateau.
+- **Suppr**, deux fois : vendre la carte sélectionnée et celles au-dessus.
+- **C** : cliquer la carte (par exemple sortir des pièces d'un coffre).
+- **Ctrl+Entrée** : déplacer la pile sur le plateau avec les flèches.
+- **I** pendant le déplacement : ce qui se trouve autour.
+- **Entrée** ou **Échap** pendant le déplacement : terminer.
+- **F5** : regrouper les ressources et la nourriture identiques en piles pleines.
+
+### Plateau : boutique
+
+- **Entrée** sur un paquet : l'ouvrir, une carte par appui.
+- **Entrée** sur un paquet à acheter : payer automatiquement avec vos pièces.
+- **Entrée** sur un marchand ambulant : payer automatiquement.
+
+### Plateau : informations
+
+- **I** : détails de la carte sous forme de liste (prix de vente, santé, combat, effets, action en cours, description).
+- **Flèche droite** dans les détails d'un villageois : son inventaire et son équipement.
+- **R** : ressources (pièces, nourriture, nombre de cartes…).
+- **T** : lune, temps restant et vitesse.
+- **Q** : liste des quêtes.
+- **L** : liste des recettes.
+- **N** : historique des messages.
+- **Ctrl+P** : liste des villageois et de leur occupation, les inactifs d'abord.
+
+### Listes (détails, recettes, quêtes, historique, villageois, aide)
+
+- **Flèches haut / bas** : ligne précédente / suivante.
+- **Flèches gauche / droite** : page précédente / suivante.
+- **Entrée** : utiliser la ligne (mettre une recette en place, aller sur un villageois, prendre un objet…).
+- **I** : plus d'informations sur la ligne.
+- **Échap** : fermer la liste.
+
+La liste des recettes (L) a plusieurs pages :
+1. Recettes possibles maintenant.
+2. Bâtiments de production (scierie, briqueterie, composteur, champ). Entrée pose les cartes disponibles sur le bâtiment.
+3. Une page par groupe d'idées, les possibles d'abord.
+
+Le mod ne prend jamais des cartes déjà utilisées par une autre fabrication.
+
+### Vitesse du jeu
+
+- **Moins / Plus** (aussi au pavé numérique) : ralentir / accélérer (pause, 0,5, 1, 2, 5).
+- **Pavé numérique 0** : pause.
+- **Pavé numérique 1 à 4** : vitesse 0,5, 1, 2 ou 5.
+- **Espace**, **Tab**, **1**, **2**, **3** : touches de pause et de vitesse du jeu lui-même.
+
+Avec NVDA, gardez le Verr. Num activé pour utiliser le pavé numérique.
+
+## Ce que le mod annonce tout seul
+
+- Les nouvelles cartes, regroupées.
+- Les ennemis, le début du combat, chaque coup avec les points de vie restants, la fin du combat.
+- Les morts et les cartes perdues.
+- Les nouvelles idées et les quêtes terminées.
+- Les recettes qui démarrent (avec leur durée) et qui se terminent.
+- Un petit carillon montant quand un villageois devient libre.
+- Le portail étrange quand il apparaît.
+- Les effets de statut (empoisonné, malade, en feu…).
+- L'alerte avant la fin de la lune, le trop-plein de cartes.
+- Les changements de vitesse, les textes des cinématiques, les fenêtres et pop-up.
+
+## Réglages
+
+Dans **Options > Mods > Stackland Access**, chacun peut être activé ou désactivé :
+- l'annonce des nouvelles cartes ;
+- l'annonce des combats ;
+- chaque coup en combat ;
+- l'annonce des recettes ;
+- le délai de l'alerte de fin de lune ;
+- la caméra qui suit la sélection ;
+- l'empilement automatique ;
+- le tri des piles par nom ;
+- le son « villageois libre ».
+
+Vous pouvez remplacer ce son par votre propre fichier WAV : `Mods\StacklandAccess\Sounds\villager_free.wav`.
 
 Si l'option du jeu « pause automatique en clavier-souris » (Options > Accessibilité) est activée, le jeu se met en pause tant que vous tenez une carte.
 
-## Annonces automatiques
+## Traductions
 
-Nouvelles cartes (regroupées), ennemis, nouvelles idées, combats (début, chaque coup avec les points de vie restants, fin), ennemis vaincus, personnes perdues,
-petit carillon montant quand un villageois devient libre (fichier `Sounds/villager_free.wav`, remplaçable), portail étrange, recette qui démarre après un dépôt (avec sa durée) et quand elle se termine, effets de statut (empoisonné, malade, en feu…), changement de vue (DLC Cités), quêtes terminées, changement de vitesse,
-alerte avant la fin de la lune, dépassement du nombre de cartes, textes des cinématiques.
+Tous les textes du mod sont dans `StacklandAccess_strings.tsv`, une colonne par langue. Pour corriger une traduction, modifiez la cellule et proposez une pull request.
 
-Réglages dans **Options > Mods > Stackland Access** : annonces des nouvelles cartes, des combats, de chaque coup,
-des recettes, délai de l'alerte de fin de lune, caméra qui suit la sélection, empilement automatique, tri des piles par nom, son quand un villageois devient libre.
+## Compiler le mod
 
-## Traduction
+1. Installer le SDK .NET.
+2. Créer `StacklandAccess.csproj.user` avec le dossier du jeu :
+   ```xml
+   <Project><PropertyGroup><stacklands>C:\Program Files (x86)\Steam\steamapps\common\Stacklands</stacklands></PropertyGroup></Project>
+   ```
+3. Lancer `dotnet build` : le mod est installé dans le dossier Mods du jeu.
+4. Lancer `powershell -ExecutionPolicy Bypass -File tools\package.ps1` pour créer le zip de release.
 
-Les textes du mod sont dans `StacklandAccess_strings.tsv` (installé avec le mod), une colonne par langue, nommée comme dans le jeu
-(`German`, `Brazilian Portuguese`, `Chinese (Simplified)`…). Les traductions autres que le français et l'anglais ont été faites par IA :
-corrections bienvenues, il suffit de modifier la cellule. Les lignes en `_one` sont le singulier, les lignes en `_few` le pluriel polonais de 2 à 4.
+Le code décompilé du jeu n'est jamais inclus dans ce dépôt (règle du wiki de modding). Pour publier une version, voir [RELEASE.md](RELEASE.md).
 
-## Publication
+## Licence
 
-Voir `RELEASE.md` (Workshop et GitHub) et `WORKSHOP.md` (texte de présentation et tags).
-
-## Licences
-
-Code du mod : licence MIT (`LICENSE`). Tolk : LGPL 3 ; NVDA Controller Client : LGPL 2.1 ; son `villager_free.wav` : Kenney, CC0. Détails dans `THIRD_PARTY.md`.
-
-## Notes techniques
-
-- Les erreurs du mod sont écrites dans `Player.log` avec le préfixe `[StacklandAccess]`. Au démarrage, le mod vérifie que les parties internes du jeu qu'il utilise existent toujours et prévient sinon.
-- Cible `netstandard2.1` comme le modèle officiel (Unity/Mono ne charge pas `net9.0`).
-- Les touches du jeu qui utilisent les touches du mod (flèches pour la caméra, etc.) sont désactivées par le mod au démarrage ;
-  la liste complète des raccourcis du jeu est écrite dans le journal (`Player.log`).
-- Le code décompilé du jeu (`stackland_uncompiled`) ne doit pas être publié (règle du wiki de modding).
+Le code du mod est sous licence MIT (voir [LICENSE](LICENSE)). Les fichiers tiers fournis sont listés dans [THIRD_PARTY.md](THIRD_PARTY.md).

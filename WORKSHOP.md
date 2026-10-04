@@ -1,24 +1,42 @@
-# Texte pour la page Steam Workshop
+# Steam Workshop page
 
-Tags à cocher dans l'outil d'envoi : **Quality of Life**, **Gameplay**.
+Tags (chosen in the in-game upload screen): **Quality of Life**, **Gameplay**.
+
+Paste everything below the line into the Workshop "Description" field (Steam BBCode).
 
 ---
 
-**Stackland Access – screen reader accessibility / accessibilité pour lecteur d'écran**
+[h1]Stackland Access – play Stacklands with a screen reader[/h1]
 
-Makes Stacklands playable without sight, with any screen reader (NVDA, JAWS…, SAPI as a fallback) and the keyboard only.
-Rend Stacklands jouable sans la vue, avec un lecteur d'écran (NVDA, JAWS…, SAPI en secours) et le clavier seul.
+Stackland Access makes Stacklands fully playable for blind and visually impaired players, using only the keyboard and your screen reader (NVDA, JAWS and others through Tolk, with the Windows voice SAPI as a fallback).
 
-- Every menu, dialog and cutscene is read; arrows, Enter, left/right for sliders.
-- The board is browsed by categories (people, food, resources, buildings, enemies, shop…), with direct shortcuts.
-- Pick up a card with Enter and drop it on a stack, the sell box, a pack to buy or a merchant.
-- Recipes possible right now (L), set up automatically; details of any card (I) with price, health, combat, effects, inventory.
-- Events are spoken: new cards, enemies, combat hits, recipes starting and finishing, quests, end of moon.
-- Idle identical resources are stacked automatically; game speed with - and + or the numpad.
-- A short "ready" chime when a villager finishes their work; Ctrl+P lists villagers and what they are doing.
-- Speaks the language of the game: English, French, Dutch, German, Italian, Spanish, Polish, Brazilian Portuguese, Japanese, Korean, Chinese (Simplified and Traditional). Translations other than English and French were made with AI: fixes welcome in `StacklandAccess_strings.tsv`.
+[h2]Features[/h2]
+[list]
+[*][b]Menus:[/b] every menu, option, slider, dialog, popup and cutscene is read aloud.
+[*][b]Board:[/b] browse everything by category (people, food, resources, buildings, enemies, animals, equipment, ideas, locations, shop…) with one-key shortcuts.
+[*][b]Cards:[/b] pick up with Enter and drop on a stack, the sell box, a pack to buy or a travelling merchant. Coins are paid automatically.
+[*][b]Details (I):[/b] sell price, health, combat stats, effects, current action, description, villager inventory and equipment.
+[*][b]Recipes (L):[/b] what you can make right now, production buildings, and every idea. Enter sets the recipe up for you.
+[*][b]Announcements:[/b] new cards, enemies, combat hits with remaining health, recipes starting and finishing, quests, end of moon warning, status effects.
+[*][b]Villagers:[/b] a short "ready" chime when a villager becomes free; Ctrl+P lists what every villager is doing.
+[*][b]Comfort:[/b] automatic stacking of identical idle resources, F5 to regroup everything, game speed with - / + or the numpad, move stacks with Ctrl+Enter.
+[*][b]Languages:[/b] English, French, Dutch, German, Italian, Spanish, Polish, Brazilian Portuguese, Japanese, Korean, Chinese (Simplified and Traditional). Languages other than English and French were translated with AI, corrections are welcome.
+[/list]
 
-Press F1 in game for the list of keys. / F1 en jeu pour la liste des touches.
+[h2]Getting started[/h2]
+Subscribe, start the game, and you will hear "Stackland Access ready". Press [b]F1[/b] at any time for the list of keys, [b]F2[/b] to repeat the last message.
+Settings are in Options > Mods > Stackland Access.
+Tip for NVDA users: keep NumLock on to use the numpad speed keys.
 
-Source code, manual download and full key list: https://github.com/kaminosekai54/StacklandAccess
-Credits: Tolk (screen reader output), Kenney (CC0 chime sound).
+[h2]Feedback[/h2]
+Bug reports and suggestions are welcome in the comments or on GitHub:
+https://github.com/kaminosekai54/StacklandAccess
+
+[hr][/hr]
+
+[h1]Français[/h1]
+Stackland Access rend Stacklands entièrement jouable sans la vue, au clavier et avec un lecteur d'écran (NVDA, JAWS…, voix Windows en secours) : menus et fenêtres lus, plateau par catégories avec raccourcis, prise et dépôt de cartes, achat et vente, détails des cartes (I), recettes mises en place automatiquement (L), annonces des événements et des combats, carillon quand un villageois est libre, empilement automatique, vitesse au pavé numérique.
+Appuyez sur [b]F1[/b] en jeu pour la liste des touches.
+
+[h2]Credits[/h2]
+Screen reader output: Tolk (Davy Kager). Chime sound: Kenney (CC0). Mod by kaminosekai54.
