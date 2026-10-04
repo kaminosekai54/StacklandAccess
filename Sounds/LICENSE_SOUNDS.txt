@@ -1,0 +1,9 @@
+villager_free.wav
+-----------------
+Original file: confirmation_001.wav from "Interface Sounds" (1.0) by Kenney (www.kenney.nl).
+License: Creative Commons Zero (CC0 1.0) - public domain.
+https://kenney.nl/assets/interface-sounds
+https://creativecommons.org/publicdomain/zero/1.0/
+
+You can replace villager_free.wav with any 16-bit PCM WAV file of your choice.
+If the file is missing or unreadable, the mod plays a built-in synthesized sound.

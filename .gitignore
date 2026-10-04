@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+*.user
+# Decompiled game code: never publish it (see the modding wiki).
+stackland_uncompiled/
+_ancien/
+release/
+workshop.txt.bak

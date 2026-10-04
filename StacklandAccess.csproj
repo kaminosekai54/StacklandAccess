@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>StacklandAccess</AssemblyName>
+    <RootNamespace>StacklandAccessNS</RootNamespace>
+    <!-- Stacklands runs on Unity Mono: the mod must target netstandard2.1 (see the official mod template). -->
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <!-- Folder of the decompiled game sources: reference only, never compiled. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);stackland_uncompiled/**;_ancien/**;bin/**;obj/**;release/**</DefaultItemExcludes>
+    <ModsFolder>$(USERPROFILE)/AppData/LocalLow/sokpop/Stacklands/Mods/StacklandAccess</ModsFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="stackland_uncompiled/**;_ancien/**" />
+    <None Remove="stackland_uncompiled/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="0Harmony"><HintPath>$(stacklands)/Stacklands_Data/Managed/0Harmony.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="GameScripts"><HintPath>$(stacklands)/Stacklands_Data/Managed/GameScripts.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(stacklands)/Stacklands_Data/Managed/Newtonsoft.Json.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="ShapesRuntime"><HintPath>$(stacklands)/Stacklands_Data/Managed/ShapesRuntime.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="SokLoc"><HintPath>$(stacklands)/Stacklands_Data/Managed/SokLoc.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="Unity.InputSystem"><HintPath>$(stacklands)/Stacklands_Data/Managed/Unity.InputSystem.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="Unity.TextMeshPro"><HintPath>$(stacklands)/Stacklands_Data/Managed/Unity.TextMeshPro.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(stacklands)/Stacklands_Data/Managed/UnityEngine.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(stacklands)/Stacklands_Data/Managed/UnityEngine.CoreModule.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(stacklands)/Stacklands_Data/Managed/UnityEngine.UI.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="UnityEngine.UIModule"><HintPath>$(stacklands)/Stacklands_Data/Managed/UnityEngine.UIModule.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(stacklands)/Stacklands_Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(stacklands)/Stacklands_Data/Managed/UnityEngine.PhysicsModule.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="UnityEngine.AudioModule"><HintPath>$(stacklands)/Stacklands_Data/Managed/UnityEngine.AudioModule.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(stacklands)/Stacklands_Data/Managed/UnityEngine.IMGUIModule.dll</HintPath><Private>False</Private></Reference>
+  </ItemGroup>
+
+  <!-- Files shipped with the mod -->
+  <ItemGroup>
+    <ModFile Include="manifest.json" />
+    <ModFile Include="StacklandAccess_strings.tsv" />
+    <ModFile Include="icon.png" />
+    <ModFile Include="workshop.txt" Condition="Exists('workshop.txt')" />
+    <NativeFile Include="native/*.dll" />
+    <SoundFile Include="Sounds/*.wav;Sounds/*.txt" />
+  </ItemGroup>
+
+  <!-- After each build, install the mod in the game's Mods folder (Windows). -->
+  <Target Name="InstallMod" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT' And '$(SkipInstall)' != 'true'">
+    <MakeDir Directories="$(ModsFolder);$(ModsFolder)/native;$(ModsFolder)/Sounds" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModsFolder)" />
+    <Copy SourceFiles="@(ModFile)" DestinationFolder="$(ModsFolder)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(NativeFile)" DestinationFolder="$(ModsFolder)/native" SkipUnchangedFiles="true" ContinueOnError="true" />
+    <Copy SourceFiles="@(SoundFile)" DestinationFolder="$(ModsFolder)/Sounds" SkipUnchangedFiles="true" ContinueOnError="true" />
+    <Message Importance="high" Text="Stackland Access installed in $(ModsFolder)" />
+  </Target>
+
+</Project>
