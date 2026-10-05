@@ -6,11 +6,12 @@ You play with the keyboard only, and everything is spoken by your screen reader 
 *[Version française](README.fr.md)*
 
 - **Steam Workshop:** https://steamcommunity.com/sharedfiles/filedetails/?id=3813252816
-- **Current version:** 0.5.0 (see [CHANGELOG.md](CHANGELOG.md))
+- **Current version:** 0.6.0 (see [CHANGELOG.md](CHANGELOG.md))
 
 ## Project status
 
 - The base game is fully playable: menus, board, buying and selling, recipes, combat, end of moon.
+- **Multiplayer:** works with the [Stacklands Together](https://steamcommunity.com/sharedfiles/filedetails/?id=3778278988) mod (see [Multiplayer](#multiplayer)). Not yet tested in a real session.
 - **DLC content (for example Cities) has not been tested yet.** It may partly work, but expect missing announcements or problems. Feedback is welcome.
 - English and French texts are written by hand. The other languages were translated with AI and may contain mistakes.
 
@@ -43,6 +44,7 @@ Letters follow the characters printed on your keyboard, so they also work on AZE
 - **F2**: repeat the last message.
 - **F3**: turn announcements of new cards on or off.
 - **F4**: turn automatic stacking on or off.
+- **F8**: multiplayer panel (only with the Stacklands Together mod).
 
 ### Menus
 
@@ -134,6 +136,23 @@ The mod never takes cards that are already used by another recipe.
 - **Space**, **Tab**, **1**, **2**, **3**: the game's own pause and speed keys.
 
 With NVDA, keep Num Lock on to use the numeric keypad.
+
+## Multiplayer
+
+With the [Stacklands Together](https://steamcommunity.com/sharedfiles/filedetails/?id=3778278988) mod installed, press **F8** (or choose Multiplayer in the main menu) to open the spoken multiplayer panel. Left and Right arrows change page:
+
+- **Session**: connection status, your player name, connected players, leave the session.
+- **Steam**: lobby name, password, public or friends only, create a lobby, search for lobbies and join one, invite friends.
+- **Direct IP**: host address, port, host a game, join.
+- **Tools**: sync the world, shared progress, reset ideas or quests (host only).
+
+On a line you can edit, press **Enter**, type the text (each character is spoken), then **Enter** to confirm or **Escape** to cancel. **Backspace** erases, **Up arrow** reads the text again.
+
+Connect from the main menu; the host then starts or loads the world. In a session:
+- the host runs the game: as a client, everything you do is sent to the host, like a mouse drag;
+- only the host can change the speed or pause;
+- automatic stacking (F4) is paused so it never moves other players' cards (F5 still works);
+- players joining or leaving and the connection status are announced.
 
 ## What the mod announces automatically
 

@@ -62,6 +62,22 @@ namespace StacklandAccessNS
             OpenPages(newPages, startIndex, briefIntro);
         }
 
+        public int PageIndex => pageIndex;
+        public int Index => index;
+
+        /// <summary>Opens (or refreshes) the pages at a given page and line, reading only that line.</summary>
+        public void OpenPagesAt(List<Page> newPages, int page, int line, bool speak = true)
+        {
+            closeLetter = '\0';
+            closeKey = Key.None;
+            pages = newPages.Where(p => p != null).ToList();
+            if (pages.Count == 0) { IsOpen = false; return; }
+            IsOpen = true;
+            pageIndex = Mathf.Clamp(page, 0, pages.Count - 1);
+            index = Mathf.Clamp(line, 0, Mathf.Max(0, entries.Count - 1));
+            if (speak) Speech.Say(TextCleaner.Join(Loc.N("page_name", entries.Count, pages[pageIndex].Name, entries.Count), CurrentLine()));
+        }
+
         private void OpenPages(List<Page> newPages, int startIndex, bool brief)
         {
             pages = newPages.Where(p => p != null).ToList();
@@ -263,7 +279,9 @@ namespace StacklandAccessNS
 
         public static List<Entry> Help()
         {
-            return Loc.T("help_lines").Split('|').Select(l => new Entry(l)).ToList();
+            var list = Loc.T("help_lines").Split('|').Select(l => new Entry(l)).ToList();
+            if (Together.Installed) list.Add(new Entry(Loc.T("help_mp")));
+            return list;
         }
     }
 }

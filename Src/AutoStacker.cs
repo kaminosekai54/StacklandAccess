@@ -121,8 +121,7 @@ namespace StacklandAccessNS
                         if (leaf.CardData.CanHaveCardOnTop(other.CardData))
                         {
                             moved += other.GetChildCount() + 1;
-                            other.SetParent(leaf);
-                            other.StackUpdate = true;
+                            Mover.MoveChain(other, leaf);
                             break;
                         }
                         t++;
@@ -138,6 +137,8 @@ namespace StacklandAccessNS
         public static void Update(BoardNavigator board)
         {
             if (!AccessController.AutoStackEnabled) return;
+            // In a multiplayer session other players move cards too: never restack behind their back.
+            if (Together.InSession) return;
             timer -= Time.unscaledDeltaTime;
             if (timer > 0f) return;
             timer = 1f;

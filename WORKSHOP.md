@@ -20,6 +20,7 @@ Stackland Access makes Stacklands fully playable for blind and visually impaired
 [*][b]Announcements:[/b] new cards, enemies, combat hits with remaining health, recipes starting and finishing, quests, end of moon warning, status effects.
 [*][b]Villagers:[/b] a short "ready" chime when a villager becomes free; Ctrl+P lists what every villager is doing.
 [*][b]Comfort:[/b] automatic stacking of identical idle resources, F5 to regroup everything, game speed with - / + or the numpad, move stacks with Ctrl+Enter.
+[*][b]Multiplayer:[/b] works with the Stacklands Together mod. F8 opens a spoken multiplayer panel (Steam lobbies, Direct IP, players, world sync), and every action is sent to the host.
 [*][b]Languages:[/b] English, French, Dutch, German, Italian, Spanish, Polish, Brazilian Portuguese, Japanese, Korean, Chinese (Simplified and Traditional). Languages other than English and French were translated with AI, corrections are welcome.
 [/list]
 

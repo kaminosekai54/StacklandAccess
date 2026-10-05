@@ -6,11 +6,12 @@ On joue uniquement au clavier, et tout est lu par votre lecteur d'écran (NVDA, 
 *[English version](README.md)*
 
 - **Steam Workshop :** https://steamcommunity.com/sharedfiles/filedetails/?id=3813252816
-- **Version actuelle :** 0.5.0 (voir [CHANGELOG.md](CHANGELOG.md))
+- **Version actuelle :** 0.6.0 (voir [CHANGELOG.md](CHANGELOG.md))
 
 ## État du projet
 
 - Le jeu de base est entièrement jouable : menus, plateau, achat et vente, recettes, combats, fin de lune.
+- **Multijoueur :** fonctionne avec le mod [Stacklands Together](https://steamcommunity.com/sharedfiles/filedetails/?id=3778278988) (voir [Multijoueur](#multijoueur)). Pas encore testé en vraie partie.
 - **Le contenu des DLC (par exemple Cités) n'a pas encore été testé.** Il peut fonctionner en partie, mais des annonces peuvent manquer ou des problèmes apparaître. Vos retours sont les bienvenus.
 - Les textes anglais et français sont écrits à la main. Les autres langues ont été traduites par IA et peuvent contenir des erreurs.
 
@@ -43,6 +44,7 @@ Les lettres suivent les caractères imprimés sur le clavier : elles fonctionnen
 - **F2** : répéter le dernier message.
 - **F3** : activer ou couper l'annonce des nouvelles cartes.
 - **F4** : activer ou couper l'empilement automatique.
+- **F8** : panneau multijoueur (seulement avec le mod Stacklands Together).
 
 ### Menus
 
@@ -134,6 +136,23 @@ Le mod ne prend jamais des cartes déjà utilisées par une autre fabrication.
 - **Espace**, **Tab**, **1**, **2**, **3** : touches de pause et de vitesse du jeu lui-même.
 
 Avec NVDA, gardez le Verr. Num activé pour utiliser le pavé numérique.
+
+## Multijoueur
+
+Avec le mod [Stacklands Together](https://steamcommunity.com/sharedfiles/filedetails/?id=3778278988) installé, appuyez sur **F8** (ou choisissez Multiplayer dans le menu principal) pour ouvrir le panneau multijoueur parlé. Flèches gauche et droite pour changer de page :
+
+- **Session** : état de la connexion, votre nom de joueur, joueurs connectés, quitter la session.
+- **Steam** : nom du salon, mot de passe, public ou amis seulement, créer un salon, chercher des salons et en rejoindre un, inviter des amis.
+- **IP directe** : adresse de l'hôte, port, héberger, rejoindre.
+- **Outils** : synchroniser le monde, progression partagée, réinitialiser idées ou quêtes (hôte seulement).
+
+Sur une ligne modifiable, appuyez sur **Entrée**, tapez le texte (chaque caractère est lu), puis **Entrée** pour valider ou **Échap** pour annuler. **Retour arrière** efface, **flèche haut** relit le texte.
+
+La connexion se fait depuis le menu principal ; l'hôte lance ensuite ou charge le monde. Pendant une session :
+- l'hôte fait tourner le jeu : en tant qu'invité, tout ce que vous faites est envoyé à l'hôte, comme un glisser à la souris ;
+- seul l'hôte peut changer la vitesse ou mettre en pause ;
+- l'empilement automatique (F4) est suspendu pour ne jamais déplacer les cartes des autres joueurs (F5 reste disponible) ;
+- les arrivées et départs de joueurs et l'état de la connexion sont annoncés.
 
 ## Ce que le mod annonce tout seul
 

@@ -11,12 +11,12 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <!-- Folder of the decompiled game sources: reference only, never compiled. -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);stackland_uncompiled/**;_ancien/**;bin/**;obj/**;release/**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);stackland_uncompiled/**;_ancien/**;_thirdparty/**;bin/**;obj/**;release/**</DefaultItemExcludes>
     <ModsFolder>$(USERPROFILE)/AppData/LocalLow/sokpop/Stacklands/Mods/StacklandAccess</ModsFolder>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="stackland_uncompiled/**;_ancien/**" />
+    <Compile Remove="stackland_uncompiled/**;_ancien/**;_thirdparty/**" />
     <None Remove="stackland_uncompiled/**" />
   </ItemGroup>
 

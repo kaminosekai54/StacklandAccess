@@ -35,6 +35,22 @@ namespace StacklandAccessNS
             Speech.Say(text, interrupt: false);
         }
 
+        /// <summary>Multiplayer client: a hit replayed from the host.</summary>
+        public static void OnRemoteAttack(Combatable attacker, Combatable target, bool isHit, int damage)
+        {
+            if (!AccessController.AnnounceCombat || !AccessController.AnnounceHits || attacker == null || target == null) return;
+            if (attacker.MyGameCard == null || attacker.MyGameCard.MyBoard == null || !attacker.MyGameCard.MyBoard.IsCurrent) return;
+            string a = CardInfo.Name(attacker.MyGameCard);
+            string t = target.MyGameCard != null ? CardInfo.Name(target.MyGameCard) : "";
+            string text;
+            // Health comes from the host's frequent snapshots, which usually arrive after this hit: deduct it.
+            int hp = Mathf.Max(0, target.HealthPoints - Mathf.Max(0, damage));
+            if (!isHit) text = Loc.T("attack_miss", a, t);
+            else if (hp <= 0) text = Loc.T("attack_kill", a, t);
+            else text = Loc.T("attack_hit", a, t, hp, target.ProcessedCombatStats.MaxHealth);
+            Speech.Say(text, interrupt: false);
+        }
+
         private string boardId;
         private readonly Dictionary<int, GameCard> known = new Dictionary<int, GameCard>();
         private readonly Dictionary<int, string> knownNames = new Dictionary<int, string>();
@@ -149,7 +165,7 @@ namespace StacklandAccessNS
             var gone = known.Keys.Where(id => !seen.Contains(id)).ToList();
 
             // Loading a save or a big reshuffle: do not read 40 cards.
-            bool bulk = fresh.Count > 20 || gone.Count > 20;
+            bool bulk = fresh.Count > 20 || gone.Count > 20 || Together.Quiet;
 
             foreach (var id in gone)
             {

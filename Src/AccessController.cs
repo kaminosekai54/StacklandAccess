@@ -34,7 +34,7 @@ namespace StacklandAccessNS
         private bool greeted;
         private bool errorSpoken;
 
-        private bool StateCapturesEscape => list.IsOpen || board.IsHolding || board.IsMoving || menu.IsEditing;
+        private bool StateCapturesEscape => TextPrompt.Active || list.IsOpen || board.IsHolding || board.IsMoving || menu.IsEditing;
 
         /// <summary>True when Escape must not reach the game this frame (see Patches).</summary>
         public static bool CapturesEscape
@@ -90,6 +90,10 @@ namespace StacklandAccessNS
             }
 
             events.Update();
+            Together.Update(list);
+
+            // A text field of the mod (multiplayer panel) takes every key.
+            if (TextPrompt.Active) { TextPrompt.Update(); return; }
 
             if (TransitionScreen.InTransition) return;
 
@@ -156,6 +160,7 @@ namespace StacklandAccessNS
 
         private void SetSpeed(WorldManager wm, int index)
         {
+            if (Together.IsClient) { Speech.Say(Loc.T("mp_speed_host")); return; }
             if (GameCanvas.instance.ModalIsOpen || !(GameCanvas.instance.CurrentScreen is GameScreen)) { Speech.Say(Loc.T("not_now")); return; }
             pausedByHold = false;
             float before = wm.SpeedUp;
@@ -165,6 +170,7 @@ namespace StacklandAccessNS
 
         private void ChangeSpeed(WorldManager wm, int dir)
         {
+            if (Together.IsClient) { Speech.Say(Loc.T("mp_speed_host")); return; }
             if (GameCanvas.instance.ModalIsOpen || !(GameCanvas.instance.CurrentScreen is GameScreen)) { Speech.Say(Loc.T("not_now")); return; }
             float cur = wm.SpeedUp;
             int idx = 0;
@@ -182,7 +188,8 @@ namespace StacklandAccessNS
         /// <summary>Follows the game's own "auto pause when dragging with keyboard and mouse" setting.</summary>
         private void AutoPauseWhileHolding(WorldManager wm)
         {
-            bool want = AccessibilityScreen.AutoPauseWhenUsingKeyboardMouse && board.IsHolding;
+            // A multiplayer client cannot pause: the host runs the game.
+            bool want = AccessibilityScreen.AutoPauseWhenUsingKeyboardMouse && board.IsHolding && !Together.IsClient;
             if (want && !pausedByHold)
             {
                 pausedByHold = true;

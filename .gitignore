@@ -7,3 +7,6 @@ stackland_uncompiled/
 _ancien/
 release/
 workshop.txt.bak
+
+# Other mods, decompiled for compatibility work only: never publish.
+_thirdparty/

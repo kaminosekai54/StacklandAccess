@@ -17,6 +17,8 @@ namespace StacklandAccessNS
         {
             var wm = WorldManager.instance;
             if (wm == null || wm.DraggingDraggable != null) return;
+            // In multiplayer, cards held by other players are flagged too: leave them alone.
+            if (Together.InSession) return;
             foreach (var c in wm.AllCards)
             {
                 if (c != null && !c.Destroyed && c.BeingDragged) c.BeingDragged = false;
@@ -94,6 +96,8 @@ namespace StacklandAccessNS
         {
             InvalidateCache();
             card.DragStartPosition = card.transform.position;
+            // Stacklands Together treats a release close to the start as a click on chests (a coin pops out).
+            if (Together.IsClient) card.DragStartPosition = card.transform.position + new Vector3(100f, 0f, 0f);
             card.StartDragging();
             SetDragStartLongAgo(card);
         }
@@ -115,6 +119,11 @@ namespace StacklandAccessNS
                 return;
             }
             var origParent = held.Parent;
+            if (!leaf.CardData.CanHaveCardOnTop(held.CardData))
+            {
+                Speech.Say(Loc.T("cant_drop", heldName, targetName));
+                return;
+            }
             BeginMove(held);
             if (!leaf.CardData.CanHaveCardOnTop(held.CardData))
             {
@@ -139,12 +148,9 @@ namespace StacklandAccessNS
         private bool DropOnTarget(GameCard held, CardTarget target, bool announce)
         {
             string heldName = CardInfo.Name(held);
-            var origParent = held.Parent;
-            BeginMove(held);
+            // Checked before picking the card up: a refused drop must not send anything to a multiplayer host.
             if (!target.CanHaveCard(held))
             {
-                if (origParent != null && !origParent.Destroyed) held.SetParent(origParent);
-                held.StopDragging();
                 if (announce)
                 {
                     if (target is SellBox) Speech.Say(Loc.T("cant_sell_now", heldName));
@@ -157,6 +163,7 @@ namespace StacklandAccessNS
                 }
                 return false;
             }
+            BeginMove(held);
             int boughtBefore = WorldManager.instance.BoughtBoosterIds.Count;
             var moved = held.GetAllCardsInStack();
             target.CardDropped(held);
@@ -171,7 +178,8 @@ namespace StacklandAccessNS
             if (announce)
             {
                 if (target is SellBox) Speech.Say(Loc.T("sold", heldName));
-                else if (target is BuyBoosterBox bb) AnnouncePurchase(bb, boughtBefore);
+                else if (target is BuyBoosterBox bb && Together.IsClient) Speech.Say(Loc.T("mp_purchase_sent", CardInfo.Name(bb)));
+                else if (target is BuyBoosterBox bb2) AnnouncePurchase(bb2, boughtBefore);
                 else Speech.Say(Loc.T("dropped_on", heldName, CardInfo.Name(target)));
             }
             return true;
@@ -205,6 +213,16 @@ namespace StacklandAccessNS
             // Bottom card: the pile above it stays where it is, the bottom card moves aside.
             var rest = card.Child;
             string name = CardInfo.Name(card);
+            if (Together.IsClient && rest != null)
+            {
+                // The host only moves a card with the cards above it: move the rest of the pile aside instead.
+                Vector3 aside = FindFreeSpot(card.transform.position, rest);
+                Mover.MoveChain(rest, null, aside);
+                current = rest;
+                stackIndex = 0;
+                Speech.Say(Loc.T("unstacked_bottom", name, CardInfo.StackLine(rest)));
+                return;
+            }
             card.RemoveFromStack();
             if (rest != null) rest.SetParent(null);
             BeginMove(card);
@@ -236,7 +254,7 @@ namespace StacklandAccessNS
                 p.y = held.transform.position.y;
                 held.transform.position = p;
                 held.TargetPosition = p;
-                if (held.IsWorking && holder != null) holder.UnequipWorker(held);
+                if (held.IsWorking && holder != null && !Together.IsClient) holder.UnequipWorker(held);
                 held.StopDragging();
                 Held = null;
                 AutoStacker.MarkManual(held);
@@ -365,6 +383,20 @@ namespace StacklandAccessNS
             return result.OrderBy(r => r.rank).Select(r => r.card).ToList();
         }
 
+        /// <summary>How much money a card and the cards above it hold.</summary>
+        private static int MoneyValue(GameCard part)
+        {
+            int total = 0;
+            for (var c = part; c != null; c = c.Child)
+            {
+                var d = c.CardData;
+                if (d is Chest ch) total += ch.CoinCount;
+                else if (d is Creditcard cc) total += cc.DollarCount;
+                else if (IsMoney(d)) total += 1;
+            }
+            return total;
+        }
+
         /// <summary>Travelling cart (3 coins per item) or merchant (takes all the coins given).</summary>
         private void PayMerchant(GameCard merchantRoot)
         {
@@ -421,6 +453,20 @@ namespace StacklandAccessNS
             int boughtBefore = wm.BoughtBoosterIds.Count;
             int paidBefore = bb.StoredCostAmount;
             var parts = MoneyParts(bb, out int blocked);
+            if (Together.IsClient)
+            {
+                // The host takes the payment later: send just enough money, then stop.
+                int still = cost, sent = 0; // GetCurrentCost() already deducts what was paid
+                foreach (var part in parts)
+                {
+                    if (sent >= still) break;
+                    if (part == null || part.Destroyed) continue;
+                    int value = MoneyValue(part);
+                    if (DropOnTarget(part, bb, announce: false)) sent += value; else blocked++;
+                }
+                Speech.Say(sent > 0 ? Loc.T("mp_purchase_sent", CardInfo.Name(bb)) : Loc.N("money_blocked", blocked, blocked, money));
+                return;
+            }
             foreach (var part in parts)
             {
                 if (wm.BoughtBoosterIds.Count > boughtBefore) break;

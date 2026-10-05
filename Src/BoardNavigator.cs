@@ -232,6 +232,12 @@ namespace StacklandAccessNS
             moving.transform.position = wanted;
             moving.TargetPosition = wanted;
             if (moving is GameCard mc) mc.Clampieee();
+            if (Together.IsClient)
+            {
+                // Tell the host where the stack now is, as if it had been dragged there.
+                if (moving is GameCard mg) { Together.Grab(mg); Together.Release(mg, ""); }
+                else if (moving is Boosterpack bp) { Together.GrabBooster(bp); Together.ReleaseBooster(bp); }
+            }
             bool edge = Vector3.Distance(new Vector3(wanted.x, 0, wanted.z), new Vector3(moving.transform.position.x, 0, moving.transform.position.z)) > 0.05f;
             CameraFollow(moving);
             InvalidateCache();

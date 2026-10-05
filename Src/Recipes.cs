@@ -77,7 +77,7 @@ namespace StacklandAccessNS
                 if (IsBusy(root)) continue;
                 foreach (var c in root.GetAllCardsInStack())
                 {
-                    if (c == null || c.Destroyed || !c.FaceUp || c.IsEquipped || c.IsWorking) continue;
+                    if (c == null || c.Destroyed || !c.FaceUp || c.IsEquipped || c.IsWorking || c.BeingDragged) continue;
                     if (c.CardData is Blueprint) continue;
                     pool.Add(c);
                 }
@@ -265,12 +265,15 @@ namespace StacklandAccessNS
             foreach (var c in plan.Cards) Extract(c);
 
             // Try each card as the bottom of the pile (cards that cannot move first, villagers last),
-            // then add the others in any order the game accepts. Undo and retry on failure.
+            // then add the others in any order the game accepts (only the card on top decides).
+            // The order is planned first and the cards are moved after: as a multiplayer client
+            // every move is a request to the host, so there is no trial and error on the board.
             var roots = plan.Cards
                 .OrderBy(c => c.CanBeDragged() ? 1 : 0)
                 .ThenBy(c => c.CardData.MyCardType == CardType.Humans ? 1 : 0)
                 .ToList();
             GameCard built = null;
+            List<GameCard> order = null;
             List<GameCard> leftovers = null;
             foreach (var root in roots)
             {
@@ -280,23 +283,30 @@ namespace StacklandAccessNS
                 while (rest.Count > 0 && progress)
                 {
                     progress = false;
-                    var leaf = placed[placed.Count - 1];
+                    var top = placed[placed.Count - 1];
                     foreach (var c in rest)
                     {
-                        if (!leaf.CardData.CanHaveCardOnTop(c.CardData)) continue;
-                        Vector3 p = leaf.transform.position;
-                        c.transform.position = new Vector3(p.x, c.transform.position.y, p.z - 0.05f);
-                        c.SetParent(leaf);
+                        if (!top.CardData.CanHaveCardOnTop(c.CardData)) continue;
                         placed.Add(c);
                         rest.Remove(c);
                         progress = true;
                         break;
                     }
                 }
-                if (rest.Count == 0) { built = root; break; }
-                // Undo this attempt.
-                for (int i = placed.Count - 1; i > 0; i--) placed[i].SetParent(null);
+                if (rest.Count == 0) { order = placed; break; }
                 if (leftovers == null || rest.Count < leftovers.Count) leftovers = rest;
+            }
+            if (order != null)
+            {
+                built = order[0];
+                for (int i = 1; i < order.Count; i++)
+                {
+                    if (Mover.MoveChain(order[i], order[i - 1])) continue;
+                    // The game refused this card on the pile (pile rules depend on its bottom card).
+                    leftovers = order.Skip(i).ToList();
+                    built = null;
+                    break;
+                }
             }
 
             string name = TextCleaner.Clean(plan.Blueprint.KnowledgeName);
@@ -318,19 +328,6 @@ namespace StacklandAccessNS
         }
 
         /// <summary>Removes one card from its stack, closing the gap (the cards above go down on the card below).</summary>
-        private static void Extract(GameCard c)
-        {
-            var parent = c.Parent;
-            var child = c.Child;
-            if (parent == null && child == null) return;
-            c.RemoveFromStack();
-            if (parent != null && child != null) child.SetParent(parent);
-            if (child != null && parent == null)
-            {
-                // The card above becomes a new stack next to the old place.
-                Vector3 pos = child.transform.position;
-                child.TargetPosition = pos;
-            }
-        }
+        private static void Extract(GameCard c) => Mover.Extract(c);
     }
 }

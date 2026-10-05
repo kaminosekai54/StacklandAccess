@@ -53,7 +53,7 @@ namespace StacklandAccessNS
                 {
                     if (c == null || c.Destroyed || !c.FaceUp || c.IsEquipped || c.IsWorking) continue;
                     if (c.CardData.MyCardType == CardType.Humans || c.CardData is Blueprint) continue;
-                    if (!c.CanBeDragged()) continue;
+                    if (!c.CanBeDragged() || c.BeingDragged) continue;
                     if (Accepts(building.CardData, c.CardData)) list.Add(c);
                 }
             }
@@ -107,13 +107,8 @@ namespace StacklandAccessNS
             {
                 var leaf = building.GetRootCard().GetLeafCard();
                 if (!leaf.CardData.CanHaveCardOnTop(c.CardData)) break;
-                var parent = c.Parent;
-                var child = c.Child;
-                c.RemoveFromStack();
-                if (parent != null && child != null) child.SetParent(parent);
-                Vector3 p = leaf.transform.position;
-                c.transform.position = new Vector3(p.x, c.transform.position.y, p.z - 0.05f);
-                c.SetParent(leaf);
+                Mover.Extract(c);
+                if (!Mover.MoveChain(c, building.GetRootCard())) break;
                 given.Add(CardInfo.Name(c));
             }
             building.GetRootCard().StackUpdate = true;

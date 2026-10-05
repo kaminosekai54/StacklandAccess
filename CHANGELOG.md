@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.6.0 – Multiplayer with Stacklands Together
+
+Compatibility with the [Stacklands Together](https://steamcommunity.com/sharedfiles/filedetails/?id=3778278988) multiplayer mod (tested against version 0.7.32, without a real game session yet).
+
+- F8, or the "Multiplayer" button of the main menu, opens a spoken multiplayer panel instead of Together's window, which screen readers cannot read:
+  - Session: status, your player name, connected players, leave.
+  - Steam: lobby name, password, public or friends only, create a lobby, search for lobbies and join them, invite friends.
+  - Direct IP: address, port, host, join.
+  - Tools: world sync, shared progress, reset ideas or quests (host only, with confirmation).
+- Text fields of the panel are spoken as you type (Backspace erases, up arrow reads, Enter confirms, Escape cancels). Lobby passwords asked by a Steam invitation use the same field.
+- Announced automatically: connection status, players joining and leaving, world loading.
+- As a client, every action of the mod goes to the host the same way a mouse drag would: picking up and dropping, selling, buying packs, paying merchants, opening packs, clicking chests, recipes (L), production buildings, F5 regrouping, moving stacks with Ctrl+Enter, taking cards out of a pile.
+- As a client, combat hits replayed by the host are announced, and buying a pack sends just enough money.
+- Only the host can change the game speed; the speed keys say so on a client. Automatic stacking is paused during a session, so it never moves other players' cards.
+- No flood of "new card" announcements while the host's world is copied to your game.
+- Recipes: each card is checked by the game's own rules before it is put on the pile, also in single player.
+
 ## 0.5.0 – First public release
 
 First release of Stackland Access, an accessibility mod that makes Stacklands playable for blind and visually impaired players, with the keyboard and a screen reader.
