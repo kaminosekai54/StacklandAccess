@@ -52,6 +52,13 @@ namespace StacklandAccessNS
 
             if (IsHolding)
             {
+                // Multiplayer: another player may have grabbed the card since it was picked up here.
+                if (Together.InSession && (Held.BeingDragged || !Held.CanBeDragged()))
+                {
+                    Speech.Say(Loc.T("mp_card_taken", CardInfo.Name(Held)));
+                    Held = null;
+                    return;
+                }
                 if (current is GameCard targetRoot) StackOnto(Held, targetRoot);
                 else if (current is CardTarget ct) DropOnTarget(Held, ct, announce: true);
                 else Speech.Say(Loc.T("cant_drop", CardInfo.Name(Held), CardInfo.Name(current)));

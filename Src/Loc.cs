@@ -367,6 +367,7 @@ namespace StacklandAccessNS
             ["edit_cancel"] = "Cancelled.",
             ["help_mp"] = "F8: multiplayer panel (Stacklands Together): connect, players, world sync. As a client, every action is sent to the host; only the host changes the speed, and automatic stacking is paused during a session.",
             ["field_set"] = "{0}: {1}",
+            ["mp_card_taken"] = "{0} is being moved by another player.",
             ["help_board"] = "Board keys",
             ["help_lines"] =
                 "Left and right arrows: previous or next stack in the category.|" +
@@ -551,6 +552,7 @@ namespace StacklandAccessNS
             ["edit_cancel"] = "Annulé.",
             ["help_mp"] = "F8 : panneau multijoueur (Stacklands Together) : connexion, joueurs, synchronisation. En tant qu'invité, chaque action est envoyée à l'hôte ; seul l'hôte change la vitesse, et l'empilement automatique est suspendu pendant une session.",
             ["field_set"] = "{0} : {1}",
+            ["mp_card_taken"] = "{0} est déplacé par un autre joueur.",
             ["help_board"] = "Touches du plateau",
             ["help_lines"] =
                 "Flèches gauche et droite : pile précédente ou suivante dans la catégorie.|" +
