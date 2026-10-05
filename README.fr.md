@@ -152,7 +152,8 @@ La connexion se fait depuis le menu principal ; l'hôte lance ensuite ou charge 
 - l'hôte fait tourner le jeu : en tant qu'invité, tout ce que vous faites est envoyé à l'hôte, comme un glisser à la souris ;
 - seul l'hôte peut changer la vitesse ou mettre en pause ;
 - l'empilement automatique (F4) est suspendu pour ne jamais déplacer les cartes des autres joueurs (F5 reste disponible) ;
-- les arrivées et départs de joueurs et l'état de la connexion sont annoncés.
+- les arrivées et départs de joueurs et l'état de la connexion sont annoncés ;
+- en tant qu'hôte, vous entendez aussi ce que font les autres joueurs, avec leur nom : paquets achetés et ouverts, cartes vendues, cartes posées sur une pile, fabrications lancées et terminées. Désactivable dans les réglages.
 
 ## Ce que le mod annonce tout seul
 
@@ -178,7 +179,8 @@ Dans **Options > Mods > Stackland Access**, chacun peut être activé ou désact
 - la caméra qui suit la sélection ;
 - l'empilement automatique ;
 - le tri des piles par nom ;
-- le son « villageois libre ».
+- le son « villageois libre » ;
+- les actions des autres joueurs (hôte multijoueur).
 
 Vous pouvez remplacer ce son par votre propre fichier WAV : `Mods\StacklandAccess\Sounds\villager_free.wav`.
 

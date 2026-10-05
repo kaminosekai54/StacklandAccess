@@ -368,6 +368,14 @@ namespace StacklandAccessNS
             ["help_mp"] = "F8: multiplayer panel (Stacklands Together): connect, players, world sync. As a client, every action is sent to the host; only the host changes the speed, and automatic stacking is paused during a session.",
             ["field_set"] = "{0}: {1}",
             ["mp_card_taken"] = "{0} is being moved by another player.",
+            ["mp_sold"] = "{0} sold {1}.",
+            ["mp_bought"] = "{0} bought {1}.",
+            ["mp_paid"] = "{0} paid towards {1}.",
+            ["mp_opened"] = "{0} opened {1}.",
+            ["mp_stacked"] = "{0} put {1} on {2}.",
+            ["mp_by"] = "{0}: {1}",
+            ["mp_other_player"] = "another player",
+            ["cfg_others"] = "Accessibility: announce other players' actions (multiplayer host)",
             ["help_board"] = "Board keys",
             ["help_lines"] =
                 "Left and right arrows: previous or next stack in the category.|" +
@@ -553,6 +561,14 @@ namespace StacklandAccessNS
             ["help_mp"] = "F8 : panneau multijoueur (Stacklands Together) : connexion, joueurs, synchronisation. En tant qu'invité, chaque action est envoyée à l'hôte ; seul l'hôte change la vitesse, et l'empilement automatique est suspendu pendant une session.",
             ["field_set"] = "{0} : {1}",
             ["mp_card_taken"] = "{0} est déplacé par un autre joueur.",
+            ["mp_sold"] = "{0} a vendu {1}.",
+            ["mp_bought"] = "{0} a acheté {1}.",
+            ["mp_paid"] = "{0} a payé une partie de {1}.",
+            ["mp_opened"] = "{0} a ouvert {1}.",
+            ["mp_stacked"] = "{0} a posé {1} sur {2}.",
+            ["mp_by"] = "{0} : {1}",
+            ["mp_other_player"] = "un autre joueur",
+            ["cfg_others"] = "Accessibilité : annoncer les actions des autres joueurs (hôte multijoueur)",
             ["help_board"] = "Touches du plateau",
             ["help_lines"] =
                 "Flèches gauche et droite : pile précédente ou suivante dans la catégorie.|" +

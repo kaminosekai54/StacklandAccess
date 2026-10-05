@@ -7,6 +7,7 @@ namespace StacklandAccessNS
     public class StacklandAccess : Mod
     {
         public static StacklandAccess Instance;
+        public HarmonyLib.Harmony ModHarmony => Harmony;
         private static bool patched;
 
         private ConfigEntry<bool> cfgNewCards;
@@ -18,6 +19,7 @@ namespace StacklandAccessNS
         private ConfigEntry<bool> cfgAutoStack;
         private ConfigEntry<bool> cfgSortByName;
         private ConfigEntry<bool> cfgBeep;
+        private ConfigEntry<bool> cfgOthers;
 
         public override void Ready()
         {
@@ -60,6 +62,7 @@ namespace StacklandAccessNS
             cfgAutoStack = Config.GetEntry<bool>("auto_stack", true);
             cfgSortByName = Config.GetEntry<bool>("sort_by_name", true);
             cfgBeep = Config.GetEntry<bool>("beep_villager_free", true);
+            cfgOthers = Config.GetEntry<bool>("announce_other_players", true);
             cfgNewCards.UI.Name = Loc.T("cfg_new_cards");
             cfgCombat.UI.Name = Loc.T("cfg_combat");
             cfgHits.UI.Name = Loc.T("cfg_hits");
@@ -69,6 +72,7 @@ namespace StacklandAccessNS
             cfgAutoStack.UI.Name = Loc.T("cfg_autostack");
             cfgSortByName.UI.Name = Loc.T("cfg_sort");
             cfgBeep.UI.Name = Loc.T("cfg_beep");
+            cfgOthers.UI.Name = Loc.T("cfg_others");
             ApplyConfig();
         }
 
@@ -83,6 +87,7 @@ namespace StacklandAccessNS
             AccessController.AutoStackEnabled = cfgAutoStack.Value;
             AccessController.SortByName = cfgSortByName.Value;
             AccessController.BeepIdleVillager = cfgBeep.Value;
+            AccessController.AnnounceOtherPlayers = cfgOthers.Value;
         }
 
         /// <summary>Keeps the config file in sync when a setting is changed by a shortcut.</summary>

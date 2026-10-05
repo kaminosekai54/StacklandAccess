@@ -22,6 +22,7 @@ namespace StacklandAccessNS
         public static bool AutoStackEnabled = true;
         public static bool SortByName = true;
         public static bool BeepIdleVillager = true;
+        public static bool AnnounceOtherPlayers = true;
         public static float BeepVolume = 0.8f;
 
         private readonly MenuNavigator menu = new MenuNavigator();

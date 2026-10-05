@@ -21,6 +21,7 @@ namespace StacklandAccessNS
         private static FieldInfo instanceField;
 
         public static bool Installed => ctrlType != null;
+        public static Assembly Assembly => ctrlType?.Assembly;
 
         /// <summary>The Together NetworkManager, or null.</summary>
         public static object Net
@@ -72,6 +73,7 @@ namespace StacklandAccessNS
                 instanceField = t.GetField("instance", BindingFlags.NonPublic | BindingFlags.Static);
                 ctrlType = t;
                 Log.Info("Stacklands Together found: multiplayer support enabled.");
+                RemoteActions.TryPatch();
             }
             catch (Exception ex) { Log.Once(ex); }
         }

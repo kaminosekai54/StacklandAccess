@@ -135,6 +135,7 @@ namespace StacklandAccessNS
             }
             FlushPending(force: false);
             CheckDropResult();
+            CheckRemoteDrops();
             CheckWatchedActions();
             CheckView(wm);
             CheckSpeed(wm);
@@ -281,7 +282,39 @@ namespace StacklandAccessNS
             if (since > 1.2f) BoardNavigator.LastDropRoot = null;
         }
 
-        private class Watched { public GameCard Card; public GameCard Root; public string Status; public float LastTime; }
+        private class Watched { public GameCard Card; public GameCard Root; public string Status; public float LastTime; public string Who; }
+
+        private class RemoteDrop { public GameCard Root; public float Time; public string Who; }
+        private static readonly List<RemoteDrop> remoteDrops = new List<RemoteDrop>();
+
+        /// <summary>Multiplayer host: another player dropped cards on this pile; announce the craft it starts.</summary>
+        public static void WatchRemoteDrop(GameCard root, string who)
+        {
+            if (root == null) return;
+            remoteDrops.RemoveAll(d => d.Root == root);
+            remoteDrops.Add(new RemoteDrop { Root = root, Time = UnityEngine.Time.unscaledTime, Who = who });
+        }
+
+        private void CheckRemoteDrops()
+        {
+            for (int i = remoteDrops.Count - 1; i >= 0; i--)
+            {
+                var d = remoteDrops[i];
+                if (d.Root == null || d.Root.Destroyed || Time.unscaledTime - d.Time > 1.5f) { remoteDrops.RemoveAt(i); continue; }
+                var root = d.Root.GetRootCard();
+                var card = root.GetCardWithStatusInStack();
+                if (card == null || !card.TimerRunning || string.IsNullOrEmpty(card.Status)) continue;
+                remoteDrops.RemoveAt(i);
+                if (watched.Any(w => w.Card == card)) continue;
+                string status = TextCleaner.Clean(card.Status);
+                watched.Add(new Watched { Card = card, Root = root, Status = status, Who = d.Who });
+                if (AccessController.AnnounceActions)
+                {
+                    float total = card.TargetTimerTime - card.CurrentTimerTime;
+                    Announce(Loc.T("mp_by", d.Who, Loc.T("action_started", CardInfo.Name(root), status, CardInfo.Seconds(total))));
+                }
+            }
+        }
         private readonly List<Watched> watched = new List<Watched>();
 
         /// <summary>Recipes started by the player: say when they are finished.</summary>
@@ -298,7 +331,8 @@ namespace StacklandAccessNS
                 {
                     string who = w.Root != null && !w.Root.Destroyed ? CardInfo.Name(w.Root) : (w.Card != null && !w.Card.Destroyed ? CardInfo.Name(w.Card) : "");
                     FlushPending(force: true);
-                    Announce(Loc.T("action_done", w.Status, who));
+                    string doneText = Loc.T("action_done", w.Status, who);
+                    Announce(w.Who != null ? Loc.T("mp_by", w.Who, doneText) : doneText);
                 }
             }
         }

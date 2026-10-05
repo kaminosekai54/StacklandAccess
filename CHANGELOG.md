@@ -11,6 +11,7 @@ Compatibility with the [Stacklands Together](https://steamcommunity.com/sharedfi
   - Tools: world sync, shared progress, reset ideas or quests (host only, with confirmation).
 - Text fields of the panel are spoken as you type (Backspace erases, up arrow reads, Enter confirms, Escape cancels). Lobby passwords asked by a Steam invitation use the same field.
 - Announced automatically: connection status, players joining and leaving, world loading.
+- As the host, the other players' actions are announced with their name: packs bought and opened, cards sold, cards put on a pile, and the crafts they start and finish (setting "announce other players' actions").
 - As a client, every action of the mod goes to the host the same way a mouse drag would: picking up and dropping, selling, buying packs, paying merchants, opening packs, clicking chests, recipes (L), production buildings, F5 regrouping, moving stacks with Ctrl+Enter, taking cards out of a pile.
 - As a client, combat hits replayed by the host are announced, and buying a pack sends just enough money.
 - Only the host can change the game speed; the speed keys say so on a client. Automatic stacking is paused during a session, so it never moves other players' cards.

@@ -152,7 +152,8 @@ Connect from the main menu; the host then starts or loads the world. In a sessio
 - the host runs the game: as a client, everything you do is sent to the host, like a mouse drag;
 - only the host can change the speed or pause;
 - automatic stacking (F4) is paused so it never moves other players' cards (F5 still works);
-- players joining or leaving and the connection status are announced.
+- players joining or leaving and the connection status are announced;
+- as the host, you also hear what the other players do, with their name: packs bought and opened, cards sold, cards put on a pile, crafts started and finished. This can be turned off in the settings.
 
 ## What the mod announces automatically
 
@@ -178,7 +179,8 @@ Go to **Options > Mods > Stackland Access** to turn each of these on or off:
 - the camera following your selection;
 - automatic stacking;
 - stacks sorted by name;
-- the "villager free" sound.
+- the "villager free" sound;
+- other players' actions (multiplayer host).
 
 You can replace the sound with your own WAV file: `Mods\StacklandAccess\Sounds\villager_free.wav`.
 
