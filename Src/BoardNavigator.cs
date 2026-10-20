@@ -112,6 +112,11 @@ namespace StacklandAccessNS
             if (cd is Portal) return Category.Locations;
             if (cd is Enemy) return Category.Enemies;
             if (cd is Mob) return Category.Animals;
+            // Production buildings, whatever card colour the game gives them.
+            if (cd is Garden || cd is Greenhouse || cd is Farmland || cd is Sawmill || cd is Brickyard || cd is Composter
+                || cd is FishTrap || cd is AnimalPen || cd is BreedingPen || cd is Smelter || cd is FlourMill
+                || cd is Distillery || cd is Oven || cd is Barrel || cd.Id == "farm" || cd.Id == "garden" || cd.Id == "greenhouse")
+                return Category.Buildings;
             switch (cd.MyCardType)
             {
                 case CardType.Humans: return Category.People;

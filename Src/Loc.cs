@@ -376,6 +376,9 @@ namespace StacklandAccessNS
             ["mp_by"] = "{0}: {1}",
             ["mp_other_player"] = "another player",
             ["cfg_others"] = "Accessibility: announce other players' actions (multiplayer host)",
+            ["prod_plant"] = "{0}: plant {1}, gives {2} in {3}",
+            ["prod_put"] = "{0}: put {1} on it",
+            ["prod_count"] = "{0} available",
             ["help_board"] = "Board keys",
             ["help_lines"] =
                 "Left and right arrows: previous or next stack in the category.|" +
@@ -569,6 +572,9 @@ namespace StacklandAccessNS
             ["mp_by"] = "{0} : {1}",
             ["mp_other_player"] = "un autre joueur",
             ["cfg_others"] = "Accessibilité : annoncer les actions des autres joueurs (hôte multijoueur)",
+            ["prod_plant"] = "{0} : planter {1}, donne {2} en {3}",
+            ["prod_put"] = "{0} : poser {1} dessus",
+            ["prod_count"] = "{0} disponibles",
             ["help_board"] = "Touches du plateau",
             ["help_lines"] =
                 "Flèches gauche et droite : pile précédente ou suivante dans la catégorie.|" +
