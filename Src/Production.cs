@@ -73,6 +73,8 @@ namespace StacklandAccessNS
                 if (kind == null) continue;
                 var building = card;
                 var inputs = Inputs(building);
+                // Only buildings that can really produce now.
+                if (inputs.Count < kind.PerCycle) continue;
                 string output = kind.Output != null ? Name(kind.Output) : (building.CardData is Farmland f && !string.IsNullOrEmpty(f.HarvestCardId) ? Name(f.HarvestCardId) : "");
                 string inputNames = string.Join(", ", inputs.Select(c => CardInfo.Name(c)).Distinct());
                 string status = CardInfo.StackStatus(building.GetRootCard());
@@ -89,7 +91,8 @@ namespace StacklandAccessNS
             }
             entries.AddRange(OtherEntries(board));
             entries.AddRange(SingleUseEntries(board));
-            entries.AddRange(Recipes.BuildingRecipes(board));
+            // Only the building recipes that can be made with the cards on the board.
+            entries.AddRange(Recipes.BuildingRecipes(board).Where(e => e.OnActivate != null));
             return entries;
         }
 
@@ -136,7 +139,6 @@ namespace StacklandAccessNS
                 var building = card;
                 string status = CardInfo.StackStatus(building.GetRootCard());
                 var inputs = Inputs(building);
-                int before = entries.Count;
                 if (grow)
                 {
                     foreach (var sp in GrowthPrints(d.Id))
@@ -170,24 +172,55 @@ namespace StacklandAccessNS
                         });
                     }
                 }
-                if (entries.Count == before)
-                {
-                    entries.Add(new ListBrowser.Entry(TextCleaner.Join(CardInfo.Name(building), Loc.T("prod_none"), status))
-                    {
-                        Info = () => CardInfo.Details(building),
-                    });
-                }
             }
             return entries;
         }
 
-        /// <summary>True when the building has its own rule for the cards it takes (university, academy, laboratory...).</summary>
+        /// <summary>
+        /// Buildings that turn the cards put on them into something by their own code (not by an idea recipe).
+        /// Other buildings only accept cards for their recipes (campfire, oven, well...), which come from the
+        /// recipe list, or to house or staff them, which produces nothing.
+        /// </summary>
+        private static readonly HashSet<string> CodeProcessors = new HashSet<string>
+        {
+            "University", "Academy", "Temple", "Charity", "WishingWell", "Cathedral", "Tavern", "IndustrialSmelter",
+            "SlaughterHouse", "ExportCenter", "Royal", "Shaman", "IndustrialRevolution", "NamingStone", "Altar",
+            "Merchant", "TimeMachine",
+        };
+
         private static bool HasOwnRule(CardData d)
         {
             if (d.Id == "laboratory") return true;
-            var m = d.GetType().GetMethod("CanHaveCard", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
-            var t = m?.DeclaringType;
-            return t != null && t != typeof(CardData) && t != typeof(Building) && t != typeof(Landmark);
+            for (var t = d.GetType(); t != null && t != typeof(CardData); t = t.BaseType)
+                if (CodeProcessors.Contains(t.Name)) return true;
+            return false;
+        }
+
+        /// <summary>True when an idea recipe uses this building with this card (then the recipe list offers it, with all its cards).</summary>
+        private static readonly Dictionary<string, bool> inRecipe = new Dictionary<string, bool>();
+
+        private static bool InRecipe(string buildingId, string cardId)
+        {
+            string key = buildingId + "\n" + cardId;
+            if (!inRecipe.TryGetValue(key, out bool r)) inRecipe[key] = r = FindInRecipe(buildingId, cardId);
+            return r;
+        }
+
+        private static bool FindInRecipe(string buildingId, string cardId)
+        {
+            var wm = WorldManager.instance;
+            if (wm == null) return false;
+            foreach (var bp in wm.BlueprintPrefabs)
+            {
+                if (bp?.Subprints == null) continue;
+                foreach (var sp in bp.Subprints)
+                {
+                    if (sp?.RequiredCards == null) continue;
+                    if (sp.RequiredCards.Any(r => r != null && Recipes.AllowedIds(sp, r).Contains(buildingId))
+                        && sp.RequiredCards.Any(r => r != null && Recipes.AllowedIds(sp, r).Contains(cardId))) return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
@@ -206,12 +239,8 @@ namespace StacklandAccessNS
                 if (!HasOwnRule(d)) continue;
                 var building = card;
                 string status = CardInfo.StackStatus(building.GetRootCard());
-                var inputs = Inputs(building, true);
-                if (inputs.Count == 0)
-                {
-                    entries.Add(new ListBrowser.Entry(TextCleaner.Join(CardInfo.Name(building), Loc.T("prod_none"), status)) { Info = () => CardInfo.Details(building) });
-                    continue;
-                }
+                // Workers only staff a building; cards of an idea recipe come from the recipe list.
+                var inputs = Inputs(building, true).Where(c => !(c.CardData is Worker) && !InRecipe(d.Id, c.CardData.Id)).ToList();
                 foreach (var group in inputs.GroupBy(c => c.CardData.Id))
                 {
                     string id = group.Key;
