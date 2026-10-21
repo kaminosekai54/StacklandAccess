@@ -148,10 +148,25 @@ namespace StacklandAccessNS
         private static string Hex(Color c) => "#" + ColorUtility.ToHtmlStringRGB(c);
 
         /// <summary>Card colours as in the game: background, border, icon.</summary>
+        /// <summary>
+        /// The game's colour for a kind of card. ColorManager.GetPaletteForCard stops on the first rule that
+        /// needs a card on the board (energy producers), so the rules are tried one by one here, skipping those.
+        /// </summary>
         private static CardPalette Palette(CardData cd)
         {
-            try { return ColorManager.instance != null ? ColorManager.instance.GetPaletteForCard(cd) : null; }
-            catch { return null; }
+            var cm = ColorManager.instance;
+            if (cm == null || cd == null) return null;
+            try { if (cd.HasUniquePalette && cd.MyPalette != null) return cd.MyPalette; } catch { }
+            var rules = HarmonyLib.Traverse.Create(cm).Field("cardColorRules").GetValue<List<CardColorRule>>();
+            if (rules != null)
+            {
+                foreach (var rule in rules)
+                {
+                    try { if (rule?.Predicate != null && rule.Predicate(cd)) return rule.Palette; }
+                    catch { }
+                }
+            }
+            return cm.Default;
         }
 
         private static string[] Colors(CardData cd)
@@ -180,8 +195,8 @@ namespace StacklandAccessNS
             if (images == null) return null;
             icon = icon ?? IconOf(cd);
             if (icon == null) return null;
-            var p = Palette(cd);
-            return images.Save(icon, p != null ? name + "_" + ColorUtility.ToHtmlStringRGB(p.Icon) : name, p?.Icon);
+            // The icons are kept as drawn (white with black lines), like on the cards of the game.
+            return images.Save(icon, name);
         }
 
         private static object BuildData(WorldManager wm, bool withSave, CardImages images, string imgBase)
