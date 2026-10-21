@@ -90,7 +90,7 @@ const EMBED = __STACKLANDS_DATA__;
 const $ = id => document.getElementById(id);
 const fold = s => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const fmt = (s, ...a) => (s || "").replace(/\{(\d)\}/g, (_, i) => a[+i]);
-let D, T, byId, producedBy, usedIn, inPacks, droppedBy;
+let D, T, byId, producedBy, usedIn, inPacks, droppedBy, ofIdea;
 
 function time(sec) {
   sec = Math.round(sec || 0);
@@ -115,8 +115,9 @@ function start(data) {
   D = data; T = data.ui;
   document.documentElement.lang = data.code || "en";
   byId = new Map(D.cards.map(c => [c.id, c]));
-  producedBy = new Map(); usedIn = new Map(); inPacks = new Map(); droppedBy = new Map();
+  producedBy = new Map(); usedIn = new Map(); inPacks = new Map(); droppedBy = new Map(); ofIdea = new Map();
   D.recipes.forEach(r => {
+    if (r.ideaId) push(ofIdea, r.ideaId, r);
     r.output.forEach(id => push(producedBy, id, r));
     new Set(r.req.flatMap(q => q.ids)).forEach(id => push(usedIn, id, r));
   });
@@ -147,7 +148,7 @@ function start(data) {
 
 function obtainKind(c) {
   const k = [];
-  if ((producedBy.get(c.id) || []).length) k.push("recipe");
+  if ((producedBy.get(c.id) || []).length || (c.idea && (ofIdea.get(c.id) || []).length)) k.push("recipe");
   if ((inPacks.get(c.id) || []).length) k.push("pack");
   if ((droppedBy.get(c.id) || []).length) k.push("drop");
   if (!k.length) k.push("none");
@@ -161,6 +162,10 @@ function recipeText(r) {
   return `${r.idea ? r.idea + " : " : ""}${ing}${out}${t ? " (" + T.web_time + " " + t + ")" : ""}`;
 }
 function howShort(c) {
+  if (c.idea) {
+    const ir = ofIdea.get(c.id) || [];
+    return ir.length ? ir.slice(0, 2).map(recipeText).join(" ; ") + (ir.length > 2 ? ` (+${ir.length - 2})` : "") : T.web_none;
+  }
   const rs = producedBy.get(c.id) || [];
   if (rs.length) return rs.slice(0, 2).map(recipeText).join(" ; ") + (rs.length > 2 ? ` (+${rs.length - 2})` : "");
   const ps = inPacks.get(c.id) || [];
@@ -172,7 +177,7 @@ function howShort(c) {
 function matches(c, q) {
   if (!q) return true;
   const parts = [c.name, c.desc, c.cat, c.type, c.upd];
-  (producedBy.get(c.id) || []).forEach(r => { parts.push(r.idea); r.req.forEach(x => parts.push(x.label)); });
+  (producedBy.get(c.id) || []).concat(ofIdea.get(c.id) || []).forEach(r => { parts.push(r.idea); r.req.forEach(x => parts.push(x.label)); });
   return fold(parts.join(" ")).includes(q);
 }
 const sorters = {
@@ -271,7 +276,9 @@ function openCard(id, from) {
   if (c.food != null) fact(T.web_food + " : " + c.food);
   if (c.hp != null) { fact(T.web_health + " : " + c.hp); fact(T.web_attack + " : " + c.atk); fact(T.web_defence + " : " + c.def); }
   body.appendChild(facts);
+  if (c.group) fact(T.web_group + " : " + c.group);
   if (c.desc) { const p = document.createElement("p"); p.textContent = c.desc; body.appendChild(p); }
+  if (c.idea) section(body, T.web_idea_recipes, ofIdea.get(id) || [], recipeItem);
   section(body, T.web_how, producedBy.get(id) || [], recipeItem);
   section(body, T.web_packs, inPacks.get(id) || [], (li, p) => li.textContent = p.name);
   section(body, T.web_from, droppedBy.get(id) || [], (li, d) => li.append(cardLink(d.id)));

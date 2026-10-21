@@ -119,7 +119,31 @@ namespace StacklandAccessNS
             foreach (var cd in wm.CardDataPrefabs)
             {
                 if (cd == null || string.IsNullOrEmpty(cd.Id) || !seen.Add(cd.Id)) continue;
-                if (cd is Blueprint) continue; // ideas are listed with the recipes
+                if (cd is Blueprint bpCard)
+                {
+                    // Ideas are cards too: their recipe is shown on them (and they stay listed with the recipes).
+                    string iname = "", idesc = "";
+                    try { iname = Clean(bpCard.KnowledgeName); } catch { }
+                    try { idesc = Clean(bpCard.KnowledgeText); } catch { }
+                    if (iname == "" || iname.StartsWith("---")) continue;
+                    var iupd = CardUpdateType.Main;
+                    try { iupd = bpCard.CardUpdateType; } catch { }
+                    cards.Add(new
+                    {
+                        id = bpCard.Id,
+                        name = iname,
+                        desc = idesc,
+                        cat = BoardNavigator.CategoryName(BoardNavigator.Category.Ideas),
+                        type = Loc.T("type_ideas"),
+                        upd = UpdateName(iupd),
+                        value = bpCard.Value,
+                        found = withSave ? (bool?)wm.HasFoundCard(bpCard.Id) : null,
+                        idea = true,
+                        hidden = bpCard.HideFromIdeasTab,
+                        group = Term("ideagroup_" + bpCard.BlueprintGroup.ToString().ToLowerInvariant(), bpCard.BlueprintGroup.ToString()),
+                    });
+                    continue;
+                }
                 string name = "", desc = "";
                 try { name = Clean(cd.FullName); } catch { name = cd.Id; }
                 try { desc = Clean(cd.Description); } catch { }
@@ -178,6 +202,7 @@ namespace StacklandAccessNS
                     recipes.Add(new
                     {
                         idea,
+                        ideaId = bp.Id,
                         group,
                         upd = UpdateName(update),
                         found = withSave ? (bool?)wm.HasFoundCard(bp.Id) : null,
@@ -226,7 +251,7 @@ namespace StacklandAccessNS
                 "web_health", "web_attack", "web_defence", "web_category_label", "web_unknown", "web_rumor", "web_idea", "web_time",
                 "web_generated", "web_generated_site", "web_type", "web_content", "web_obtain", "web_obtain_recipe", "web_obtain_pack",
                 "web_obtain_drop", "web_obtain_none", "web_sort", "web_sort_name", "web_sort_value", "web_sort_food", "web_sort_attack",
-                "web_language", "web_reset", "web_loading", "web_group",
+                "web_language", "web_reset", "web_loading", "web_group", "web_idea_recipes",
             };
             return keys.ToDictionary(k => k, k => Loc.T(k));
         }
