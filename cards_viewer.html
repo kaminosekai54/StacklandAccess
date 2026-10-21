@@ -207,7 +207,7 @@ function recipeText(r) {
 const pct = v => v == null ? "" : (v < 1 ? "<1" : Math.round(v)) + " %";
 function packOdds(p, id) {
   let best = null;
-  p.bags.forEach(b => b.cards.forEach(x => { if (x.id === id && x.pct != null && (best == null || x.pct > best)) best = x.pct; }));
+  (p.bags || []).forEach(b => b.cards.forEach(x => { if (x.id === id && x.pct != null && (best == null || x.pct > best)) best = x.pct; }));
   return best;
 }
 function packUnlock(p) {
@@ -215,7 +215,7 @@ function packUnlock(p) {
   return fmt(T.web_pack_unlock_quests, p.quests);
 }
 function howShort(c) {
-  if (c.isPack) { const p = c.pack; return `${T.web_pack_cost} ${p.cost} ${p.currency}, ${p.place}. ${T.web_pack_unlock} : ${packUnlock(p)}.`; }
+  if (c.isPack) { const p = c.pack; return [p.cost + (p.currency ? " " + p.currency : ""), p.place, p.quests != null ? T.web_pack_unlock + " : " + packUnlock(p) : ""].filter(Boolean).join(". "); }
   if (c.idea) {
     const ir = ofIdea.get(c.id) || [];
     return ir.length ? ir.slice(0, 2).map(recipeText).join(" ; ") + (ir.length > 2 ? ` (+${ir.length - 2})` : "") : T.web_none;
@@ -364,7 +364,7 @@ function packDetails(p, body, facts, fact) {
   fact(`${T.web_pack_unlock} : ${packUnlock(p)}`);
   fact(`${T.web_pack_ev} : ${p.ev}`);
   const h = document.createElement("h3"); h.textContent = T.web_pack_bags; body.appendChild(h);
-  p.bags.forEach(b => {
+  (p.bags || []).forEach(b => {
     const intro = document.createElement("p");
     intro.textContent = fmt(T.web_pack_bag, b.count) + (b.cond ? " (" + b.cond + ")" : "")
       + (b.kind === "SetPack" ? " — " + T.web_pack_fixed : b.kind === "Enemies" ? " — " + T.web_pack_strength : "");
