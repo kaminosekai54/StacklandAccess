@@ -29,13 +29,20 @@ input[type=search], select { font: inherit; padding: 8px 10px; border: 1px solid
 button.plain { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); cursor: pointer; }
 #hint { color: var(--muted); font-size: .9rem; margin: 0; }
 #count { font-weight: 600; margin: 8px 0; }
-.grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
-.card { width: 100%; height: 100%; text-align: left; font: inherit; color: var(--ink); background: var(--panel);
-        border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; }
-.card:hover { border-color: var(--accent); }
-.card .n { display: block; font-weight: 700; }
-.card .c { display: block; color: var(--muted); font-size: .85rem; }
+.grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.card { --bg: var(--panel); --bd: var(--line); --ic: var(--ink); --tx: var(--ink);
+        width: 100%; height: 100%; min-height: 200px; display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+        text-align: center; font: inherit; color: var(--tx); background: var(--bg); border: 4px solid var(--bd);
+        border-radius: 12px; padding: 8px; cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,.25); transition: transform .08s; }
+.card:hover { transform: translateY(-2px); }
+.card .n { font-weight: 700; line-height: 1.2; min-height: 2.4em; display: flex; align-items: center; justify-content: center; }
+.pic { display: block; flex: 1; min-height: 90px; width: 100%; height: 90px; object-fit: contain; }
+.pic.none { visibility: hidden; }
+.card .m { font-size: .85rem; opacity: .85; }
+.card.unknown { filter: grayscale(.7); opacity: .8; }
 .card.unknown .n { font-style: italic; }
+.hero { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 4px 0 8px; }
+.hero .card { width: 150px; min-height: 210px; flex: none; cursor: default; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 #tip { position: fixed; z-index: 10; max-width: 360px; background: var(--ink); color: var(--bg); padding: 8px 10px; border-radius: 8px;
@@ -110,6 +117,37 @@ const options = (sel, values, all) => {
   if ([...sel.options].some(o => o.value === keep)) sel.value = keep;
 };
 const sorted = arr => [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+function inkFor(hex) {
+  if (!hex) return "";
+  const n = parseInt(hex.slice(1), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 140 ? "#1d1611" : "#fff8ec";
+}
+/** A card drawn like in the game: its colours, name, icon, and a line of numbers. */
+function cardFace(c, el) {
+  if (c.colors) {
+    el.style.setProperty("--bg", c.colors[0]);
+    el.style.setProperty("--bd", c.colors[1]);
+    el.style.setProperty("--ic", c.colors[2]);
+    el.style.setProperty("--tx", inkFor(c.colors[0]));
+  }
+  el.innerHTML = `<span class="n"></span><img class="pic" alt=""><span class="m"></span>`;
+  el.querySelector(".n").textContent = c.name;
+  const pic = el.querySelector(".pic");
+  if (c.img) { pic.src = encodeURI(D.imgBase + c.img); pic.onerror = () => pic.classList.add("none"); } else pic.classList.add("none");
+  const m = [];
+  if (!c.idea) m.push("💰 " + c.value);
+  if (c.food != null) m.push("🍖 " + c.food);
+  if (c.hp != null) m.push("❤ " + c.hp, "⚔ " + c.atk);
+  el.querySelector(".m").textContent = m.join("  ");
+  el.querySelector(".m").setAttribute("aria-hidden", "true");
+}
+function infoLine(c) {
+  const parts = [c.cat, c.type, c.upd];
+  if (!c.idea) parts.push(T.web_value + " " + c.value);
+  if (c.food != null) parts.push(T.web_food + " " + c.food);
+  if (c.hp != null) parts.push(`${T.web_health} ${c.hp}, ${T.web_attack} ${c.atk}, ${T.web_defence} ${c.def}`);
+  return parts.filter(Boolean).join(" · ");
+}
 
 function start(data) {
   D = data; T = data.ui;
@@ -201,11 +239,11 @@ function render() {
     const b = document.createElement("button");
     b.className = "card" + (D.personal && !c.found ? " unknown" : "");
     b.type = "button";
-    const how = howShort(c);
-    b.innerHTML = `<span class="n"></span><span class="c"></span><span class="sr" id="h${i}"></span>`;
-    b.querySelector(".n").textContent = c.name;
-    b.querySelector(".c").textContent = c.cat + (c.upd ? " · " + c.upd : "");
-    b.querySelector(".sr").textContent = how;
+    const how = infoLine(c) + ". " + howShort(c);
+    cardFace(c, b);
+    const sr = document.createElement("span");
+    sr.className = "sr"; sr.id = "h" + i; sr.textContent = how;
+    b.appendChild(sr);
     b.setAttribute("aria-describedby", "h" + i);
     b.addEventListener("click", () => openCard(c.id, b));
     b.addEventListener("mouseenter", () => showTip(how, b));
@@ -264,9 +302,15 @@ function openCard(id, from) {
   close.className = "close"; close.type = "button"; close.textContent = T.web_close;
   close.addEventListener("click", () => $("detail").close());
   body.appendChild(close);
+  const hero = document.createElement("div"); hero.className = "hero";
+  const face = document.createElement("div"); face.className = "card"; face.setAttribute("aria-hidden", "true");
+  cardFace(c, face);
+  const right = document.createElement("div");
   const h = document.createElement("h2"); h.id = "d-name"; h.tabIndex = -1;
   h.textContent = c.name + (c.rumor ? " (" + T.web_rumor + ")" : "");
-  body.appendChild(h);
+  right.appendChild(h);
+  hero.append(face, right);
+  body.appendChild(hero);
   const facts = document.createElement("ul"); facts.className = "facts";
   const fact = t => { const li = document.createElement("li"); li.textContent = t; facts.appendChild(li); };
   fact(T.web_category_label + " : " + c.cat);
@@ -275,9 +319,9 @@ function openCard(id, from) {
   fact(T.web_value + " : " + c.value);
   if (c.food != null) fact(T.web_food + " : " + c.food);
   if (c.hp != null) { fact(T.web_health + " : " + c.hp); fact(T.web_attack + " : " + c.atk); fact(T.web_defence + " : " + c.def); }
-  body.appendChild(facts);
+  right.appendChild(facts);
   if (c.group) fact(T.web_group + " : " + c.group);
-  if (c.desc) { const p = document.createElement("p"); p.textContent = c.desc; body.appendChild(p); }
+  if (c.desc) { const p = document.createElement("p"); p.textContent = c.desc; right.appendChild(p); }
   if (c.idea) section(body, T.web_idea_recipes, ofIdea.get(id) || [], recipeItem);
   section(body, T.web_how, producedBy.get(id) || [], recipeItem);
   section(body, T.web_packs, inPacks.get(id) || [], (li, p) => li.textContent = p.name);

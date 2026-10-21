@@ -42,7 +42,12 @@ namespace StacklandAccessNS
 
                 if (!site)
                 {
-                    string json = Json(BuildData(wm, withSave: true));
+                    Speech.Say(Loc.T("export_working"));
+                    string imgFolder = Loc.T("export_file_name") + "_img";
+                    var images = new CardImages(Path.Combine(docs, imgFolder));
+                    string json;
+                    try { json = Json(BuildData(wm, withSave: true, images, imgFolder + "/")); }
+                    finally { images.Dispose(); }
                     string file = Path.Combine(docs, Loc.T("export_file_name") + ".html");
                     File.WriteAllText(file, html.Replace(DataMarker, json), new System.Text.UTF8Encoding(false));
                     Speech.Say(Loc.T("export_done", file));
@@ -54,6 +59,8 @@ namespace StacklandAccessNS
                 string dataDir = Path.Combine(dir, "data");
                 Directory.CreateDirectory(dataDir);
                 var languages = new List<object>();
+                var siteImages = new CardImages(Path.Combine(dir, "img"));
+                Speech.Say(Loc.T("export_working"));
                 var loc = SokLoc.instance;
                 string original = loc != null ? loc.CurrentLanguage : null;
                 try
@@ -63,7 +70,7 @@ namespace StacklandAccessNS
                         if (loc == null || lang == null || !LangCodes.TryGetValue(lang.LanguageName, out var code)) continue;
                         // Switch the game's texts to each language in turn (restored below).
                         loc.CurrentLanguage = lang.LanguageName;
-                        File.WriteAllText(Path.Combine(dataDir, code + ".json"), Json(BuildData(wm, withSave: false)), new System.Text.UTF8Encoding(false));
+                        File.WriteAllText(Path.Combine(dataDir, code + ".json"), Json(BuildData(wm, withSave: false, siteImages, "img/")), new System.Text.UTF8Encoding(false));
                         string local = lang.LanguageName;
                         try { local = SokLoc.GetLocalLanguageName(lang.LanguageName); } catch { }
                         languages.Add(new { code, name = local, file = "data/" + code + ".json" });
@@ -72,6 +79,7 @@ namespace StacklandAccessNS
                 finally
                 {
                     if (loc != null && original != null) loc.CurrentLanguage = original;
+                    siteImages.Dispose();
                 }
                 File.WriteAllText(Path.Combine(dataDir, "languages.json"), JsonConvert.SerializeObject(languages), new System.Text.UTF8Encoding(false));
                 File.WriteAllText(Path.Combine(dir, "index.html"), html.Replace(DataMarker, "null"), new System.Text.UTF8Encoding(false));
@@ -111,7 +119,29 @@ namespace StacklandAccessNS
             }
         }
 
-        private static object BuildData(WorldManager wm, bool withSave)
+        private static string Hex(Color c) => "#" + ColorUtility.ToHtmlStringRGB(c);
+
+        /// <summary>Card colours as in the game: background, border, icon.</summary>
+        private static CardPalette Palette(CardData cd)
+        {
+            try { return ColorManager.instance != null ? ColorManager.instance.GetPaletteForCard(cd) : null; }
+            catch { return null; }
+        }
+
+        private static string[] Colors(CardData cd)
+        {
+            var p = Palette(cd);
+            return p != null ? new[] { Hex(p.Color), Hex(p.Color2), Hex(p.Icon) } : null;
+        }
+
+        private static string Icon(CardImages images, Sprite icon, CardData cd, string name)
+        {
+            if (images == null) return null;
+            var p = Palette(cd);
+            return images.Save(icon, p != null ? name + "_" + ColorUtility.ToHtmlStringRGB(p.Icon) : name, p?.Icon);
+        }
+
+        private static object BuildData(WorldManager wm, bool withSave, CardImages images, string imgBase)
         {
             var loader = wm.GameDataLoader;
             var cards = new List<object>();
@@ -141,6 +171,8 @@ namespace StacklandAccessNS
                         idea = true,
                         hidden = bpCard.HideFromIdeasTab,
                         group = Term("ideagroup_" + bpCard.BlueprintGroup.ToString().ToLowerInvariant(), bpCard.BlueprintGroup.ToString()),
+                        img = Icon(images, bpCard.Icon, bpCard, bpCard.Id),
+                        colors = Colors(bpCard),
                     });
                     continue;
                 }
@@ -173,6 +205,8 @@ namespace StacklandAccessNS
                     found = withSave ? (bool?)wm.HasFoundCard(cd.Id) : null,
                     rumor = cd is Rumor,
                     drops = drops != null && drops.Count > 0 ? drops : null,
+                    img = Icon(images, cd.Icon, cd, cd.Id),
+                    colors = Colors(cd),
                 });
             }
 
@@ -223,7 +257,7 @@ namespace StacklandAccessNS
                 try { foreach (var bag in pack.CardBags) ids.AddRange(bag.GetCardsInBag(loader)); } catch { }
                 string name = "";
                 try { name = Clean(pack.Name); } catch { name = pack.BoosterId; }
-                packs.Add(new { id = pack.BoosterId, name, cost = pack.Cost, cards = ids.Distinct().ToList() });
+                packs.Add(new { id = pack.BoosterId, name, cost = pack.Cost, cards = ids.Distinct().ToList(), img = images?.Save(pack.Icon, "pack_" + pack.BoosterId) });
             }
 
             string lang = "";
@@ -234,6 +268,7 @@ namespace StacklandAccessNS
                 code = LangCodes.TryGetValue(lang, out var c) ? c : "en",
                 generated = DateTime.Now.ToString("yyyy-MM-dd"),
                 personal = withSave,
+                imgBase,
                 ui = UiTexts(),
                 cards,
                 recipes,

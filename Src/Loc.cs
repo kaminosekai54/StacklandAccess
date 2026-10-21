@@ -487,6 +487,7 @@ namespace StacklandAccessNS
             ["type_landmarks"] = "Landmark",
             ["export_site_done"] = "Public website created in {0} ({1} languages). Put the content of this folder on GitHub Pages or any web host.",
             ["web_idea_recipes"] = "Recipe of this idea",
+            ["export_working"] = "Creating the card list, extracting the images… please wait.",
             ["help_board"] = "Board keys",
             ["help_lines"] =
                 "Left and right arrows: previous or next stack in the category.|" +
@@ -791,6 +792,7 @@ namespace StacklandAccessNS
             ["type_landmarks"] = "Monument",
             ["export_site_done"] = "Site public créé dans {0} ({1} langues). Mettez le contenu de ce dossier sur GitHub Pages ou un autre hébergeur.",
             ["web_idea_recipes"] = "Recette de cette idée",
+            ["export_working"] = "Création de la liste des cartes et extraction des images… patientez.",
             ["help_board"] = "Touches du plateau",
             ["help_lines"] =
                 "Flèches gauche et droite : pile précédente ou suivante dans la catégorie.|" +

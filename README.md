@@ -147,7 +147,7 @@ With NVDA, keep Num Lock on to use the numeric keypad.
 Press **F6** (in a menu or on the board) to create `Stacklands - cards.html` in your Documents folder and open it in your browser. The page is made from your own game, in its language:
 
 - a search field (card name, description, recipe or ingredient) and a category filter;
-- a grid of cards: each card tells how to get it (recipe, pack or drop), read by the screen reader with the card name or shown when the mouse is over it;
+- a grid of cards drawn like in the game (colours and icon); each card gives its information and how to get it (recipe, pack or drop), read by the screen reader with the card name or shown when the mouse is over it;
 - Enter or a click opens all its details: category, sell value, food, combat, description, how to make it, packs, where it drops, the recipes that use it, what it gives;
 - "Only cards I have found" (checked by default) hides the cards and ideas you have not discovered yet.
 

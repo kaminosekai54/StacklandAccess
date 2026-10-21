@@ -147,7 +147,7 @@ Avec NVDA, gardez le Verr. Num activé pour utiliser le pavé numérique.
 Appuyez sur **F6** (dans un menu ou sur le plateau) pour créer `Stacklands - cartes.html` dans votre dossier Documents et l'ouvrir dans votre navigateur. La page est fabriquée à partir de votre propre jeu, dans sa langue :
 
 - un champ de recherche (nom de carte, description, recette ou ingrédient) et un filtre par catégorie ;
-- une grille de cartes : chacune indique comment l'obtenir (recette, paquet ou butin), lu par le lecteur d'écran avec le nom de la carte, ou affiché au survol de la souris ;
+- une grille de cartes dessinées comme dans le jeu (couleurs et icône) ; chacune donne ses informations et comment l'obtenir (recette, paquet ou butin), lu par le lecteur d'écran avec le nom de la carte, ou affiché au survol de la souris ;
 - Entrée ou un clic ouvre toutes ses informations : catégorie, prix de vente, nourriture, combat, description, comment la fabriquer, paquets, où on la trouve, recettes qui l'utilisent, ce qu'elle donne ;
 - « Seulement les cartes découvertes » (coché par défaut) cache les cartes et idées que vous n'avez pas encore trouvées.
 

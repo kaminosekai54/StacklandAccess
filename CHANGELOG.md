@@ -23,6 +23,7 @@ Compatibility with the [Stacklands Together](https://steamcommunity.com/sharedfi
 - L has an "All ideas and rumors" page again, and rumors you found are listed in their group (I reads them).
 - The Industrial Revolution card (Cities DLC) is announced, listed in Locations (U), and its line explains to put a villager on it to go to the city.
 - Card page: every card and every idea of the game (also the ones not discovered yet, and the installed DLCs); ideas are cards of the grid with their recipe.
+- Card page: cards are drawn like in the game, with their colours and their icon (extracted from the game); hovering or focusing a card gives its information, a click opens the full details with a larger card.
 - Card page filters: card type, content (base game, island, dark forest, spirits, Cities…), how to get it; sort by sell value, food or attack. Shift+F6 makes a public website in every language (no save data), ready for GitHub Pages.
 - F6: creates and opens a web page with every card of the game (searchable grid, how to get each card, recipes, packs, drops, recipes that use it), made from your own game and language; undiscovered cards hidden by default.
 - E: connections of a stack (energy cables, sewer pipes, transport arrows), with what they give it and where the linked cards are; connect and disconnect from the list; pages with every connection and with the cards lacking energy or sewer. In move mode, E says where the linked cards are.
