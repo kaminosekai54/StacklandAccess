@@ -39,6 +39,11 @@ button.plain { font: inherit; padding: 8px 12px; border: 1px solid var(--line); 
            padding: 4px 6px; background: var(--bd); color: var(--tx2, var(--tx)); }
 .pic { display: block; flex: 1; min-height: 90px; width: 100%; height: 90px; object-fit: contain; }
 .pic.none { visibility: hidden; }
+.picw { position: relative; flex: 1; display: flex; }
+.age { position: absolute; top: 4px; right: 6px; min-width: 1.9em; height: 1.9em; padding: 0 5px; border-radius: 999px;
+       display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .85rem;
+       background: #4B362D; color: #F2E6C9; border: 2px solid #F2E6C9; box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+.age.none { display: none; }
 .card .m { font-size: .85rem; opacity: .85; }
 .card.unknown { filter: grayscale(.7); opacity: .8; }
 .card.unknown .n { font-style: italic; }
@@ -79,6 +84,7 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
     <label class="f" for="cat"><span id="l-cat"></span><select id="cat"></select></label>
     <label class="f" for="type"><span id="l-type"></span><select id="type"></select></label>
     <label class="f" for="upd"><span id="l-upd"></span><select id="upd"></select></label>
+    <label class="f" for="ageSel"><span id="l-age"></span><select id="ageSel"></select></label>
     <label class="f" for="obtain"><span id="l-obtain"></span><select id="obtain"></select></label>
     <label class="f" for="sort"><span id="l-sort"></span><select id="sort"></select></label>
     <label class="check" id="foundBox" hidden><input id="onlyFound" type="checkbox" checked> <span id="l-found"></span></label>
@@ -183,7 +189,10 @@ function cardFace(c, el) {
     el.style.setProperty("--tx", inkFor(bg));
     el.style.setProperty("--tx2", inkFor(bd));
   }
-  el.innerHTML = `<span class="n"></span><img class="pic" alt=""><span class="m"></span>`;
+  el.innerHTML = `<span class="n"></span><span class="picw"><img class="pic" alt=""><span class="age" aria-hidden="true"></span></span><span class="m"></span>`;
+  const ab = el.querySelector(".age"), a = ageOf(c);
+  if (c.isPack || !(a < Infinity)) ab.classList.add("none");
+  else { ab.textContent = a; ab.title = (T.web_age || "Tech age") + " " + a; }
   el.querySelector(".n").textContent = c.name;
   const pic = el.querySelector(".pic");
   if (c.img) { pic.src = encodeURI(D.imgBase + c.img); pic.onerror = () => pic.classList.add("none"); } else pic.classList.add("none");
@@ -198,6 +207,7 @@ function cardFace(c, el) {
 function infoLine(c) {
   if (c.isPack) return [c.cat, `${T.web_pack_ev} ${c.pack.ev}`].join(" · ");
   const parts = [c.cat, c.type, c.upd];
+  if (ageOf(c) < Infinity) parts.push(ageLabel(ageOf(c)));
   if (!c.idea) parts.push(T.web_value + " " + c.value);
   if (c.food != null) parts.push(T.web_food + " " + c.food);
   if (c.hp != null) parts.push(`${T.web_health} ${c.hp}, ${T.web_attack} ${c.atk}, ${T.web_defence} ${c.def}`);
@@ -220,6 +230,7 @@ function start(data) {
   });
   D.packs.forEach(p => p.cards.forEach(id => push(inPacks, id, p)));
   D.cards.forEach(c => (c.drops || []).forEach(id => push(droppedBy, id, c)));
+  computeAges();
 
   document.title = T.web_title;
   $("title").textContent = T.web_title;
@@ -231,6 +242,7 @@ function start(data) {
   $("l-type").textContent = T.web_type;
   $("l-upd").textContent = T.web_content;
   $("l-obtain").textContent = T.web_obtain;
+  $("l-age").textContent = T.web_age || "Tech age";
   $("l-sort").textContent = T.web_sort;
   $("l-found").textContent = T.web_only_found;
   $("reset").textContent = T.web_reset;
@@ -238,10 +250,49 @@ function start(data) {
   options($("cat"), sorted(D.cards.map(c => c.cat)), T.web_all);
   options($("type"), sorted(D.cards.map(c => c.type)), T.web_all);
   options($("upd"), sorted(D.cards.map(c => c.upd)), T.web_all);
+  {
+    const keys = [...new Set(D.cards.filter(c => !c.isPack).map(ageKey))].sort((x, y) => (x === "x") - (y === "x") || x - y);
+    options($("ageSel"), keys.map(k => [k, k === "x" ? ageLabel(Infinity) : ageLabel(+k)]), T.web_all);
+  }
   options($("obtain"), [["recipe", T.web_obtain_recipe], ["pack", T.web_obtain_pack], ["drop", T.web_obtain_drop], ["none", T.web_obtain_none]], T.web_all);
-  options($("sort"), [["name", T.web_sort_name], ["value", T.web_sort_value], ["food", T.web_sort_food], ["attack", T.web_sort_attack]], null);
+  options($("sort"), [["name", T.web_sort_name], ["value", T.web_sort_value], ["food", T.web_sort_food], ["attack", T.web_sort_attack], ["age", T.web_sort_age || "Tech age"]], null);
   render();
 }
+
+// Tech age: how many crafting steps a card is from the basic cards.
+// Cards from packs (or that nothing makes) are age 0, a recipe gives 1 + its most advanced ingredient
+// (taking the easiest card for each "any of" requirement and the easiest recipe), a drop-only card
+// takes the age of what drops it. Ideas take the age of what they make.
+let age = new Map();
+function computeAges() {
+  age = new Map();
+  const get = id => age.has(id) ? age.get(id) : Infinity;
+  D.cards.forEach(c => {
+    if (c.isPack || c.idea) return;
+    if ((inPacks.get(c.id) || []).length || (!(producedBy.get(c.id) || []).length && !(droppedBy.get(c.id) || []).length)) age.set(c.id, 0);
+  });
+  for (let pass = 0, changed = true; changed && pass < 100; pass++) {
+    changed = false;
+    const lower = (id, v) => { if (v < get(id)) { age.set(id, v); changed = true; } };
+    D.recipes.forEach(r => {
+      if (!r.output.length) return;
+      let v = 0;
+      for (const q of r.req) { const m = Math.min(...q.ids.map(get)); if (!(m < Infinity)) { v = Infinity; break; } v = Math.max(v, m); }
+      if (v < Infinity) r.output.forEach(id => lower(id, v + 1));
+    });
+    D.cards.forEach(c => (c.drops || []).forEach(id => { const v = get(c.id); if (v < Infinity) lower(id, v); }));
+  }
+  D.cards.forEach(c => {
+    if (c.isPack) age.set(c.id, 0);
+    else if (c.idea) {
+      const outs = (ofIdea.get(c.id) || []).flatMap(r => r.output).map(get);
+      age.set(c.id, outs.length ? Math.min(...outs) : Infinity);
+    }
+  });
+}
+const ageOf = c => age.has(c.id) ? age.get(c.id) : Infinity;
+const ageLabel = a => a < Infinity ? fmt(T.web_age_n || "Tech age {0}", a) : (T.web_age_unknown || "Unknown age");
+const ageKey = c => { const a = ageOf(c); return a < Infinity ? String(a) : "x"; };
 
 function obtainKind(c) {
   const k = [];
@@ -293,13 +344,14 @@ const sorters = {
   value: (a, b) => b.value - a.value || a.name.localeCompare(b.name),
   food: (a, b) => (b.food ?? -1) - (a.food ?? -1) || a.name.localeCompare(b.name),
   attack: (a, b) => (b.atk ?? -1) - (a.atk ?? -1) || a.name.localeCompare(b.name),
+  age: (a, b) => (ageOf(a) - ageOf(b) || 0) || (!!a.idea - !!b.idea) || a.name.localeCompare(b.name),
 };
 
 function render() {
-  const q = fold($("q").value.trim()), cat = $("cat").value, type = $("type").value, upd = $("upd").value, ob = $("obtain").value;
+  const q = fold($("q").value.trim()), cat = $("cat").value, type = $("type").value, upd = $("upd").value, ob = $("obtain").value, ag = $("ageSel").value;
   const shown = D.cards
     .filter(c => (!onlyFound() || c.found) && (!cat || c.cat === cat) && (!type || c.type === type) && (!upd || c.upd === upd)
-              && (!ob || obtainKind(c).includes(ob)) && matches(c, q))
+              && (!ob || obtainKind(c).includes(ob)) && (!ag || (!c.isPack && ageKey(c) === ag)) && matches(c, q))
     .sort(sorters[$("sort").value] || sorters.name);
   const grid = $("grid");
   grid.innerHTML = "";
@@ -388,6 +440,7 @@ function openCard(id, from) {
   fact(T.web_content + " : " + c.upd);
   fact(T.web_value + " : " + c.value);
   if (c.food != null) fact(T.web_food + " : " + c.food);
+  if (!c.isPack && ageOf(c) < Infinity) fact((T.web_age || "Tech age") + " : " + ageOf(c));
   if (c.hp != null) { fact(T.web_health + " : " + c.hp); fact(T.web_attack + " : " + c.atk); fact(T.web_defence + " : " + c.def); }
   right.appendChild(facts);
   if (c.group) fact(T.web_group + " : " + c.group);
@@ -441,9 +494,9 @@ $("detail").addEventListener("close", () => { if (returnFocus) returnFocus.focus
 
 let timer = null;
 $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(render, 150); });
-["cat", "type", "upd", "obtain", "sort", "onlyFound"].forEach(id => $(id).addEventListener("change", render));
+["cat", "type", "upd", "obtain", "ageSel", "sort", "onlyFound"].forEach(id => $(id).addEventListener("change", render));
 $("reset").addEventListener("click", () => {
-  $("q").value = ""; ["cat", "type", "upd", "obtain"].forEach(id => $(id).value = ""); $("sort").value = "name";
+  $("q").value = ""; ["cat", "type", "upd", "obtain", "ageSel"].forEach(id => $(id).value = ""); $("sort").value = "name";
   render(); $("q").focus();
 });
 
