@@ -121,7 +121,8 @@ const sorted = arr => [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeC
 function inkFor(hex) {
   if (!hex) return "";
   const n = parseInt(hex.slice(1), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
-  return (0.299 * r + 0.587 * g + 0.114 * b) > 140 ? "#1d1611" : "#fff8ec";
+  // Text in palette colours too: Cacao Brown on light cards, Butter Cream on dark ones.
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 140 ? "#4B362D" : "#F2E6C9";
 }
 /**
  * The game gives each kind of card a colour (resources, food, buildings, ideas…). Each of the game's colours is
@@ -174,7 +175,8 @@ function vivid(hex, sat, light) {
 /** A card drawn like in the game: its colours, name, icon, and a line of numbers. */
 function cardFace(c, el) {
   if (c.colors) {
-    const bg = toPalette(c.colors[0]), bd = vivid(bg, 1, -0.14);
+    // Exactly the palette colour, for the card, its border and its name band.
+    const bg = toPalette(c.colors[0]), bd = bg;
     el.style.setProperty("--bg", bg);
     el.style.setProperty("--bd", bd);
     el.style.setProperty("--ic", c.colors[2]);
