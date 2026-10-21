@@ -14,7 +14,7 @@ if (Test-Path $out) { Remove-Item $out -Recurse -Force }
 New-Item -ItemType Directory -Force -Path "$stage/native", "$stage/Sounds" | Out-Null
 
 Copy-Item 'bin/Release/netstandard2.1/StacklandAccess.dll' $stage
-Copy-Item manifest.json, StacklandAccess_strings.tsv, icon.png, LICENSE, THIRD_PARTY.md, README.md, README.fr.md, CHANGELOG.md $stage
+Copy-Item manifest.json, StacklandAccess_strings.tsv, icon.png, cards_viewer.html, LICENSE, THIRD_PARTY.md, README.md, README.fr.md, CHANGELOG.md $stage
 Copy-Item native/*.dll "$stage/native"
 Copy-Item Sounds/* "$stage/Sounds"
 if (Test-Path workshop.txt) { Copy-Item workshop.txt $stage }

@@ -119,6 +119,11 @@ namespace StacklandAccessNS
             bool boardMode = !gc.ModalIsOpen && wm != null && wm.CurrentBoard != null &&
                              (gc.CurrentScreen is GameScreen || (gc.CurrentScreen is CutsceneScreen && wm.RemovingCards));
 
+            if (Keys.Down(Key.F6) && !menu.IsEditing)
+            {
+                CardExport.Run();
+                return;
+            }
             if (Keys.Down(Key.F1) && !menu.IsEditing)
             {
                 list.Open(Loc.T("list_help"), ListBrowser.Help(), Key.F1);

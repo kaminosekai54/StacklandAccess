@@ -16,7 +16,7 @@ namespace StacklandAccessNS
             "<Keyboard>/pageUp", "<Keyboard>/pageDown", "<Keyboard>/home", "<Keyboard>/end",
             "<Keyboard>/enter", "<Keyboard>/numpadEnter", "<Keyboard>/backspace", "<Keyboard>/delete",
             "<Keyboard>/f1", "<Keyboard>/f2", "<Keyboard>/f3", "<Keyboard>/f4",
-            "<Keyboard>/numpadMinus", "<Keyboard>/numpadPlus", "<Keyboard>/f5",
+            "<Keyboard>/numpadMinus", "<Keyboard>/numpadPlus", "<Keyboard>/f5", "<Keyboard>/f6",
             "<Keyboard>/numpad0", "<Keyboard>/numpad1", "<Keyboard>/numpad2", "<Keyboard>/numpad3", "<Keyboard>/numpad4",
         };
 

@@ -44,6 +44,7 @@ Les lettres suivent les caractères imprimés sur le clavier : elles fonctionnen
 - **F2** : répéter le dernier message.
 - **F3** : activer ou couper l'annonce des nouvelles cartes.
 - **F4** : activer ou couper l'empilement automatique.
+- **F6** : créer une page web avec toutes les cartes du jeu et l'ouvrir dans votre navigateur (voir [Liste des cartes](#liste-des-cartes)).
 - **F8** : panneau multijoueur (seulement avec le mod Stacklands Together).
 
 ### Menus
@@ -139,6 +140,17 @@ Le mod ne prend jamais des cartes déjà utilisées par une autre fabrication.
 - **Espace**, **Tab**, **1**, **2**, **3** : touches de pause et de vitesse du jeu lui-même.
 
 Avec NVDA, gardez le Verr. Num activé pour utiliser le pavé numérique.
+
+## Liste des cartes
+
+Appuyez sur **F6** (dans un menu ou sur le plateau) pour créer `Stacklands - cartes.html` dans votre dossier Documents et l'ouvrir dans votre navigateur. La page est fabriquée à partir de votre propre jeu, dans sa langue :
+
+- un champ de recherche (nom de carte, description, recette ou ingrédient) et un filtre par catégorie ;
+- une grille de cartes : chacune indique comment l'obtenir (recette, paquet ou butin), lu par le lecteur d'écran avec le nom de la carte, ou affiché au survol de la souris ;
+- Entrée ou un clic ouvre toutes ses informations : catégorie, prix de vente, nourriture, combat, description, comment la fabriquer, paquets, où on la trouve, recettes qui l'utilisent, ce qu'elle donne ;
+- « Seulement les cartes découvertes » (coché par défaut) cache les cartes et idées que vous n'avez pas encore trouvées.
+
+Appuyez de nouveau sur F6 après de nouvelles découvertes pour la mettre à jour.
 
 ## Multijoueur
 

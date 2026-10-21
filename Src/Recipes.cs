@@ -23,7 +23,7 @@ namespace StacklandAccessNS
 
         private static MethodInfo parseCardId;
 
-        private static string[] AllowedIds(Subprint sp, string requirement)
+        internal static string[] AllowedIds(Subprint sp, string requirement)
         {
             try
             {
@@ -38,7 +38,7 @@ namespace StacklandAccessNS
         }
 
         /// <summary>Readable name of a requirement: "any_villager" is a villager, not the first villager-like card (a dog).</summary>
-        private static string RequirementName(string req, string[] allowed)
+        internal static string RequirementName(string req, string[] allowed)
         {
             switch (req)
             {

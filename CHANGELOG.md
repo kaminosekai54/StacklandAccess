@@ -22,6 +22,7 @@ Compatibility with the [Stacklands Together](https://steamcommunity.com/sharedfi
 - Production buildings page (L) also lists the buildings with a single use (university, academy, laboratory…: what they accept from your board) and every recipe that uses a building on your board (temple, smithy, lighthouse…), possible ones first.
 - L has an "All ideas and rumors" page again, and rumors you found are listed in their group (I reads them).
 - The Industrial Revolution card (Cities DLC) is announced, listed in Locations (U), and its line explains to put a villager on it to go to the city.
+- F6: creates and opens a web page with every card of the game (searchable grid, how to get each card, recipes, packs, drops, recipes that use it), made from your own game and language; undiscovered cards hidden by default.
 - E: connections of a stack (energy cables, sewer pipes, transport arrows), with what they give it and where the linked cards are; connect and disconnect from the list; pages with every connection and with the cards lacking energy or sewer. In move mode, E says where the linked cards are.
 - Gardens, farms, greenhouses, mills, ovens, smelters and other production buildings are always in the Buildings category (H).
 

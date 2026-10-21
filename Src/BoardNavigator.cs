@@ -108,7 +108,13 @@ namespace StacklandAccessNS
         public static Category CategoryOf(Draggable d)
         {
             if (!(d is GameCard gc)) return Category.Shop;
-            var cd = gc.CardData;
+            return CategoryOf(gc.CardData);
+        }
+
+        /// <summary>Category of a kind of card (also used for cards that are not on the board).</summary>
+        public static Category CategoryOf(CardData cd)
+        {
+            if (cd == null) return Category.Other;
             if (IsMerchant(cd)) return Category.Shop;
             if (cd is Portal || cd is IndustrialRevolution || cd.Id == "event_industrial_revolution") return Category.Locations;
             if (cd is Enemy) return Category.Enemies;

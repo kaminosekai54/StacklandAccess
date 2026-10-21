@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stacklands</title>
+<style>
+:root {
+  --bg: #f6f1e7; --panel: #fffaf0; --ink: #2b2118; --muted: #6b5d4f; --line: #d9ccb7;
+  --accent: #9a4f12; --accent-ink: #ffffff; --focus: #1f5fbf; --chip: #efe4d1;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1d1915; --panel: #27211c; --ink: #f2e9dc; --muted: #b8a994; --line: #4a3f34;
+          --accent: #f0a35e; --accent-ink: #1d1915; --focus: #8ab4ff; --chip: #3a3029; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, "Segoe UI", sans-serif; }
+header, main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+h1 { margin: 0 0 4px; font-size: 1.6rem; }
+.sub { color: var(--muted); margin: 0; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: end; margin: 12px 0; }
+.controls label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
+.controls label.check { flex-direction: row; align-items: center; font-weight: 400; }
+input[type=search], select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); min-width: 220px; }
+input[type=search] { min-width: min(420px, 100%); }
+#hint { color: var(--muted); font-size: .9rem; margin: 0; }
+#count { font-weight: 600; margin: 8px 0; }
+.grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.card { width: 100%; height: 100%; text-align: left; font: inherit; color: var(--ink); background: var(--panel);
+        border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; position: relative; }
+.card:hover { border-color: var(--accent); }
+.card .n { display: block; font-weight: 700; }
+.card .c { display: block; color: var(--muted); font-size: .85rem; }
+.card.unknown .n { font-style: italic; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+#tip { position: fixed; z-index: 10; max-width: 340px; background: var(--ink); color: var(--bg); padding: 8px 10px; border-radius: 8px;
+       font-size: .9rem; pointer-events: none; display: none; }
+dialog { border: 1px solid var(--line); border-radius: 12px; padding: 0; width: min(760px, calc(100% - 32px)); max-height: calc(100% - 32px);
+         background: var(--panel); color: var(--ink); }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+.dlg { padding: 16px 20px 20px; }
+.dlg h2 { margin: 0 0 4px; }
+.dlg h3 { margin: 18px 0 6px; font-size: 1.05rem; }
+.dlg ul { margin: 0; padding-left: 20px; }
+.dlg li { margin: 4px 0; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; list-style: none; margin: 8px 0; }
+.facts li { background: var(--chip); border-radius: 999px; padding: 2px 10px; margin: 0; }
+.link { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+.close { float: right; font: inherit; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Stacklands</h1>
+  <p class="sub" id="generated"></p>
+</header>
+<main>
+  <div class="controls" role="search">
+    <label for="q"><span id="l-search"></span>
+      <input id="q" type="search" autocomplete="off" aria-describedby="hint">
+    </label>
+    <label for="cat"><span id="l-cat"></span>
+      <select id="cat"></select>
+    </label>
+    <label class="check"><input id="onlyFound" type="checkbox" checked> <span id="l-found"></span></label>
+  </div>
+  <p id="hint"></p>
+  <p id="count" role="status" aria-live="polite"></p>
+  <ul class="grid" id="grid"></ul>
+</main>
+<div id="tip" aria-hidden="true"></div>
+<dialog id="detail" aria-labelledby="d-name">
+  <div class="dlg" id="d-body"></div>
+</dialog>
+<script>
+const DATA = __STACKLANDS_DATA__;
+const T = DATA.ui;
+const $ = id => document.getElementById(id);
+const byId = new Map(DATA.cards.map(c => [c.id, c]));
+const producedBy = new Map(), usedIn = new Map(), inPacks = new Map(), droppedBy = new Map();
+const push = (m, k, v) => { if (!m.has(k)) m.set(k, []); m.get(k).push(v); };
+DATA.recipes.forEach(r => {
+  r.output.forEach(id => push(producedBy, id, r));
+  new Set(r.req.flatMap(q => q.ids)).forEach(id => push(usedIn, id, r));
+});
+DATA.packs.forEach(p => p.cards.forEach(id => push(inPacks, id, p)));
+DATA.cards.forEach(c => (c.drops || []).forEach(id => push(droppedBy, id, c)));
+
+const fold = s => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const nameOf = id => byId.has(id) ? byId.get(id).name : id;
+const fmt = (s, ...a) => s.replace(/\{(\d)\}/g, (_, i) => a[+i]);
+function time(sec) {
+  sec = Math.round(sec || 0);
+  if (!sec) return "";
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return m ? (s ? `${m} min ${s} s` : `${m} min`) : `${s} s`;
+}
+const onlyFound = () => $("onlyFound").checked;
+const recipeKnown = r => r.found || r.hidden || !onlyFound();
+function recipeText(r) {
+  if (!recipeKnown(r)) return T.web_unknown;
+  const ing = r.req.map(q => q.label).join(" + ");
+  const out = r.output.length ? " → " + r.output.map(nameOf).join(", ") : "";
+  const t = time(r.time);
+  return `${r.idea ? r.idea + " : " : ""}${ing}${out}${t ? " (" + T.web_time + " " + t + ")" : ""}`;
+}
+function howShort(c) {
+  const rs = producedBy.get(c.id) || [];
+  if (rs.length) return rs.slice(0, 2).map(recipeText).join(" ; ") + (rs.length > 2 ? ` (+${rs.length - 2})` : "");
+  const ps = inPacks.get(c.id) || [];
+  if (ps.length) return T.web_packs + " : " + ps.map(p => p.name).join(", ");
+  const ds = droppedBy.get(c.id) || [];
+  if (ds.length) return T.web_from + " : " + ds.slice(0, 4).map(d => d.name).join(", ");
+  return T.web_none;
+}
+
+// Controls
+document.documentElement.lang = ({French:"fr",German:"de",Dutch:"nl",Italian:"it",Spanish:"es",Polish:"pl","Brazilian Portuguese":"pt-BR",Japanese:"ja",Korean:"ko","Chinese (Simplified)":"zh-Hans","Chinese (Traditional)":"zh-Hant"})[DATA.lang] || "en";
+document.title = T.web_title;
+$("title").textContent = T.web_title;
+$("generated").textContent = fmt(T.web_generated, DATA.generated);
+$("l-search").textContent = T.web_search;
+$("hint").textContent = T.web_search_hint;
+$("l-cat").textContent = T.web_category;
+$("l-found").textContent = T.web_only_found;
+const cats = [...new Set(DATA.cards.map(c => c.cat))].sort((a, b) => a.localeCompare(b));
+$("cat").innerHTML = `<option value="">${T.web_all}</option>` + cats.map(c => `<option>${c}</option>`).join("");
+
+function matches(c, q) {
+  if (!q) return true;
+  const parts = [c.name, c.desc, c.cat];
+  (producedBy.get(c.id) || []).forEach(r => { parts.push(r.idea); r.req.forEach(x => parts.push(x.label)); });
+  return fold(parts.join(" ")).includes(q);
+}
+let shown = [];
+function render() {
+  const q = fold($("q").value.trim()), cat = $("cat").value;
+  shown = DATA.cards
+    .filter(c => (!onlyFound() || c.found) && (!cat || c.cat === cat) && matches(c, q))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const grid = $("grid");
+  grid.innerHTML = "";
+  const frag = document.createDocumentFragment();
+  shown.forEach((c, i) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.className = "card" + (c.found ? "" : " unknown");
+    b.type = "button";
+    b.dataset.id = c.id;
+    const how = howShort(c);
+    b.innerHTML = `<span class="n"></span><span class="c"></span><span class="sr" id="h${i}"></span>`;
+    b.querySelector(".n").textContent = c.name + (c.cities ? " (" + T.web_cities + ")" : "");
+    b.querySelector(".c").textContent = c.cat;
+    b.querySelector(".sr").textContent = how;
+    b.setAttribute("aria-describedby", "h" + i);
+    b.addEventListener("click", () => openCard(c.id, b));
+    b.addEventListener("mouseenter", e => showTip(how, b));
+    b.addEventListener("focus", e => showTip(how, b));
+    b.addEventListener("mouseleave", hideTip);
+    b.addEventListener("blur", hideTip);
+    li.appendChild(b);
+    frag.appendChild(li);
+  });
+  grid.appendChild(frag);
+  $("count").textContent = fmt(shown.length === 1 ? T.web_count_one : T.web_count, shown.length);
+}
+function showTip(text, el) {
+  const tip = $("tip"), r = el.getBoundingClientRect();
+  tip.textContent = text;
+  tip.style.display = "block";
+  const x = Math.min(r.left, window.innerWidth - tip.offsetWidth - 8);
+  const y = r.bottom + 6 + tip.offsetHeight > window.innerHeight ? r.top - tip.offsetHeight - 6 : r.bottom + 6;
+  tip.style.left = Math.max(8, x) + "px";
+  tip.style.top = y + "px";
+}
+function hideTip() { $("tip").style.display = "none"; }
+
+// Details
+let returnFocus = null;
+function cardLink(id) {
+  const b = document.createElement("button");
+  b.className = "link"; b.type = "button";
+  b.textContent = nameOf(id);
+  if (byId.has(id)) b.addEventListener("click", () => openCard(id));
+  else b.disabled = true;
+  return b;
+}
+function section(body, title, items, build) {
+  const h = document.createElement("h3"); h.textContent = title; body.appendChild(h);
+  if (!items.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = T.web_none; body.appendChild(p); return; }
+  const ul = document.createElement("ul");
+  items.forEach(it => { const li = document.createElement("li"); build(li, it); ul.appendChild(li); });
+  body.appendChild(ul);
+}
+function recipeItem(li, r) {
+  if (!recipeKnown(r)) { li.textContent = T.web_unknown; return; }
+  if (r.idea) li.append(r.idea + " : ");
+  r.req.forEach((q, i) => {
+    if (i) li.append(" + ");
+    if (q.ids.length === 1) li.append(cardLink(q.ids[0])); else li.append(q.label);
+  });
+  if (r.output.length) { li.append(" → "); r.output.forEach((id, i) => { if (i) li.append(", "); li.append(cardLink(id)); }); }
+  const t = time(r.time);
+  if (t) li.append(` (${T.web_time} ${t})`);
+}
+function openCard(id, from) {
+  const c = byId.get(id); if (!c) return;
+  if (from) returnFocus = from;
+  const body = $("d-body"); body.innerHTML = "";
+  const close = document.createElement("button");
+  close.className = "close"; close.type = "button"; close.textContent = T.web_close;
+  close.addEventListener("click", () => $("detail").close());
+  body.appendChild(close);
+  const h = document.createElement("h2"); h.id = "d-name"; h.tabIndex = -1;
+  h.textContent = c.name + (c.rumor ? " (" + T.web_rumor + ")" : "") + (c.cities ? " (" + T.web_cities + ")" : "");
+  body.appendChild(h);
+  const facts = document.createElement("ul"); facts.className = "facts";
+  const fact = t => { const li = document.createElement("li"); li.textContent = t; facts.appendChild(li); };
+  fact(T.web_category_label + " : " + c.cat);
+  fact(T.web_value + " : " + c.value);
+  if (c.food != null) fact(T.web_food + " : " + c.food);
+  if (c.hp != null) { fact(T.web_health + " : " + c.hp); fact(T.web_attack + " : " + c.atk); fact(T.web_defence + " : " + c.def); }
+  body.appendChild(facts);
+  if (c.desc) { const p = document.createElement("p"); p.textContent = c.desc; body.appendChild(p); }
+  section(body, T.web_how, producedBy.get(id) || [], recipeItem);
+  section(body, T.web_packs, inPacks.get(id) || [], (li, p) => li.textContent = p.name);
+  section(body, T.web_from, droppedBy.get(id) || [], (li, d) => li.append(cardLink(d.id)));
+  section(body, T.web_used, usedIn.get(id) || [], recipeItem);
+  if (c.drops) section(body, T.web_drops, c.drops, (li, d) => li.append(cardLink(d)));
+  const dlg = $("detail");
+  if (!dlg.open) dlg.showModal();
+  h.focus();
+}
+$("detail").addEventListener("close", () => { if (returnFocus) returnFocus.focus(); });
+
+let timer = null;
+$("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(render, 150); });
+$("cat").addEventListener("change", render);
+$("onlyFound").addEventListener("change", render);
+render();
+$("q").focus();
+</script>
+</body>
+</html>

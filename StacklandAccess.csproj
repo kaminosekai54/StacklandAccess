@@ -43,6 +43,7 @@
     <ModFile Include="manifest.json" />
     <ModFile Include="StacklandAccess_strings.tsv" />
     <ModFile Include="icon.png" />
+    <ModFile Include="cards_viewer.html" />
     <ModFile Include="workshop.txt" Condition="Exists('workshop.txt')" />
     <NativeFile Include="native/*.dll" />
     <SoundFile Include="Sounds/*.wav;Sounds/*.txt" />
