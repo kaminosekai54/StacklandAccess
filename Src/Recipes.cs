@@ -60,7 +60,7 @@ namespace StacklandAccessNS
             try
             {
                 var prefab = WorldManager.instance.GetCardPrefab(id);
-                if (prefab != null) return TextCleaner.Clean(prefab.Name);
+                if (prefab != null) return CardExport.CardName(prefab);
             }
             catch (System.Exception ex) { Log.Once(ex); }
             return id;

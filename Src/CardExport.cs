@@ -98,6 +98,32 @@ namespace StacklandAccessNS
 
         private static string Clean(string s) => TextCleaner.Clean(s ?? "");
 
+        /// <summary>
+        /// Name of a card in the current language. CardData.Name keeps the first translation it made,
+        /// so it would give the same language in every file of the website: translate the term again instead.
+        /// </summary>
+        public static string CardName(CardData cd)
+        {
+            if (cd == null) return "";
+            if (string.IsNullOrEmpty(cd.NameTerm)) return Clean(cd.Name);
+            string text = SokLoc.Translate(cd.NameTerm);
+            try
+            {
+                if (cd.MyCardType == CardType.Ideas)
+                {
+                    string label = "label_idea_fullname";
+                    if (cd is Blueprint b) label = b.IsInvention ? "label_invention_fullname" : b.IsLandmark ? "label_landmark_fullname" : "label_idea_fullname";
+                    text = SokLoc.Translate(label, LocParam.Create("name", text));
+                }
+                else if (cd.MyCardType == CardType.Rumors)
+                {
+                    text = SokLoc.Translate("label_rumor_full", LocParam.Create("name", text));
+                }
+            }
+            catch { }
+            return Clean(text);
+        }
+
         private static string Term(string id, string fallback)
         {
             try
@@ -177,7 +203,7 @@ namespace StacklandAccessNS
                     continue;
                 }
                 string name = "", desc = "";
-                try { name = Clean(cd.FullName); } catch { name = cd.Id; }
+                try { name = CardName(cd); } catch { name = cd.Id; }
                 try { desc = Clean(cd.Description); } catch { }
                 if (name == "" || name.StartsWith("---")) continue;
                 int? hp = null, atk = null, def = null;
