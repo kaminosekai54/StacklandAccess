@@ -279,11 +279,7 @@ namespace StacklandAccessNS
             foreach (var pack in wm.BoosterPackDatas ?? new List<BoosterpackData>())
             {
                 if (pack == null) continue;
-                var ids = new List<string>();
-                try { foreach (var bag in pack.CardBags) ids.AddRange(bag.GetCardsInBag(loader)); } catch { }
-                string name = "";
-                try { name = Clean(pack.Name); } catch { name = pack.BoosterId; }
-                packs.Add(new { id = pack.BoosterId, name, cost = pack.Cost, cards = ids.Distinct().ToList(), img = images?.Save(pack.Icon, "pack_" + pack.BoosterId) });
+                try { packs.Add(PackData(wm, pack, images)); } catch (Exception ex) { Log.Once(ex); }
             }
 
             string lang = "";
@@ -302,6 +298,109 @@ namespace StacklandAccessNS
             };
         }
 
+        /// <summary>Currency used on the boards of a pack's location (gold, shells, dollars).</summary>
+        private static BoardCurrency CurrencyOf(WorldManager wm, Location location)
+        {
+            try
+            {
+                var board = wm.Boards?.FirstOrDefault(b => b != null && b.Location == location);
+                if (board != null && board.BoardOptions != null) return board.BoardOptions.Currency;
+            }
+            catch { }
+            return location == Location.Island ? BoardCurrency.Shell : location == Location.Cities ? BoardCurrency.Dollar : BoardCurrency.Gold;
+        }
+
+        /// <summary>Cards a bag can give, with the chance of each draw (null when it is a fixed list or depends on strength).</summary>
+        private static object BagData(GameDataLoader loader, CardBag bag, string condition)
+        {
+            var cards = new List<object>();
+            List<CardChance> chances = null;
+            string kind = bag.CardBagType.ToString();
+            try
+            {
+                if (bag.CardBagType == CardBagType.Chances) chances = bag.Chances;
+                else if (bag.CardBagType == CardBagType.SetCardBag)
+                    chances = bag.UseFallbackBag ? CardBag.GetChancesForSetCardBag(loader, bag.SetCardBag, bag.FallbackBag) : CardBag.GetChancesForSetCardBag(loader, bag.SetCardBag, null);
+            }
+            catch { }
+            if (chances != null && chances.Count > 0)
+            {
+                float total = chances.Sum(c => (float)Math.Max(0, c.Chance));
+                foreach (var g in chances.GroupBy(c => c.Id))
+                {
+                    var first = g.First();
+                    float pct = total > 0 ? g.Sum(c => (float)Math.Max(0, c.Chance)) / total * 100f : 0f;
+                    if (first.IsEnemy)
+                    {
+                        cards.Add(new { id = (string)null, enemy = true, pct = (float?)Math.Round(pct, 1) });
+                        continue;
+                    }
+                    cards.Add(new
+                    {
+                        id = first.Id,
+                        pct = (float?)Math.Round(pct, 1),
+                        max = first.HasMaxCount ? (int?)first.MaxCountToGive : null,
+                        needs = first.HasPrerequisiteCard ? first.PrerequisiteCardId : null,
+                    });
+                }
+            }
+            else
+            {
+                List<string> ids = null;
+                try { ids = bag.GetCardsInBag(loader); } catch { }
+                foreach (var id in (ids ?? new List<string>()).Distinct()) cards.Add(new { id, pct = (float?)null });
+            }
+            return new { count = bag.CardsInPack, kind, cond = condition, cards };
+        }
+
+        private static object PackData(WorldManager wm, BoosterpackData pack, CardImages images)
+        {
+            var loader = wm.GameDataLoader;
+            var ids = new List<string>();
+            var bags = new List<object>();
+            float expected = 0f;
+            foreach (var bag in pack.CardBags ?? new List<CardBag>())
+            {
+                if (bag == null) continue;
+                try { ids.AddRange(bag.GetCardsInBag(loader)); } catch { }
+                try { bag.CalculateExpectedValueForBag(loader); expected += bag.ExpectedValue * bag.CardsInPack; } catch { }
+                bags.Add(BagData(loader, bag, null));
+            }
+            foreach (var add in pack.BoosterAdditions ?? new List<BoosterAddition>())
+            {
+                if (add?.CardBags == null) continue;
+                string cond = null;
+                if (add.Filter != null)
+                {
+                    string curse = Together.Get(add.Filter, "Curse")?.ToString().ToLowerInvariant();
+                    cond = Loc.T("pack_cond_" + add.Filter.GetType().Name.Replace("VariableFilter", "").ToLowerInvariant(), curse != null ? Loc.T("curse_" + curse) : "");
+                }
+                foreach (var bag in add.CardBags)
+                {
+                    if (bag == null) continue;
+                    try { ids.AddRange(bag.GetCardsInBag(loader)); } catch { }
+                    bags.Add(BagData(loader, bag, cond));
+                }
+            }
+            string name = "";
+            try { name = Clean(pack.Name); } catch { name = pack.BoosterId; }
+            var currency = CurrencyOf(wm, pack.BoosterLocation);
+            return new
+            {
+                id = pack.BoosterId,
+                name,
+                cost = pack.Cost,
+                currency = Loc.Word("icon_" + currency.ToString().ToLowerInvariant(), pack.Cost),
+                place = Loc.T("place_" + pack.BoosterLocation.ToString().ToLowerInvariant()),
+                quests = pack.MinAchievementCount,
+                intro = pack.IsIntroPack,
+                ev = Math.Round(expected, 1),
+                cards = ids.Where(x => !string.IsNullOrEmpty(x)).Distinct().ToList(),
+                bags,
+                img = images?.Save(pack.Icon, "pack_" + pack.BoosterId),
+            };
+        }
+
         /// <summary>Texts of the page, in the mod's language for the current game language.</summary>
         private static Dictionary<string, string> UiTexts()
         {
@@ -312,7 +411,7 @@ namespace StacklandAccessNS
                 "web_health", "web_attack", "web_defence", "web_category_label", "web_unknown", "web_rumor", "web_idea", "web_time",
                 "web_generated", "web_generated_site", "web_type", "web_content", "web_obtain", "web_obtain_recipe", "web_obtain_pack",
                 "web_obtain_drop", "web_obtain_none", "web_sort", "web_sort_name", "web_sort_value", "web_sort_food", "web_sort_attack",
-                "web_language", "web_reset", "web_loading", "web_group", "web_idea_recipes",
+                "web_language", "web_reset", "web_loading", "web_group", "web_idea_recipes", "web_pack", "web_pack_cost", "web_pack_place", "web_pack_unlock", "web_pack_unlock_start", "web_pack_unlock_quests", "web_pack_ev", "web_pack_bags", "web_pack_bag", "web_pack_fixed", "web_pack_enemy", "web_pack_needs", "web_pack_max", "web_pack_intro", "web_pack_strength", "web_packs_cat", "web_pack_per_draw",
             };
             return keys.ToDictionary(k => k, k => Loc.T(k));
         }

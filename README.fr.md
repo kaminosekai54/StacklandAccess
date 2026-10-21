@@ -151,6 +151,7 @@ Appuyez sur **F6** (dans un menu ou sur le plateau) pour créer `Stacklands - ca
 - Entrée ou un clic ouvre toutes ses informations : catégorie, prix de vente, nourriture, combat, description, comment la fabriquer, paquets, où on la trouve, recettes qui l'utilisent, ce qu'elle donne ;
 - « Seulement les cartes découvertes » (coché par défaut) cache les cartes et idées que vous n'avez pas encore trouvées.
 
+- les paquets (catégorie Paquets) : prix, où ils sont vendus, comment les débloquer, valeur moyenne, et toutes les cartes qu'ils peuvent donner avec leur chance par tirage ;
 - des filtres : catégorie, type de carte, contenu (jeu de base, île, forêt sombre, esprits, Cités…), obtention (recette, paquet, butin) ; tri par nom, prix de vente, nourriture ou attaque.
 
 Appuyez de nouveau sur F6 après de nouvelles découvertes pour la mettre à jour.

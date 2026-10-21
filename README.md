@@ -151,6 +151,7 @@ Press **F6** (in a menu or on the board) to create `Stacklands - cards.html` in 
 - Enter or a click opens all its details: category, sell value, food, combat, description, how to make it, packs, where it drops, the recipes that use it, what it gives;
 - "Only cards I have found" (checked by default) hides the cards and ideas you have not discovered yet.
 
+- packs (category Packs): price, where they are sold, how to unlock them, average value, and every card they can give with its chance per draw;
 - filters: category, card type, content (base game, island, dark forest, spirits, Cities…), how to get it (recipe, pack, drop); sort by name, sell value, food or attack.
 
 Press F6 again after discovering new cards to update it.

@@ -135,13 +135,15 @@ function cardFace(c, el) {
   const pic = el.querySelector(".pic");
   if (c.img) { pic.src = encodeURI(D.imgBase + c.img); pic.onerror = () => pic.classList.add("none"); } else pic.classList.add("none");
   const m = [];
-  if (!c.idea) m.push("💰 " + c.value);
+  if (c.isPack) m.push("💰 " + c.pack.cost);
+  else if (!c.idea) m.push("💰 " + c.value);
   if (c.food != null) m.push("🍖 " + c.food);
   if (c.hp != null) m.push("❤ " + c.hp, "⚔ " + c.atk);
   el.querySelector(".m").textContent = m.join("  ");
   el.querySelector(".m").setAttribute("aria-hidden", "true");
 }
 function infoLine(c) {
+  if (c.isPack) return [c.cat, `${T.web_pack_ev} ${c.pack.ev}`].join(" · ");
   const parts = [c.cat, c.type, c.upd];
   if (!c.idea) parts.push(T.web_value + " " + c.value);
   if (c.food != null) parts.push(T.web_food + " " + c.food);
@@ -151,6 +153,9 @@ function infoLine(c) {
 
 function start(data) {
   D = data; T = data.ui;
+  // Packs are shown as cards of the grid too.
+  D.packs.forEach(p => D.cards.push({ id: "pack:" + p.id, name: p.name, desc: "", cat: T.web_packs_cat, type: T.web_pack, upd: "",
+    value: p.cost, isPack: true, pack: p, img: p.img, found: true }));
   document.documentElement.lang = data.code || "en";
   byId = new Map(D.cards.map(c => [c.id, c]));
   producedBy = new Map(); usedIn = new Map(); inPacks = new Map(); droppedBy = new Map(); ofIdea = new Map();
@@ -199,7 +204,18 @@ function recipeText(r) {
   const t = time(r.time);
   return `${r.idea ? r.idea + " : " : ""}${ing}${out}${t ? " (" + T.web_time + " " + t + ")" : ""}`;
 }
+const pct = v => v == null ? "" : (v < 1 ? "<1" : Math.round(v)) + " %";
+function packOdds(p, id) {
+  let best = null;
+  p.bags.forEach(b => b.cards.forEach(x => { if (x.id === id && x.pct != null && (best == null || x.pct > best)) best = x.pct; }));
+  return best;
+}
+function packUnlock(p) {
+  if (p.intro || p.quests <= 0) return T.web_pack_unlock_start;
+  return fmt(T.web_pack_unlock_quests, p.quests);
+}
 function howShort(c) {
+  if (c.isPack) { const p = c.pack; return `${T.web_pack_cost} ${p.cost} ${p.currency}, ${p.place}. ${T.web_pack_unlock} : ${packUnlock(p)}.`; }
   if (c.idea) {
     const ir = ofIdea.get(c.id) || [];
     return ir.length ? ir.slice(0, 2).map(recipeText).join(" ; ") + (ir.length > 2 ? ` (+${ir.length - 2})` : "") : T.web_none;
@@ -322,15 +338,50 @@ function openCard(id, from) {
   right.appendChild(facts);
   if (c.group) fact(T.web_group + " : " + c.group);
   if (c.desc) { const p = document.createElement("p"); p.textContent = c.desc; right.appendChild(p); }
+  if (c.isPack) { packDetails(c.pack, body, facts, fact); finishDialog(h); return; }
   if (c.idea) section(body, T.web_idea_recipes, ofIdea.get(id) || [], recipeItem);
   section(body, T.web_how, producedBy.get(id) || [], recipeItem);
-  section(body, T.web_packs, inPacks.get(id) || [], (li, p) => li.textContent = p.name);
+  section(body, T.web_packs, inPacks.get(id) || [], (li, p) => {
+    li.append(cardLink("pack:" + p.id));
+    const o = packOdds(p, id);
+    li.append(` — ${p.cost} ${p.currency}${o != null ? ", " + pct(o) + " " + T.web_pack_per_draw : ""}`);
+  });
   section(body, T.web_from, droppedBy.get(id) || [], (li, d) => li.append(cardLink(d.id)));
   section(body, T.web_used, usedIn.get(id) || [], recipeItem);
   if (c.drops) section(body, T.web_drops, c.drops, (li, d) => li.append(cardLink(d)));
+  finishDialog(h);
+}
+function finishDialog(h) {
   const dlg = $("detail");
   if (!dlg.open) dlg.showModal();
   h.focus();
+}
+/** Pack details: price, where it is sold, how to unlock it, and every card it can give with its odds. */
+function packDetails(p, body, facts, fact) {
+  facts.innerHTML = "";
+  fact(`${T.web_pack_cost} : ${p.cost} ${p.currency}`);
+  fact(`${T.web_pack_place} : ${p.place}`);
+  fact(`${T.web_pack_unlock} : ${packUnlock(p)}`);
+  fact(`${T.web_pack_ev} : ${p.ev}`);
+  const h = document.createElement("h3"); h.textContent = T.web_pack_bags; body.appendChild(h);
+  p.bags.forEach(b => {
+    const intro = document.createElement("p");
+    intro.textContent = fmt(T.web_pack_bag, b.count) + (b.cond ? " (" + b.cond + ")" : "")
+      + (b.kind === "SetPack" ? " — " + T.web_pack_fixed : b.kind === "Enemies" ? " — " + T.web_pack_strength : "");
+    body.appendChild(intro);
+    const ul = document.createElement("ul");
+    [...b.cards].sort((x, y) => (y.pct ?? -1) - (x.pct ?? -1)).forEach(x => {
+      const li = document.createElement("li");
+      if (x.enemy || !x.id) li.append(T.web_pack_enemy); else li.append(cardLink(x.id));
+      const notes = [];
+      if (x.pct != null) notes.push(pct(x.pct));
+      if (x.max != null) notes.push(fmt(T.web_pack_max, x.max));
+      if (x.needs) notes.push(fmt(T.web_pack_needs, nameOf(x.needs)));
+      if (notes.length) li.append(" — " + notes.join(", "));
+      ul.appendChild(li);
+    });
+    body.appendChild(ul);
+  });
 }
 $("detail").addEventListener("close", () => { if (returnFocus) returnFocus.focus(); });
 
