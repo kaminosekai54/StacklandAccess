@@ -280,6 +280,7 @@ namespace StacklandAccessNS
         public static List<Entry> Help()
         {
             var list = Loc.T("help_lines").Split('|').Select(l => new Entry(l)).ToList();
+            list.Add(new Entry(Loc.T("help_conn")));
             if (Together.Installed) list.Add(new Entry(Loc.T("help_mp")));
             return list;
         }

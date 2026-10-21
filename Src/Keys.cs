@@ -30,7 +30,7 @@ namespace StacklandAccessNS
         /// Letters used by the mod. They are matched by the character printed on the key
         /// (so Q is the Q key on an AZERTY keyboard too), not by the physical position.
         /// </summary>
-        public const string ModLetters = "irtqlncpbhfxgmaokujy";
+        public const string ModLetters = "irtqlncpbhfxgmaokujye";
 
         private static readonly Dictionary<char, KeyControl> letterCache = new Dictionary<char, KeyControl>();
         private static string cachedLayout;

@@ -181,6 +181,11 @@ namespace StacklandAccessNS
             else if (Keys.Letter('c')) ClickCard();
             else if (Keys.Letter('i')) OpenDetails();
             else if (Keys.Letter('m')) GoToHeld();
+            else if (Keys.Letter('e'))
+            {
+                Sync();
+                Connections.Open(List, this, current is GameCard cg ? cg.GetRootCard() : null);
+            }
             else if (Keys.Letter('p')) Jump(Category.People);
             else if (Keys.Letter('b')) Jump(Category.Shop);
             else if (Keys.Letter('h')) Jump(Category.Buildings);
@@ -233,6 +238,7 @@ namespace StacklandAccessNS
             else if (Keys.Repeat(Key.UpArrow)) delta.z = wm.GridHeight * 1.4f;
             else if (Keys.Repeat(Key.DownArrow)) delta.z = -wm.GridHeight * 1.4f;
             else if (Keys.Letter('i')) { Speech.Say(Surroundings(moving)); return; }
+            else if (Keys.Letter('e')) { Speech.Say(MovingConnections(moving)); return; }
             if (delta == Vector3.zero) return;
             Vector3 wanted = moving.transform.position + delta;
             moving.transform.position = wanted;
@@ -349,6 +355,25 @@ namespace StacklandAccessNS
 
         /// <summary>Lists used for the details (set by the AccessController).</summary>
         public ListBrowser List;
+
+        /// <summary>Move mode, E: where the cards linked to the moving stack are, and what the links give it.</summary>
+        private static string MovingConnections(Draggable d)
+        {
+            if (!(d is GameCard root)) return Loc.T("conn_none");
+            var parts = new List<string>();
+            foreach (var card in root.GetAllCardsInStack())
+            {
+                foreach (var c in card.CardConnectorChildren ?? new List<CardConnector>())
+                {
+                    var other = c.GetConnectedGameCard();
+                    if (other == null) continue;
+                    parts.Add(Loc.T("conn_link", CardInfo.Name(card), CardInfo.Name(other), Connections.TypeName(c.ConnectionType), Connections.RelativePosition(card, other)));
+                }
+                string eff = Connections.Effects(card);
+                if (eff != "") parts.Add(eff);
+            }
+            return parts.Count == 0 ? Loc.T("conn_none") : TextCleaner.Join(parts.ToArray());
+        }
 
         private void OpenDetails()
         {

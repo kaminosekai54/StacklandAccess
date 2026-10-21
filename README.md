@@ -93,6 +93,7 @@ Press the letter again to go to the next stack of that category.
 - **C**: click the card (for example, take coins out of a chest).
 - **Ctrl+Enter**: move the stack on the board with the arrows.
 - **I** while moving a stack: what is around it.
+- **E** while moving a stack: where the cards linked to it are.
 - **Enter** or **Escape** while moving a stack: stop moving.
 - **F5**: regroup all identical idle cards into full stacks. Cards used by a craft in progress, and cards that make something when stacked together, are left alone.
 - **Ctrl+F5**: same as F5, only for the category you are browsing.
@@ -113,6 +114,7 @@ Press the letter again to go to the next stack of that category.
 - **L**: list of recipes.
 - **N**: history of messages.
 - **Ctrl+P**: list of villagers and what they are doing, idle villagers first.
+- **E**: connections of the stack (energy cables, sewer pipes, transport arrows): what they give it and where the linked cards are. Enter on a free connector lists the cards it can be linked to, nearest first; Enter on a linked one disconnects it. Right arrow: all connections on the board, then the cards with an energy or sewer problem.
 
 ### Lists (details, recipes, quests, history, villagers, help)
 

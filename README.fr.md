@@ -93,6 +93,7 @@ Appuyer de nouveau sur la lettre passe à la pile suivante de cette catégorie.
 - **C** : cliquer la carte (par exemple sortir des pièces d'un coffre).
 - **Ctrl+Entrée** : déplacer la pile sur le plateau avec les flèches.
 - **I** pendant le déplacement : ce qui se trouve autour.
+- **E** pendant le déplacement : où sont les cartes reliées à la pile.
 - **Entrée** ou **Échap** pendant le déplacement : terminer.
 - **F5** : regrouper toutes les cartes identiques inutilisées en piles pleines. Les cartes d'une fabrication en cours, et celles qui fabriquent quelque chose une fois empilées ensemble, ne bougent pas.
 - **Ctrl+F5** : pareil que F5, seulement pour la catégorie que vous parcourez.
@@ -113,6 +114,7 @@ Appuyer de nouveau sur la lettre passe à la pile suivante de cette catégorie.
 - **L** : liste des recettes.
 - **N** : historique des messages.
 - **Ctrl+P** : liste des villageois et de leur occupation, les inactifs d'abord.
+- **E** : connexions de la pile (câbles électriques, égouts, flèches de transport) : ce qu'elles lui apportent et où sont les cartes reliées. Entrée sur une connexion libre liste les cartes auxquelles la relier, les plus proches d'abord ; Entrée sur une connexion reliée la débranche. Flèche droite : toutes les connexions du plateau, puis les cartes qui ont un problème d'énergie ou d'égout.
 
 ### Listes (détails, recettes, quêtes, historique, villageois, aide)
 
