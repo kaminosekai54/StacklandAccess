@@ -94,7 +94,8 @@ Appuyer de nouveau sur la lettre passe à la pile suivante de cette catégorie.
 - **Ctrl+Entrée** : déplacer la pile sur le plateau avec les flèches.
 - **I** pendant le déplacement : ce qui se trouve autour.
 - **Entrée** ou **Échap** pendant le déplacement : terminer.
-- **F5** : regrouper les ressources et la nourriture identiques en piles pleines.
+- **F5** : regrouper toutes les cartes identiques inutilisées en piles pleines. Les cartes d'une fabrication en cours, et celles qui fabriquent quelque chose une fois empilées ensemble, ne bougent pas.
+- **Ctrl+F5** : pareil que F5, seulement pour la catégorie que vous parcourez.
 
 ### Plateau : boutique
 

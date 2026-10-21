@@ -396,7 +396,7 @@ namespace StacklandAccessNS
                 "R: resources. T: moon and time. Q: quests. L: recipes, with pages: possible now, production buildings, then one page per idea group; Enter sets the recipe up or feeds the building, left and right change page, I for the result. N: message history.|" +
                 "Minus and plus (also on the numeric keypad): slower or faster, from pause to speed 5. Numeric keypad 0 to 4: pause, 0.5, 1, 2, 5. Space: pause. Tab and 1, 2, 3: game speed, handled by the game.|" +
                 "Menus: up and down arrows, Enter to activate, left and right for sliders and lists, I for the description, R to read the whole screen, Escape to go back.|" +
-                "F2: repeat the last message. F3: toggle announcement of new cards. F4: toggle automatic stacking of identical resources and food (piles you build yourself are never touched). F5: regroup identical resources and food into full piles. Each category remembers the last stack visited.",
+                "F2: repeat the last message. F3: toggle announcement of new cards. F4: toggle automatic stacking of identical resources and food (piles you build yourself are never touched). F5: regroup all identical idle cards into full piles (cards used by a craft, and cards that make something together, are left alone). Ctrl+F5: same, only in the current category. Each category remembers the last stack visited.",
         };
 
         private static readonly Dictionary<string, string> Fr = new Dictionary<string, string>
@@ -592,7 +592,7 @@ namespace StacklandAccessNS
                 "R : ressources. T : lune et temps. Q : quêtes. L : recettes, par pages : possibles maintenant, bâtiments de production, puis une page par groupe d'idées ; Entrée met la recette en place ou alimente le bâtiment, gauche et droite changent de page, I pour le résultat. N : historique des messages.|" +
                 "Moins et plus (aussi sur le pavé numérique) : ralentir ou accélérer, de la pause à la vitesse 5. Pavé numérique 0 à 4 : pause, 0,5, 1, 2, 5. Espace : pause. Tab et 1, 2, 3 : vitesse du jeu, gérés par le jeu.|" +
                 "Menus : flèches haut et bas, Entrée pour activer, gauche et droite pour les curseurs et listes, I pour la description, R pour lire tout l'écran, Échap pour revenir.|" +
-                "F2 : répéter le dernier message. F3 : activer ou couper l'annonce des nouvelles cartes. F4 : activer ou couper l'empilement automatique des ressources et de la nourriture identiques (les piles faites à la main ne sont jamais touchées). F5 : regrouper les ressources et la nourriture identiques en piles pleines. Chaque catégorie retient la dernière pile visitée.",
+                "F2 : répéter le dernier message. F3 : activer ou couper l'annonce des nouvelles cartes. F4 : activer ou couper l'empilement automatique des ressources et de la nourriture identiques (les piles faites à la main ne sont jamais touchées). F5 : regrouper toutes les cartes identiques inutilisées en piles pleines (les cartes d'une fabrication en cours, et celles qui fabriquent quelque chose ensemble, ne bougent pas). Ctrl+F5 : pareil, seulement dans la catégorie courante. Chaque catégorie retient la dernière pile visitée.",
         };
     }
 }

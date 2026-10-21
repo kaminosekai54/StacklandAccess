@@ -214,8 +214,11 @@ namespace StacklandAccessNS
             if (Keys.Down(Key.F5))
             {
                 if (!wm.CanInteract) { Speech.Say(Loc.T("not_now")); return true; }
-                int moved = AutoStacker.RestackAll(board);
-                Speech.Say(moved > 0 ? Loc.N("restacked", moved, moved) : Loc.T("restacked_none"));
+                // Ctrl+F5: only the category being browsed.
+                BoardNavigator.Category? only = Keys.Ctrl ? board.CurrentCategory : (BoardNavigator.Category?)null;
+                int moved = AutoStacker.RestackAll(board, only);
+                string where = only.HasValue && only.Value != BoardNavigator.Category.All ? BoardNavigator.CategoryName(only.Value) : "";
+                Speech.Say(TextCleaner.Join(where, moved > 0 ? Loc.N("restacked", moved, moved) : Loc.T("restacked_none")));
                 return true;
             }
             // Numeric keypad: 0 pause, 1 to 4 the speeds (0.5, 1, 2, 5).

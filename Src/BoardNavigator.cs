@@ -18,6 +18,7 @@ namespace StacklandAccessNS
         private static readonly Category[] Order = (Category[])Enum.GetValues(typeof(Category));
 
         private Category category = Category.All;
+        public Category CurrentCategory => category;
         private Draggable current;
         private int stackIndex;
         private int lastListIndex;

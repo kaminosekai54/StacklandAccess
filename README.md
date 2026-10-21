@@ -94,7 +94,8 @@ Press the letter again to go to the next stack of that category.
 - **Ctrl+Enter**: move the stack on the board with the arrows.
 - **I** while moving a stack: what is around it.
 - **Enter** or **Escape** while moving a stack: stop moving.
-- **F5**: regroup identical resources and food into full stacks.
+- **F5**: regroup all identical idle cards into full stacks. Cards used by a craft in progress, and cards that make something when stacked together, are left alone.
+- **Ctrl+F5**: same as F5, only for the category you are browsing.
 
 ### Board: shop
 

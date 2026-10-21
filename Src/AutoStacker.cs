@@ -87,46 +87,115 @@ namespace StacklandAccessNS
             return Eligible(root.CardData);
         }
 
+        /// <summary>Cards F5 may regroup: anything that piles up, except people, animals, buildings and places.</summary>
+        private static bool Restackable(CardData cd)
+        {
+            if (cd == null) return false;
+            if (cd is Harvestable || cd is Combatable || cd is FoodWarehouse || cd is Chest || cd is ResourceChest || cd is Blueprint || cd is Hotpot) return false;
+            if (cd.HasInventory) return false;
+            switch (cd.MyCardType)
+            {
+                case CardType.Resources:
+                case CardType.Food:
+                case CardType.Fish:
+                case CardType.Equipable:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static HashSet<string> selfRecipes;
+
+        /// <summary>Card ids that make something when stacked with themselves (left alone by F5).</summary>
+        private static bool MakesSomethingWithItself(string id)
+        {
+            if (selfRecipes == null)
+            {
+                selfRecipes = new HashSet<string>();
+                try
+                {
+                    foreach (var bp in WorldManager.instance.BlueprintPrefabs)
+                    {
+                        if (bp?.Subprints == null) continue;
+                        foreach (var sp in bp.Subprints)
+                        {
+                            var req = sp?.RequiredCards;
+                            if (req == null || req.Length < 2) continue;
+                            var first = req[0].Split('|');
+                            foreach (var candidate in first)
+                            {
+                                string c = candidate.Trim();
+                                if (c != "" && req.All(r => r.Split('|').Select(x => x.Trim()).Contains(c))) selfRecipes.Add(c);
+                            }
+                        }
+                    }
+                }
+                catch (System.Exception ex) { Log.Once(ex); }
+            }
+            return selfRecipes.Contains(id);
+        }
+
+        /// <summary>A card F5 may move: idle (its pile is not crafting, fighting or moving), not held.</summary>
+        private static bool Free(GameCard c, GameCard held)
+        {
+            if (c == null || c.Destroyed || c.CardData == null || !c.FaceUp) return false;
+            if (c.BeingDragged || c.IsEquipped || c.IsWorking || c == held) return false;
+            var root = c.GetRootCard();
+            if (root.BeingDragged || root.BounceTarget != null || root.Velocity.HasValue) return false;
+            if (held != null && root.GetAllCardsInStack().Contains(held)) return false;
+            if (Recipes.IsBusy(root) || root.GetCardInCombatInStack() != null) return false;
+            return Restackable(c.CardData) && !MakesSomethingWithItself(c.CardData.Id);
+        }
+
         /// <summary>
-        /// F5: regroups every idle resource and food of the same kind into full piles (30 cards),
-        /// manual piles included (they become managed piles again). Returns how many cards moved.
+        /// F5: regroups every idle identical card into full piles (taken out of mixed piles too).
+        /// Cards of a pile that is crafting are left alone, and so are cards that make something together.
+        /// With a category, only the cards of that category. Returns how many cards moved.
         /// </summary>
-        public static int RestackAll(BoardNavigator board)
+        public static int RestackAll(BoardNavigator board, BoardNavigator.Category? only = null)
         {
             var wm = WorldManager.instance;
             if (wm == null) return 0;
             SyncWithSave();
             var held = board.IsHolding ? board.Held : null;
             int moved = 0;
-            var roots = BoardNavigator.AllObjects().OfType<GameCard>().Where(r =>
+            var cards = BoardNavigator.AllObjects().OfType<GameCard>()
+                .SelectMany(r => r.GetAllCardsInStack())
+                .Where(c => Free(c, held) && (only == null || only == BoardNavigator.Category.All || BoardNavigator.CategoryOf(c) == only))
+                .ToList();
+            foreach (var group in cards.GroupBy(c => c.CardData.Id))
             {
-                if (r == null || r.Destroyed || r.Parent != null || !r.FaceUp || r.BeingDragged || r.Velocity.HasValue) return false;
-                if (r.GetCardWithStatusInStack() != null || r.TimerRunningInStack || r.GetCardInCombatInStack() != null) return false;
-                var stack = r.GetAllCardsInStack();
-                string id = r.CardData.Id;
-                return Eligible(r.CardData) && stack.All(c => c != null && c.CardData != null && c.CardData.Id == id && c != held && c.FaceUp);
-            }).ToList();
-            foreach (var group in roots.GroupBy(r => r.CardData.Id))
-            {
-                // Biggest piles receive the smaller ones.
-                var piles = group.OrderByDescending(r => r.GetChildCount()).ToList();
-                foreach (var c in piles.SelectMany(r => r.GetAllCardsInStack())) { string id = Id(c); if (id != null) manual.Remove(id); }
-                int t = 0;
-                for (int i = 1; i < piles.Count; i++)
+                var all = group.ToList();
+                if (all.Count < 2) continue;
+                // A pile made only of this card moves in one go; other cards are taken out one by one.
+                bool Pure(GameCard root) => root.GetAllCardsInStack().All(x => x.CardData != null && x.CardData.Id == group.Key && all.Contains(x));
+                var pureRoots = all.Select(c => c.GetRootCard()).Distinct().Where(Pure).OrderByDescending(r => r.GetChildCount()).ToList();
+                var singles = all.Where(c => !pureRoots.Contains(c.GetRootCard())).ToList();
+                foreach (var c in all) { string id = Id(c); if (id != null) manual.Remove(id); }
+
+                GameCard target = pureRoots.Count > 0 ? pureRoots[0] : null;
+                var pieces = pureRoots.Skip(1).ToList();
+                foreach (var single in singles)
                 {
-                    var other = piles[i];
-                    while (t < i)
+                    if (target == null)
                     {
-                        var leaf = piles[t].GetLeafCard();
-                        if (leaf.CardData.CanHaveCardOnTop(other.CardData))
-                        {
-                            moved += other.GetChildCount() + 1;
-                            Mover.MoveChain(other, leaf);
-                            break;
-                        }
-                        t++;
+                        Mover.Extract(single);
+                        target = single;
+                        moved++;
+                        continue;
                     }
-                    if (t >= i) t = i; // this pile could not go anywhere: it becomes a target itself
+                    Mover.Extract(single);
+                    pieces.Add(single);
+                }
+                foreach (var piece in pieces)
+                {
+                    if (piece == null || piece.Destroyed || piece == target) continue;
+                    int n = piece.GetAllCardsInStack().Count;
+                    if (Mover.MoveChain(piece, target)) { moved += singles.Contains(piece) ? 1 : n; continue; }
+                    // The target pile is full: this piece starts the next one.
+                    target = piece;
+                    if (singles.Contains(piece)) moved++;
                 }
             }
             Save();
