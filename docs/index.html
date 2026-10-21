@@ -32,10 +32,11 @@ button.plain { font: inherit; padding: 8px 12px; border: 1px solid var(--line); 
 .grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .card { --bg: var(--panel); --bd: var(--line); --ic: var(--ink); --tx: var(--ink);
         width: 100%; height: 100%; min-height: 200px; display: flex; flex-direction: column; align-items: stretch; gap: 6px;
-        text-align: center; font: inherit; color: var(--tx); background: var(--bg); border: 4px solid var(--bd);
-        border-radius: 12px; padding: 8px; cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,.25); transition: transform .08s; }
+        text-align: center; font: inherit; color: var(--tx); background: var(--bg); border: 5px solid var(--bd);
+        border-radius: 12px; padding: 0 0 8px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,.25); transition: transform .08s; }
 .card:hover { transform: translateY(-2px); }
-.card .n { font-weight: 700; line-height: 1.2; min-height: 2.4em; display: flex; align-items: center; justify-content: center; }
+.card .n { font-weight: 700; line-height: 1.2; min-height: 2.6em; display: flex; align-items: center; justify-content: center;
+           padding: 4px 6px; background: var(--bd); color: var(--tx2, var(--tx)); }
 .pic { display: block; flex: 1; min-height: 90px; width: 100%; height: 90px; object-fit: contain; }
 .pic.none { visibility: hidden; }
 .card .m { font-size: .85rem; opacity: .85; }
@@ -120,28 +121,82 @@ const sorted = arr => [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeC
 function inkFor(hex) {
   if (!hex) return "";
   const n = parseInt(hex.slice(1), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
-  return (0.299 * r + 0.587 * g + 0.114 * b) > 140 ? "#1d1611" : "#fff8ec";
+  // Text in palette colours too: Cacao Brown on light cards, Butter Cream on dark ones.
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 140 ? "#4B362D" : "#F2E6C9";
+}
+/**
+ * The game gives each kind of card a colour (resources, food, buildings, ideas…). Each of the game's colours is
+ * replaced by the closest one of a soft palette, each palette colour used by one game colour only, so
+ * kinds of cards stay as distinct as in the game.
+ */
+const PALETTE = ["#A8C7C5", "#C47F6B", "#A6B89A", "#E2C9A6", "#2F4B63", "#B19AB6", "#D4A037", "#A0907E",
+                 "#84B0AE", "#4B362D", "#3C3F44", "#5B2F42", "#6B7A4E", "#F2E6C9", "#E07A5F"];
+let paletteMap = new Map();
+function lab(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lin = v => { v /= 255; return v > 0.04045 ? Math.pow((v + 0.055) / 1.055, 2.4) : v / 12.92; };
+  const r = lin(n >> 16 & 255), g = lin(n >> 8 & 255), b = lin(n & 255);
+  const f = t => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116;
+  const x = f((r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047), y = f(r * 0.2126 + g * 0.7152 + b * 0.0722), z = f((r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883);
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+}
+const dist = (a, b) => { const p = lab(a), q = lab(b); return Math.hypot((p[0] - q[0]) * 0.6, (p[1] - q[1]) * 2.2, (p[2] - q[2]) * 2.2); };
+function buildPaletteMap(cards) {
+  const counts = new Map();
+  cards.forEach(c => { if (c.colors) counts.set(c.colors[0].toUpperCase(), (counts.get(c.colors[0].toUpperCase()) || 0) + 1); });
+  paletteMap = new Map();
+  const free = [...PALETTE];
+  [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a)).forEach(col => {
+    const pool = free.length ? free : PALETTE;
+    const best = pool.reduce((m, p) => dist(col, p) < dist(col, m) ? p : m, pool[0]);
+    paletteMap.set(col, best);
+    const i = free.indexOf(best); if (i >= 0) free.splice(i, 1);
+  });
+}
+const toPalette = hex => paletteMap.get((hex || "").toUpperCase()) || hex;
+/** Same hue, stronger colour: the game's pastel palette is hard to tell apart on a page. */
+function vivid(hex, sat, light) {
+  if (!hex) return hex;
+  let n = parseInt(hex.slice(1), 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h /= 6;
+  }
+  s = Math.min(1, s * sat); l = Math.max(0, Math.min(1, l + light));
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  const f = t => { t = (t + 1) % 1; return t < 1/6 ? p + (q - p) * 6 * t : t < 1/2 ? q : t < 2/3 ? p + (q - p) * (2/3 - t) * 6 : p; };
+  const hx = v => Math.round(v * 255).toString(16).padStart(2, "0");
+  return "#" + hx(f(h + 1/3)) + hx(f(h)) + hx(f(h - 1/3));
 }
 /** A card drawn like in the game: its colours, name, icon, and a line of numbers. */
 function cardFace(c, el) {
   if (c.colors) {
-    el.style.setProperty("--bg", c.colors[0]);
-    el.style.setProperty("--bd", c.colors[1]);
+    // Exactly the palette colour, for the card, its border and its name band.
+    const bg = toPalette(c.colors[0]), bd = bg;
+    el.style.setProperty("--bg", bg);
+    el.style.setProperty("--bd", bd);
     el.style.setProperty("--ic", c.colors[2]);
-    el.style.setProperty("--tx", inkFor(c.colors[0]));
+    el.style.setProperty("--tx", inkFor(bg));
+    el.style.setProperty("--tx2", inkFor(bd));
   }
   el.innerHTML = `<span class="n"></span><img class="pic" alt=""><span class="m"></span>`;
   el.querySelector(".n").textContent = c.name;
   const pic = el.querySelector(".pic");
   if (c.img) { pic.src = encodeURI(D.imgBase + c.img); pic.onerror = () => pic.classList.add("none"); } else pic.classList.add("none");
   const m = [];
-  if (!c.idea) m.push("💰 " + c.value);
+  if (c.isPack) m.push("💰 " + c.pack.cost);
+  else if (!c.idea) m.push("💰 " + c.value);
   if (c.food != null) m.push("🍖 " + c.food);
   if (c.hp != null) m.push("❤ " + c.hp, "⚔ " + c.atk);
   el.querySelector(".m").textContent = m.join("  ");
   el.querySelector(".m").setAttribute("aria-hidden", "true");
 }
 function infoLine(c) {
+  if (c.isPack) return [c.cat, `${T.web_pack_ev} ${c.pack.ev}`].join(" · ");
   const parts = [c.cat, c.type, c.upd];
   if (!c.idea) parts.push(T.web_value + " " + c.value);
   if (c.food != null) parts.push(T.web_food + " " + c.food);
@@ -151,7 +206,11 @@ function infoLine(c) {
 
 function start(data) {
   D = data; T = data.ui;
+  // Packs are shown as cards of the grid too.
+  D.packs.forEach(p => D.cards.push({ id: "pack:" + p.id, name: p.name, desc: "", cat: T.web_packs_cat, type: T.web_pack, upd: "",
+    value: p.cost, isPack: true, pack: p, img: p.img, found: true, colors: ["#F2E6C9", "#D4A037", "#000000"] }));
   document.documentElement.lang = data.code || "en";
+  buildPaletteMap(D.cards);
   byId = new Map(D.cards.map(c => [c.id, c]));
   producedBy = new Map(); usedIn = new Map(); inPacks = new Map(); droppedBy = new Map(); ofIdea = new Map();
   D.recipes.forEach(r => {
@@ -199,7 +258,18 @@ function recipeText(r) {
   const t = time(r.time);
   return `${r.idea ? r.idea + " : " : ""}${ing}${out}${t ? " (" + T.web_time + " " + t + ")" : ""}`;
 }
+const pct = v => v == null ? "" : (v < 1 ? "<1" : Math.round(v)) + " %";
+function packOdds(p, id) {
+  let best = null;
+  (p.bags || []).forEach(b => b.cards.forEach(x => { if (x.id === id && x.pct != null && (best == null || x.pct > best)) best = x.pct; }));
+  return best;
+}
+function packUnlock(p) {
+  if (p.intro || p.quests <= 0) return T.web_pack_unlock_start;
+  return fmt(T.web_pack_unlock_quests, p.quests);
+}
 function howShort(c) {
+  if (c.isPack) { const p = c.pack; return [p.cost + (p.currency ? " " + p.currency : ""), p.place, p.quests != null ? T.web_pack_unlock + " : " + packUnlock(p) : ""].filter(Boolean).join(". "); }
   if (c.idea) {
     const ir = ofIdea.get(c.id) || [];
     return ir.length ? ir.slice(0, 2).map(recipeText).join(" ; ") + (ir.length > 2 ? ` (+${ir.length - 2})` : "") : T.web_none;
@@ -322,15 +392,50 @@ function openCard(id, from) {
   right.appendChild(facts);
   if (c.group) fact(T.web_group + " : " + c.group);
   if (c.desc) { const p = document.createElement("p"); p.textContent = c.desc; right.appendChild(p); }
+  if (c.isPack) { packDetails(c.pack, body, facts, fact); finishDialog(h); return; }
   if (c.idea) section(body, T.web_idea_recipes, ofIdea.get(id) || [], recipeItem);
   section(body, T.web_how, producedBy.get(id) || [], recipeItem);
-  section(body, T.web_packs, inPacks.get(id) || [], (li, p) => li.textContent = p.name);
+  section(body, T.web_packs, inPacks.get(id) || [], (li, p) => {
+    li.append(cardLink("pack:" + p.id));
+    const o = packOdds(p, id);
+    li.append(` — ${p.cost} ${p.currency}${o != null ? ", " + pct(o) + " " + T.web_pack_per_draw : ""}`);
+  });
   section(body, T.web_from, droppedBy.get(id) || [], (li, d) => li.append(cardLink(d.id)));
   section(body, T.web_used, usedIn.get(id) || [], recipeItem);
   if (c.drops) section(body, T.web_drops, c.drops, (li, d) => li.append(cardLink(d)));
+  finishDialog(h);
+}
+function finishDialog(h) {
   const dlg = $("detail");
   if (!dlg.open) dlg.showModal();
   h.focus();
+}
+/** Pack details: price, where it is sold, how to unlock it, and every card it can give with its odds. */
+function packDetails(p, body, facts, fact) {
+  facts.innerHTML = "";
+  fact(`${T.web_pack_cost} : ${p.cost} ${p.currency}`);
+  fact(`${T.web_pack_place} : ${p.place}`);
+  fact(`${T.web_pack_unlock} : ${packUnlock(p)}`);
+  fact(`${T.web_pack_ev} : ${p.ev}`);
+  const h = document.createElement("h3"); h.textContent = T.web_pack_bags; body.appendChild(h);
+  (p.bags || []).forEach(b => {
+    const intro = document.createElement("p");
+    intro.textContent = fmt(T.web_pack_bag, b.count) + (b.cond ? " (" + b.cond + ")" : "")
+      + (b.kind === "SetPack" ? " — " + T.web_pack_fixed : b.kind === "Enemies" ? " — " + T.web_pack_strength : "");
+    body.appendChild(intro);
+    const ul = document.createElement("ul");
+    [...b.cards].sort((x, y) => (y.pct ?? -1) - (x.pct ?? -1)).forEach(x => {
+      const li = document.createElement("li");
+      if (x.enemy || !x.id) li.append(T.web_pack_enemy); else li.append(cardLink(x.id));
+      const notes = [];
+      if (x.pct != null) notes.push(pct(x.pct));
+      if (x.max != null) notes.push(fmt(T.web_pack_max, x.max));
+      if (x.needs) notes.push(fmt(T.web_pack_needs, nameOf(x.needs)));
+      if (notes.length) li.append(" — " + notes.join(", "));
+      ul.appendChild(li);
+    });
+    body.appendChild(ul);
+  });
 }
 $("detail").addEventListener("close", () => { if (returnFocus) returnFocus.focus(); });
 
