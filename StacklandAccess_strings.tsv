@@ -447,6 +447,8 @@ web_sort_name	Name	Nom	Naam	Name	Nome	Nombre	Nazwa	Nome	名前	이름	名称	名
 web_sort_value	Sell value	Prix de vente	Verkoopwaarde	Verkaufswert	Valore di vendita	Valor de venta	Wartość sprzedaży	Valor de venda	売値	판매 가격	售价	售價
 web_sort_food	Food	Nourriture	Voedsel	Nahrung	Cibo	Comida	Jedzenie	Comida	食料	식량	食物	食物
 web_sort_attack	Attack	Attaque	Aanval	Angriff	Attacco	Ataque	Atak	Ataque	攻撃	공격	攻击	攻擊
+web_sort_age	Tech age (oldest first)	Âge technologique (du plus ancien)	Technologisch tijdperk (oudste eerst)	Technologiestufe (älteste zuerst)	Età tecnologica (dalla più antica)	Era tecnológica (más antigua primero)	Epoka technologiczna (od najstarszej)	Era tecnológica (mais antiga primeiro)	技術の時代（古い順）	기술 시대 (오래된 순)	技术时代（从早到晚）	技術時代（由早到晚）
+web_age	Tech age	Âge technologique	Technologisch tijdperk	Technologiestufe	Età tecnologica	Era tecnológica	Epoka technologiczna	Era tecnológica	技術の時代	기술 시대	技术时代	技術時代
 web_language	Language	Langue	Taal	Sprache	Lingua	Idioma	Język	Idioma	言語	언어	语言	語言
 web_reset	Reset filters	Réinitialiser les filtres	Filters wissen	Filter zurücksetzen	Azzera filtri	Restablecer filtros	Wyczyść filtry	Limpar filtros	フィルターをリセット	필터 초기화	重置筛选	重設篩選
 web_loading	Loading…	Chargement…	Laden…	Wird geladen…	Caricamento…	Cargando…	Ładowanie…	Carregando…	読み込み中…	불러오는 중…	加载中…	載入中…

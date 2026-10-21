@@ -442,7 +442,7 @@ namespace StacklandAccessNS
                 "web_how", "web_used", "web_packs", "web_drops", "web_from", "web_none", "web_close", "web_value", "web_food",
                 "web_health", "web_attack", "web_defence", "web_category_label", "web_unknown", "web_rumor", "web_idea", "web_time",
                 "web_generated", "web_generated_site", "web_type", "web_content", "web_obtain", "web_obtain_recipe", "web_obtain_pack",
-                "web_obtain_drop", "web_obtain_none", "web_sort", "web_sort_name", "web_sort_value", "web_sort_food", "web_sort_attack",
+                "web_obtain_drop", "web_obtain_none", "web_sort", "web_sort_name", "web_sort_value", "web_sort_food", "web_sort_attack", "web_sort_age", "web_age",
                 "web_language", "web_reset", "web_loading", "web_group", "web_idea_recipes", "web_pack", "web_pack_cost", "web_pack_place", "web_pack_unlock", "web_pack_unlock_start", "web_pack_unlock_quests", "web_pack_ev", "web_pack_bags", "web_pack_bag", "web_pack_fixed", "web_pack_enemy", "web_pack_needs", "web_pack_max", "web_pack_intro", "web_pack_strength", "web_packs_cat", "web_pack_per_draw",
             };
             return keys.ToDictionary(k => k, k => Loc.T(k));

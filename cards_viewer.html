@@ -220,6 +220,7 @@ function start(data) {
   });
   D.packs.forEach(p => p.cards.forEach(id => push(inPacks, id, p)));
   D.cards.forEach(c => (c.drops || []).forEach(id => push(droppedBy, id, c)));
+  computeAges();
 
   document.title = T.web_title;
   $("title").textContent = T.web_title;
@@ -239,9 +240,42 @@ function start(data) {
   options($("type"), sorted(D.cards.map(c => c.type)), T.web_all);
   options($("upd"), sorted(D.cards.map(c => c.upd)), T.web_all);
   options($("obtain"), [["recipe", T.web_obtain_recipe], ["pack", T.web_obtain_pack], ["drop", T.web_obtain_drop], ["none", T.web_obtain_none]], T.web_all);
-  options($("sort"), [["name", T.web_sort_name], ["value", T.web_sort_value], ["food", T.web_sort_food], ["attack", T.web_sort_attack]], null);
+  options($("sort"), [["name", T.web_sort_name], ["value", T.web_sort_value], ["food", T.web_sort_food], ["attack", T.web_sort_attack], ["age", T.web_sort_age || "Tech age"]], null);
   render();
 }
+
+// Tech age: how many crafting steps a card is from the basic cards.
+// Cards from packs (or that nothing makes) are age 0, a recipe gives 1 + its most advanced ingredient
+// (taking the easiest card for each "any of" requirement and the easiest recipe), a drop-only card
+// takes the age of what drops it. Ideas take the age of what they make.
+let age = new Map();
+function computeAges() {
+  age = new Map();
+  const get = id => age.has(id) ? age.get(id) : Infinity;
+  D.cards.forEach(c => {
+    if (c.isPack || c.idea) return;
+    if ((inPacks.get(c.id) || []).length || (!(producedBy.get(c.id) || []).length && !(droppedBy.get(c.id) || []).length)) age.set(c.id, 0);
+  });
+  for (let pass = 0, changed = true; changed && pass < 100; pass++) {
+    changed = false;
+    const lower = (id, v) => { if (v < get(id)) { age.set(id, v); changed = true; } };
+    D.recipes.forEach(r => {
+      if (!r.output.length) return;
+      let v = 0;
+      for (const q of r.req) { const m = Math.min(...q.ids.map(get)); if (!(m < Infinity)) { v = Infinity; break; } v = Math.max(v, m); }
+      if (v < Infinity) r.output.forEach(id => lower(id, v + 1));
+    });
+    D.cards.forEach(c => (c.drops || []).forEach(id => { const v = get(c.id); if (v < Infinity) lower(id, v); }));
+  }
+  D.cards.forEach(c => {
+    if (c.isPack) age.set(c.id, 0);
+    else if (c.idea) {
+      const outs = (ofIdea.get(c.id) || []).flatMap(r => r.output).map(get);
+      age.set(c.id, outs.length ? Math.min(...outs) : Infinity);
+    }
+  });
+}
+const ageOf = c => age.has(c.id) ? age.get(c.id) : Infinity;
 
 function obtainKind(c) {
   const k = [];
@@ -293,6 +327,7 @@ const sorters = {
   value: (a, b) => b.value - a.value || a.name.localeCompare(b.name),
   food: (a, b) => (b.food ?? -1) - (a.food ?? -1) || a.name.localeCompare(b.name),
   attack: (a, b) => (b.atk ?? -1) - (a.atk ?? -1) || a.name.localeCompare(b.name),
+  age: (a, b) => (ageOf(a) - ageOf(b) || 0) || (!!a.idea - !!b.idea) || a.name.localeCompare(b.name),
 };
 
 function render() {
@@ -388,6 +423,7 @@ function openCard(id, from) {
   fact(T.web_content + " : " + c.upd);
   fact(T.web_value + " : " + c.value);
   if (c.food != null) fact(T.web_food + " : " + c.food);
+  if (!c.isPack && ageOf(c) < Infinity) fact((T.web_age || "Tech age") + " : " + ageOf(c));
   if (c.hp != null) { fact(T.web_health + " : " + c.hp); fact(T.web_attack + " : " + c.atk); fact(T.web_defence + " : " + c.def); }
   right.appendChild(facts);
   if (c.group) fact(T.web_group + " : " + c.group);
