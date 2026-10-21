@@ -160,9 +160,26 @@ namespace StacklandAccessNS
             return p != null ? new[] { Hex(p.Color), Hex(p.Color2), Hex(p.Icon) } : null;
         }
 
+        /// <summary>Icon shown on the card: its own, or for ideas the idea icon of its content (like the game).</summary>
+        private static Sprite IconOf(CardData cd)
+        {
+            if (cd.Icon != null) return cd.Icon;
+            var sm = SpriteManager.instance;
+            if (sm == null || cd.MyCardType != CardType.Ideas) return null;
+            switch (cd.CardUpdateType)
+            {
+                case CardUpdateType.Island: return sm.IslandIdeaIcon;
+                case CardUpdateType.Spirit: return sm.SpiritIdeaIcon;
+                case CardUpdateType.Cities: return sm.CitiesIdeaIcon;
+                default: return sm.IdeaIcon;
+            }
+        }
+
         private static string Icon(CardImages images, Sprite icon, CardData cd, string name)
         {
             if (images == null) return null;
+            icon = icon ?? IconOf(cd);
+            if (icon == null) return null;
             var p = Palette(cd);
             return images.Save(icon, p != null ? name + "_" + ColorUtility.ToHtmlStringRGB(p.Icon) : name, p?.Icon);
         }
@@ -197,7 +214,7 @@ namespace StacklandAccessNS
                         idea = true,
                         hidden = bpCard.HideFromIdeasTab,
                         group = Term("ideagroup_" + bpCard.BlueprintGroup.ToString().ToLowerInvariant(), bpCard.BlueprintGroup.ToString()),
-                        img = Icon(images, bpCard.Icon, bpCard, bpCard.Id),
+                        img = Icon(images, IconOf(bpCard), bpCard, "idea_" + bpCard.CardUpdateType),
                         colors = Colors(bpCard),
                     });
                     continue;

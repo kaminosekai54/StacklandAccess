@@ -29,20 +29,21 @@ input[type=search], select { font: inherit; padding: 8px 10px; border: 1px solid
 button.plain { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); cursor: pointer; }
 #hint { color: var(--muted); font-size: .9rem; margin: 0; }
 #count { font-weight: 600; margin: 8px 0; }
-.grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .card { --bg: var(--panel); --bd: var(--line); --ic: var(--ink); --tx: var(--ink);
-        width: 100%; height: 100%; min-height: 270px; display: flex; flex-direction: column; align-items: stretch; gap: 6px;
-        text-align: center; font: inherit; color: var(--tx); background: var(--bg); border: 4px solid var(--bd);
-        border-radius: 12px; padding: 8px; cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,.25); transition: transform .08s; }
+        width: 100%; height: 100%; min-height: 200px; display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+        text-align: center; font: inherit; color: var(--tx); background: var(--bg); border: 5px solid var(--bd);
+        border-radius: 12px; padding: 0 0 8px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,.25); transition: transform .08s; }
 .card:hover { transform: translateY(-2px); }
-.card .n { font-weight: 700; line-height: 1.2; min-height: 2.4em; display: flex; align-items: center; justify-content: center; }
-.pic { display: block; flex: 1; min-height: 150px; width: 100%; height: 150px; object-fit: contain; padding: 4px 8px; }
+.card .n { font-weight: 700; line-height: 1.2; min-height: 2.6em; display: flex; align-items: center; justify-content: center;
+           padding: 4px 6px; background: var(--bd); color: var(--tx2, var(--tx)); }
+.pic { display: block; flex: 1; min-height: 90px; width: 100%; height: 90px; object-fit: contain; }
 .pic.none { visibility: hidden; }
 .card .m { font-size: .85rem; opacity: .85; }
 .card.unknown { filter: grayscale(.7); opacity: .8; }
 .card.unknown .n { font-style: italic; }
 .hero { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 4px 0 8px; }
-.hero .card { width: 200px; min-height: 280px; flex: none; cursor: default; }
+.hero .card { width: 150px; min-height: 210px; flex: none; cursor: default; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 #tip { position: fixed; z-index: 10; max-width: 360px; background: var(--ink); color: var(--bg); padding: 8px 10px; border-radius: 8px;
@@ -122,13 +123,33 @@ function inkFor(hex) {
   const n = parseInt(hex.slice(1), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
   return (0.299 * r + 0.587 * g + 0.114 * b) > 140 ? "#1d1611" : "#fff8ec";
 }
+/** Same hue, stronger colour: the game's pastel palette is hard to tell apart on a page. */
+function vivid(hex, sat, light) {
+  if (!hex) return hex;
+  let n = parseInt(hex.slice(1), 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h /= 6;
+  }
+  s = Math.min(1, s * sat); l = Math.max(0, Math.min(1, l + light));
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  const f = t => { t = (t + 1) % 1; return t < 1/6 ? p + (q - p) * 6 * t : t < 1/2 ? q : t < 2/3 ? p + (q - p) * (2/3 - t) * 6 : p; };
+  const hx = v => Math.round(v * 255).toString(16).padStart(2, "0");
+  return "#" + hx(f(h + 1/3)) + hx(f(h)) + hx(f(h - 1/3));
+}
 /** A card drawn like in the game: its colours, name, icon, and a line of numbers. */
 function cardFace(c, el) {
   if (c.colors) {
-    el.style.setProperty("--bg", c.colors[0]);
-    el.style.setProperty("--bd", c.colors[1]);
+    const bg = vivid(c.colors[0], 1.5, -0.06), bd = vivid(c.colors[1], 1.5, -0.12);
+    el.style.setProperty("--bg", bg);
+    el.style.setProperty("--bd", bd);
     el.style.setProperty("--ic", c.colors[2]);
-    el.style.setProperty("--tx", inkFor(c.colors[0]));
+    el.style.setProperty("--tx", inkFor(bg));
+    el.style.setProperty("--tx2", inkFor(bd));
   }
   el.innerHTML = `<span class="n"></span><img class="pic" alt=""><span class="m"></span>`;
   el.querySelector(".n").textContent = c.name;
