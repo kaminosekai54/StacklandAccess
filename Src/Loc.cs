@@ -379,6 +379,11 @@ namespace StacklandAccessNS
             ["prod_plant"] = "{0}: plant {1}, gives {2} in {3}",
             ["prod_put"] = "{0}: put {1} on it",
             ["prod_count"] = "{0} available",
+            ["list_all_ideas"] = "All ideas and rumors",
+            ["no_ideas"] = "No idea found yet.",
+            ["rumor"] = "rumor",
+            ["new_city_gate"] = "The Industrial Revolution card appeared: {0}. Put a villager on it to go to the city. Shortcut U.",
+            ["city_gate_info"] = "put a villager on it: after 10 seconds you can go to the city",
             ["help_board"] = "Board keys",
             ["help_lines"] =
                 "Left and right arrows: previous or next stack in the category.|" +
@@ -575,6 +580,11 @@ namespace StacklandAccessNS
             ["prod_plant"] = "{0} : planter {1}, donne {2} en {3}",
             ["prod_put"] = "{0} : poser {1} dessus",
             ["prod_count"] = "{0} disponibles",
+            ["list_all_ideas"] = "Toutes les idées et rumeurs",
+            ["no_ideas"] = "Aucune idée trouvée pour l'instant.",
+            ["rumor"] = "rumeur",
+            ["new_city_gate"] = "La carte Révolution industrielle est apparue : {0}. Posez un villageois dessus pour aller en ville. Raccourci U.",
+            ["city_gate_info"] = "posez un villageois dessus : après 10 secondes vous pourrez aller en ville",
             ["help_board"] = "Touches du plateau",
             ["help_lines"] =
                 "Flèches gauche et droite : pile précédente ou suivante dans la catégorie.|" +

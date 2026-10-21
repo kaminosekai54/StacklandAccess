@@ -110,7 +110,7 @@ namespace StacklandAccessNS
             if (!(d is GameCard gc)) return Category.Shop;
             var cd = gc.CardData;
             if (IsMerchant(cd)) return Category.Shop;
-            if (cd is Portal) return Category.Locations;
+            if (cd is Portal || cd is IndustrialRevolution || cd.Id == "event_industrial_revolution") return Category.Locations;
             if (cd is Enemy) return Category.Enemies;
             if (cd is Mob) return Category.Animals;
             // Production buildings, whatever card colour the game gives them.

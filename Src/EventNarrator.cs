@@ -206,6 +206,7 @@ namespace StacklandAccessNS
                 if (c == null || c.Destroyed || c.CardData == null) continue;
                 string n = CardInfo.Name(c);
                 if (c.CardData is StrangePortal) Announce(Loc.T("new_portal", n), true);
+                else if (c.CardData is IndustrialRevolution || c.CardData.Id == "event_industrial_revolution") Announce(Loc.T("new_city_gate", n), true);
                 else if (c.CardData is Enemy) enemies.Add(n);
                 else if (c.CardData.MyCardType == CardType.Ideas || c.CardData.MyCardType == CardType.Rumors) ideas.Add(n);
                 else others.Add(n);

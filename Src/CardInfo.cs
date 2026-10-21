@@ -90,6 +90,8 @@ namespace StacklandAccessNS
                     return TextCleaner.Join(StackLine(gc), Loc.T("merchant_given", m.AmountGiven, m.AmountNeeded));
                 case GameCard gc when gc.CardData is StrangePortal sp:
                     return TextCleaner.Join(StackLine(gc), Loc.T("portal_info", sp.SpawnsRemaining));
+                case GameCard gc when gc.CardData is IndustrialRevolution || gc.CardData.Id == "event_industrial_revolution":
+                    return TextCleaner.Join(StackLine(gc), Loc.T("city_gate_info"));
                 case GameCard gc: return StackLine(gc);
                 case Boosterpack bp:
                     {

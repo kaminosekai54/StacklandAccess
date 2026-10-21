@@ -19,6 +19,9 @@ Compatibility with the [Stacklands Together](https://steamcommunity.com/sharedfi
 - Recipes: each card is checked by the game's own rules before it is put on the pile, also in single player.
 - Production buildings page (L): gardens, farms and greenhouses (one line per plant you can grow, with the harvest and the time), fish traps, animal pens, breeding pens and hotpots. Enter puts the cards on the building.
 - F5 now regroups every identical idle card (resources, food, fish, equipment), also out of mixed piles; cards of a craft in progress and cards that make something together are left alone. Ctrl+F5 does the same in the current category only.
+- Production buildings page (L) also lists the buildings with a single use (university, academy, laboratory…: what they accept from your board) and every recipe that uses a building on your board (temple, smithy, lighthouse…), possible ones first.
+- L has an "All ideas and rumors" page again, and rumors you found are listed in their group (I reads them).
+- The Industrial Revolution card (Cities DLC) is announced, listed in Locations (U), and its line explains to put a villager on it to go to the city.
 - Gardens, farms, greenhouses, mills, ovens, smelters and other production buildings are always in the Buildings category (H).
 
 ## 0.5.0 – First public release

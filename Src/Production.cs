@@ -42,7 +42,9 @@ namespace StacklandAccessNS
         }
 
         /// <summary>Idle cards that the building accepts (not used by another craft, not already on it).</summary>
-        private static List<GameCard> Inputs(GameCard building)
+        private static List<GameCard> Inputs(GameCard building) => Inputs(building, false);
+
+        private static List<GameCard> Inputs(GameCard building, bool people)
         {
             var list = new List<GameCard>();
             foreach (var root in BoardNavigator.AllObjects().OfType<GameCard>())
@@ -52,7 +54,7 @@ namespace StacklandAccessNS
                 foreach (var c in root.GetAllCardsInStack())
                 {
                     if (c == null || c.Destroyed || !c.FaceUp || c.IsEquipped || c.IsWorking) continue;
-                    if (c.CardData.MyCardType == CardType.Humans || c.CardData is Blueprint) continue;
+                    if ((!people && c.CardData.MyCardType == CardType.Humans) || c.CardData is Blueprint) continue;
                     if (!c.CanBeDragged() || c.BeingDragged) continue;
                     if (Accepts(building.CardData, c.CardData)) list.Add(c);
                 }
@@ -86,6 +88,8 @@ namespace StacklandAccessNS
                 });
             }
             entries.AddRange(OtherEntries(board));
+            entries.AddRange(SingleUseEntries(board));
+            entries.AddRange(Recipes.BuildingRecipes(board));
             return entries;
         }
 
@@ -177,8 +181,54 @@ namespace StacklandAccessNS
             return entries;
         }
 
+        /// <summary>True when the building has its own rule for the cards it takes (university, academy, laboratory...).</summary>
+        private static bool HasOwnRule(CardData d)
+        {
+            if (d.Id == "laboratory") return true;
+            var m = d.GetType().GetMethod("CanHaveCard", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+            var t = m?.DeclaringType;
+            return t != null && t != typeof(CardData) && t != typeof(Building) && t != typeof(Landmark);
+        }
+
+        /// <summary>
+        /// Other buildings with a single use: what they accept from the board, one line per kind of card
+        /// (people one at a time, other cards as many as the building takes).
+        /// </summary>
+        private static List<ListBrowser.Entry> SingleUseEntries(BoardNavigator board)
+        {
+            var entries = new List<ListBrowser.Entry>();
+            foreach (var card in BoardNavigator.AllObjects().OfType<GameCard>().SelectMany(r => r.GetAllCardsInStack()))
+            {
+                if (card == null || card.Destroyed || card.CardData == null) continue;
+                var d = card.CardData;
+                if (BoardNavigator.CategoryOf(card) != BoardNavigator.Category.Buildings) continue;
+                if (Kinds.Any(k => k.Type.IsInstanceOfType(d)) || IsGrowBuilding(d) || FeedAmount(d) >= 0) continue;
+                if (!HasOwnRule(d)) continue;
+                var building = card;
+                string status = CardInfo.StackStatus(building.GetRootCard());
+                var inputs = Inputs(building, true);
+                if (inputs.Count == 0)
+                {
+                    entries.Add(new ListBrowser.Entry(TextCleaner.Join(CardInfo.Name(building), Loc.T("prod_none"), status)) { Info = () => CardInfo.Details(building) });
+                    continue;
+                }
+                foreach (var group in inputs.GroupBy(c => c.CardData.Id))
+                {
+                    string id = group.Key;
+                    int amount = group.First().CardData.MyCardType == CardType.Humans ? 1 : 0;
+                    string title = TextCleaner.Join(Loc.T("prod_put", CardInfo.Name(building), CardInfo.Name(group.First())), Loc.T("prod_count", group.Count()), status);
+                    entries.Add(new ListBrowser.Entry(title)
+                    {
+                        OnActivate = () => Put(building, id, amount, board, true),
+                        Info = () => CardInfo.Details(building),
+                    });
+                }
+            }
+            return entries;
+        }
+
         /// <summary>Puts cards of one kind on the building: a given number, or as many as it accepts (amount 0).</summary>
-        private static void Put(GameCard building, string id, int amount, BoardNavigator board)
+        private static void Put(GameCard building, string id, int amount, BoardNavigator board, bool people = false)
         {
             var wm = WorldManager.instance;
             if (wm == null || !wm.CanInteract || building == null || building.Destroyed) { Speech.Say(Loc.T("not_now")); return; }
@@ -191,8 +241,8 @@ namespace StacklandAccessNS
                 Speech.Say(Loc.T("target_busy", CardInfo.Name(building)));
                 return;
             }
-            var cards = Inputs(building).Where(c => c.CardData.Id == id).ToList();
-            int max = amount > 0 ? amount : MaxFeed;
+            var cards = Inputs(building, people).Where(c => c.CardData.Id == id).ToList();
+            int max = amount > 0 ? amount : 30;
             if (cards.Count == 0 || (amount > 1 && cards.Count < amount))
             {
                 Speech.Say(Loc.T("prod_not_enough", CardInfo.Name(building), Mathf.Max(1, amount)));

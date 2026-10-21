@@ -67,7 +67,7 @@ namespace StacklandAccessNS
         }
 
         /// <summary>Cards that can be used for a recipe.</summary>
-        private static List<GameCard> Pool()
+        internal static List<GameCard> Pool()
         {
             var pool = new List<GameCard>();
             foreach (var root in BoardNavigator.AllObjects().OfType<GameCard>())
@@ -101,7 +101,7 @@ namespace StacklandAccessNS
             return cost;
         }
 
-        private static Plan Assign(Blueprint bp, Subprint sp, List<GameCard> pool)
+        internal static Plan Assign(Blueprint bp, Subprint sp, List<GameCard> pool)
         {
             var plan = new Plan { Blueprint = bp, Subprint = sp };
             var used = new HashSet<GameCard>();
@@ -156,6 +156,72 @@ namespace StacklandAccessNS
             return best;
         }
 
+        /// <summary>Rumors already found (same filter as the game's ideas tab: main game or Cities).</summary>
+        public static List<Rumor> KnownRumors()
+        {
+            var wm = WorldManager.instance;
+            var list = new List<Rumor>();
+            if (wm == null) return list;
+            bool cities = wm.CurrentBoard != null && wm.CurrentBoard.Id == "cities";
+            foreach (var r in wm.CardDataPrefabs.OfType<Rumor>())
+            {
+                if (r == null || !wm.HasFoundCard(r.Id)) continue;
+                var c = wm.GameDataLoader.GetCardFromId(r.Id);
+                if (c == null || (c.CardUpdateType == CardUpdateType.Cities) != cities) continue;
+                list.Add(r);
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Recipes that use a building on the board (temple, smithy, lighthouse...): one line per recipe,
+        /// for the production buildings page. Growth (garden, farm...) has its own lines there.
+        /// </summary>
+        public static List<ListBrowser.Entry> BuildingRecipes(BoardNavigator board)
+        {
+            var result = new List<(string building, bool ok, string text, ListBrowser.Entry entry)>();
+            var wm = WorldManager.instance;
+            if (wm == null) return new List<ListBrowser.Entry>();
+            var buildings = BoardNavigator.AllObjects().OfType<GameCard>().SelectMany(r => r.GetAllCardsInStack())
+                .Where(c => c != null && !c.Destroyed && c.CardData != null && BoardNavigator.CategoryOf(c) == BoardNavigator.Category.Buildings)
+                .GroupBy(c => c.CardData.Id).ToDictionary(g => g.Key, g => g.First());
+            if (buildings.Count == 0) return new List<ListBrowser.Entry>();
+            var pool = Pool();
+            bool cities = wm.CurrentBoard != null && wm.CurrentBoard.Id == "cities";
+            foreach (var bp in wm.BlueprintPrefabs)
+            {
+                if (bp == null || bp.Subprints == null || bp is BlueprintGrowth) continue;
+                var data = wm.GameDataLoader.GetCardFromId(bp.Id);
+                if (data == null || (data.CardUpdateType == CardUpdateType.Cities) != cities) continue;
+                foreach (var sp in bp.Subprints)
+                {
+                    if (sp?.RequiredCards == null) continue;
+                    string buildingId = null;
+                    foreach (var req in sp.RequiredCards)
+                    {
+                        buildingId = AllowedIds(sp, req).FirstOrDefault(id => buildings.ContainsKey(id));
+                        if (buildingId != null) break;
+                    }
+                    if (buildingId == null) continue;
+                    Plan plan = null;
+                    try { plan = Assign(bp, sp, pool); } catch (System.Exception ex) { Log.Once(ex); }
+                    if (plan == null) continue;
+                    string bname = CardInfo.Name(buildings[buildingId]);
+                    string idea = TextCleaner.Clean(bp.KnowledgeName);
+                    string status = plan.Possible ? Loc.T("recipe_possible") : Loc.T("recipe_missing", string.Join(", ", plan.Missing));
+                    string title = TextCleaner.Join(bname + " : " + idea + " : " + Ingredients(sp), Duration(sp), status);
+                    var p = plan;
+                    var b = bp;
+                    var entry = new ListBrowser.Entry(title) { Info = () => ResultInfo(b) };
+                    if (p.Possible) entry.OnActivate = () => Build(p, board);
+                    result.Add((bname, p.Possible, title, entry));
+                }
+            }
+            var cmp = System.StringComparer.CurrentCultureIgnoreCase;
+            return result.GroupBy(x => x.text).Select(g => g.First())
+                .OrderBy(x => x.building, cmp).ThenBy(x => x.ok ? 0 : 1).ThenBy(x => x.text, cmp).Select(x => x.entry).ToList();
+        }
+
         public static List<Blueprint> KnownBlueprints()
         {
             var wm = WorldManager.instance;
@@ -173,12 +239,12 @@ namespace StacklandAccessNS
             return list.OrderBy(b => TextCleaner.Clean(b.KnowledgeName)).ToList();
         }
 
-        private static string Ingredients(Subprint sp)
+        internal static string Ingredients(Subprint sp)
         {
             try { return TextCleaner.Clean(sp.DefaultText()).Replace(". ", ", "); } catch (System.Exception ex) { Log.Once(ex); return ""; }
         }
 
-        private static string Duration(Subprint sp) => sp.Time > 0 ? CardInfo.Seconds(sp.Time) : "";
+        internal static string Duration(Subprint sp) => sp.Time > 0 ? CardInfo.Seconds(sp.Time) : "";
 
         private static string ResultInfo(Blueprint bp)
         {
@@ -234,11 +300,25 @@ namespace StacklandAccessNS
                 if (!groups.TryGetValue(bp.BlueprintGroup, out var list)) groups[bp.BlueprintGroup] = list = new List<(bool, string, ListBrowser.Entry)>();
                 list.Add((ok, name, entry));
             }
+            // Rumors found so far: in their group and in the "all" page, read with I.
+            foreach (var r in KnownRumors())
+            {
+                var rumor = r;
+                string name = TextCleaner.Clean(rumor.KnowledgeName);
+                var entry = new ListBrowser.Entry(TextCleaner.Join(name, Loc.T("rumor")))
+                {
+                    Info = () => TextCleaner.Join(TextCleaner.Clean(rumor.KnowledgeName), TextCleaner.Clean(rumor.KnowledgeText)),
+                };
+                if (!groups.TryGetValue(rumor.Group, out var list)) groups[rumor.Group] = list = new List<(bool, string, ListBrowser.Entry)>();
+                list.Add((false, name, entry));
+            }
             var cmp = System.StringComparer.CurrentCultureIgnoreCase;
+            var everything = groups.Values.SelectMany(x => x).OrderBy(x => x.ok ? 0 : 1).ThenBy(x => x.name, cmp).Select(x => x.entry).ToList();
             var pages = new List<ListBrowser.Page>
             {
                 new ListBrowser.Page(Loc.T("list_possible"), possible.OrderBy(x => x.name, cmp).Select(x => x.entry).ToList(), Loc.T("no_possible")),
                 new ListBrowser.Page(Loc.T("list_production"), Production.Entries(board), Loc.T("no_production")),
+                new ListBrowser.Page(Loc.T("list_all_ideas"), everything, Loc.T("no_ideas")),
             };
             foreach (var g in groups.Keys.OrderBy(k => (int)k))
             {
@@ -250,7 +330,7 @@ namespace StacklandAccessNS
         }
 
         /// <summary>Takes the cards of the plan out of their stacks and stacks them together.</summary>
-        public static void Build(Plan plan, BoardNavigator board)
+        internal static void Build(Plan plan, BoardNavigator board)
         {
             var wm = WorldManager.instance;
             if (wm == null || !wm.CanInteract) { Speech.Say(Loc.T("not_now")); return; }
