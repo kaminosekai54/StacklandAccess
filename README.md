@@ -6,6 +6,7 @@ You play with the keyboard only, and everything is spoken by your screen reader 
 *[Version française](README.fr.md)*
 
 - **Steam Workshop:** https://steamcommunity.com/sharedfiles/filedetails/?id=3813252816
+- **Card list website:** https://kaminosekai54.github.io/StacklandAccess/ (every card, recipe, pack and drop, searchable, screen reader friendly)
 - **Current version:** 0.6.0 (see [CHANGELOG.md](CHANGELOG.md))
 
 ## Project status
@@ -150,7 +151,11 @@ Press **F6** (in a menu or on the board) to create `Stacklands - cards.html` in 
 - Enter or a click opens all its details: category, sell value, food, combat, description, how to make it, packs, where it drops, the recipes that use it, what it gives;
 - "Only cards I have found" (checked by default) hides the cards and ideas you have not discovered yet.
 
+- filters: category, card type, content (base game, island, dark forest, spirits, Cities…), how to get it (recipe, pack, drop); sort by name, sell value, food or attack.
+
 Press F6 again after discovering new cards to update it.
+
+**Shift+F6** makes the same page as a public website, in every language of the game and without your save data, in `Documents\Stacklands cards site`. `tools\update-site.ps1` copies it into `docs/` for GitHub Pages.
 
 ## Multiplayer
 

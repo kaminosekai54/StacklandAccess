@@ -20,7 +20,14 @@ L'envoi se fait **depuis le jeu**, qui envoie tout le contenu du dossier install
 
 Le dossier ne doit contenir que les fichiers du mod (pas de `bin`, `obj`, ni code décompilé) : c'est le cas du dossier installé.
 
-## 3. GitHub
+## 3. Site de la liste des cartes (GitHub Pages)
+
+1. Dans le jeu, appuyer sur **Maj+F6** : le site est créé dans `Documents\Stacklands cards site` (toutes les langues).
+2. `powershell -ExecutionPolicy Bypass -File tools\update-site.ps1` : copie le site dans `docs/`.
+3. Commit et push, puis sur GitHub : Settings > Pages > Branch `main`, dossier `/docs`.
+4. Le site est en ligne à `https://<compte>.github.io/StacklandAccess/`. Refaire 1 à 3 après une mise à jour du jeu.
+
+## 4. GitHub
 
 Première fois (le dépôt peut être public : le code décompilé est exclu par `.gitignore`) :
 

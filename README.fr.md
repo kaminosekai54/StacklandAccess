@@ -6,6 +6,7 @@ On joue uniquement au clavier, et tout est lu par votre lecteur d'écran (NVDA, 
 *[English version](README.md)*
 
 - **Steam Workshop :** https://steamcommunity.com/sharedfiles/filedetails/?id=3813252816
+- **Site de la liste des cartes :** https://kaminosekai54.github.io/StacklandAccess/ (toutes les cartes, recettes, paquets et butins, avec recherche, adapté aux lecteurs d'écran)
 - **Version actuelle :** 0.6.0 (voir [CHANGELOG.md](CHANGELOG.md))
 
 ## État du projet
@@ -150,7 +151,11 @@ Appuyez sur **F6** (dans un menu ou sur le plateau) pour créer `Stacklands - ca
 - Entrée ou un clic ouvre toutes ses informations : catégorie, prix de vente, nourriture, combat, description, comment la fabriquer, paquets, où on la trouve, recettes qui l'utilisent, ce qu'elle donne ;
 - « Seulement les cartes découvertes » (coché par défaut) cache les cartes et idées que vous n'avez pas encore trouvées.
 
+- des filtres : catégorie, type de carte, contenu (jeu de base, île, forêt sombre, esprits, Cités…), obtention (recette, paquet, butin) ; tri par nom, prix de vente, nourriture ou attaque.
+
 Appuyez de nouveau sur F6 après de nouvelles découvertes pour la mettre à jour.
+
+**Maj+F6** fabrique la même page en site public, dans toutes les langues du jeu et sans données de votre partie, dans `Documents\Stacklands cards site`. `tools\update-site.ps1` la copie dans `docs/` pour GitHub Pages.
 
 ## Multijoueur
 

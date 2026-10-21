@@ -121,7 +121,8 @@ namespace StacklandAccessNS
 
             if (Keys.Down(Key.F6) && !menu.IsEditing)
             {
-                CardExport.Run();
+                // Shift+F6: public website, all languages.
+                CardExport.Run(site: Keys.Shift);
                 return;
             }
             if (Keys.Down(Key.F1) && !menu.IsEditing)

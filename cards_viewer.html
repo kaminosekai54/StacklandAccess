@@ -1,9 +1,10 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stacklands</title>
+<meta name="description" content="Every Stacklands card with recipes, packs and drops: searchable and screen reader friendly.">
+<title>Stacklands cards</title>
 <style>
 :root {
   --bg: #f6f1e7; --panel: #fffaf0; --ink: #2b2118; --muted: #6b5d4f; --line: #d9ccb7;
@@ -14,27 +15,30 @@
           --accent: #f0a35e; --accent-ink: #1d1915; --focus: #8ab4ff; --chip: #3a3029; }
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, "Segoe UI", sans-serif; }
 header, main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+header { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: end; justify-content: space-between; }
 h1 { margin: 0 0 4px; font-size: 1.6rem; }
 .sub { color: var(--muted); margin: 0; }
-.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: end; margin: 12px 0; }
-.controls label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
-.controls label.check { flex-direction: row; align-items: center; font-weight: 400; }
-input[type=search], select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); min-width: 220px; }
-input[type=search] { min-width: min(420px, 100%); }
+.controls { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px 16px; align-items: end; margin: 12px 0; }
+.controls .wide { grid-column: 1 / -1; }
+label.f { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
+label.check { display: flex; align-items: center; gap: 8px; }
+input[type=search], select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); width: 100%; }
+button.plain { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); cursor: pointer; }
 #hint { color: var(--muted); font-size: .9rem; margin: 0; }
 #count { font-weight: 600; margin: 8px 0; }
 .grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
 .card { width: 100%; height: 100%; text-align: left; font: inherit; color: var(--ink); background: var(--panel);
-        border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; position: relative; }
+        border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; }
 .card:hover { border-color: var(--accent); }
 .card .n { display: block; font-weight: 700; }
 .card .c { display: block; color: var(--muted); font-size: .85rem; }
 .card.unknown .n { font-style: italic; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-#tip { position: fixed; z-index: 10; max-width: 340px; background: var(--ink); color: var(--bg); padding: 8px 10px; border-radius: 8px;
+#tip { position: fixed; z-index: 10; max-width: 360px; background: var(--ink); color: var(--bg); padding: 8px 10px; border-radius: 8px;
        font-size: .9rem; pointer-events: none; display: none; }
 dialog { border: 1px solid var(--line); border-radius: 12px; padding: 0; width: min(760px, calc(100% - 32px)); max-height: calc(100% - 32px);
          background: var(--panel); color: var(--ink); }
@@ -44,8 +48,8 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 .dlg h3 { margin: 18px 0 6px; font-size: 1.05rem; }
 .dlg ul { margin: 0; padding-left: 20px; }
 .dlg li { margin: 4px 0; }
-.facts { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; list-style: none; margin: 8px 0; }
-.facts li { background: var(--chip); border-radius: 999px; padding: 2px 10px; margin: 0; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 8px 0; padding: 0 !important; }
+.facts li { background: var(--chip); border-radius: 999px; padding: 2px 10px; margin: 0 !important; }
 .link { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
 .close { float: right; font: inherit; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
 .muted { color: var(--muted); }
@@ -53,21 +57,27 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 </head>
 <body>
 <header>
-  <h1 id="title">Stacklands</h1>
-  <p class="sub" id="generated"></p>
+  <div>
+    <h1 id="title">Stacklands</h1>
+    <p class="sub" id="generated"></p>
+  </div>
+  <label class="f" id="langBox" hidden><span id="l-lang">Language</span><select id="lang"></select></label>
 </header>
 <main>
   <div class="controls" role="search">
-    <label for="q"><span id="l-search"></span>
+    <label class="f wide" for="q"><span id="l-search"></span>
       <input id="q" type="search" autocomplete="off" aria-describedby="hint">
     </label>
-    <label for="cat"><span id="l-cat"></span>
-      <select id="cat"></select>
-    </label>
-    <label class="check"><input id="onlyFound" type="checkbox" checked> <span id="l-found"></span></label>
+    <label class="f" for="cat"><span id="l-cat"></span><select id="cat"></select></label>
+    <label class="f" for="type"><span id="l-type"></span><select id="type"></select></label>
+    <label class="f" for="upd"><span id="l-upd"></span><select id="upd"></select></label>
+    <label class="f" for="obtain"><span id="l-obtain"></span><select id="obtain"></select></label>
+    <label class="f" for="sort"><span id="l-sort"></span><select id="sort"></select></label>
+    <label class="check" id="foundBox" hidden><input id="onlyFound" type="checkbox" checked> <span id="l-found"></span></label>
+    <button class="plain" type="button" id="reset"></button>
   </div>
   <p id="hint"></p>
-  <p id="count" role="status" aria-live="polite"></p>
+  <p id="count" role="status" aria-live="polite">…</p>
   <ul class="grid" id="grid"></ul>
 </main>
 <div id="tip" aria-hidden="true"></div>
@@ -75,30 +85,74 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
   <div class="dlg" id="d-body"></div>
 </dialog>
 <script>
-const DATA = __STACKLANDS_DATA__;
-const T = DATA.ui;
+// Personal page: the data is written here by the game (F6). Public site: null, data/*.json is loaded instead.
+const EMBED = __STACKLANDS_DATA__;
 const $ = id => document.getElementById(id);
-const byId = new Map(DATA.cards.map(c => [c.id, c]));
-const producedBy = new Map(), usedIn = new Map(), inPacks = new Map(), droppedBy = new Map();
-const push = (m, k, v) => { if (!m.has(k)) m.set(k, []); m.get(k).push(v); };
-DATA.recipes.forEach(r => {
-  r.output.forEach(id => push(producedBy, id, r));
-  new Set(r.req.flatMap(q => q.ids)).forEach(id => push(usedIn, id, r));
-});
-DATA.packs.forEach(p => p.cards.forEach(id => push(inPacks, id, p)));
-DATA.cards.forEach(c => (c.drops || []).forEach(id => push(droppedBy, id, c)));
-
 const fold = s => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-const nameOf = id => byId.has(id) ? byId.get(id).name : id;
-const fmt = (s, ...a) => s.replace(/\{(\d)\}/g, (_, i) => a[+i]);
+const fmt = (s, ...a) => (s || "").replace(/\{(\d)\}/g, (_, i) => a[+i]);
+let D, T, byId, producedBy, usedIn, inPacks, droppedBy;
+
 function time(sec) {
   sec = Math.round(sec || 0);
   if (!sec) return "";
   const m = Math.floor(sec / 60), s = sec % 60;
   return m ? (s ? `${m} min ${s} s` : `${m} min`) : `${s} s`;
 }
-const onlyFound = () => $("onlyFound").checked;
-const recipeKnown = r => r.found || r.hidden || !onlyFound();
+const push = (m, k, v) => { if (!m.has(k)) m.set(k, []); m.get(k).push(v); };
+const nameOf = id => byId.has(id) ? byId.get(id).name : id;
+const onlyFound = () => D.personal && $("onlyFound").checked;
+const recipeKnown = r => !onlyFound() || r.found || r.hidden;
+const options = (sel, values, all) => {
+  const keep = sel.value;
+  sel.innerHTML = "";
+  if (all) sel.add(new Option(all, ""));
+  values.forEach(v => sel.add(Array.isArray(v) ? new Option(v[1], v[0]) : new Option(v, v)));
+  if ([...sel.options].some(o => o.value === keep)) sel.value = keep;
+};
+const sorted = arr => [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
+function start(data) {
+  D = data; T = data.ui;
+  document.documentElement.lang = data.code || "en";
+  byId = new Map(D.cards.map(c => [c.id, c]));
+  producedBy = new Map(); usedIn = new Map(); inPacks = new Map(); droppedBy = new Map();
+  D.recipes.forEach(r => {
+    r.output.forEach(id => push(producedBy, id, r));
+    new Set(r.req.flatMap(q => q.ids)).forEach(id => push(usedIn, id, r));
+  });
+  D.packs.forEach(p => p.cards.forEach(id => push(inPacks, id, p)));
+  D.cards.forEach(c => (c.drops || []).forEach(id => push(droppedBy, id, c)));
+
+  document.title = T.web_title;
+  $("title").textContent = T.web_title;
+  $("generated").textContent = fmt(D.personal ? T.web_generated : T.web_generated_site, D.generated);
+  $("l-lang").textContent = T.web_language;
+  $("l-search").textContent = T.web_search;
+  $("hint").textContent = T.web_search_hint;
+  $("l-cat").textContent = T.web_category;
+  $("l-type").textContent = T.web_type;
+  $("l-upd").textContent = T.web_content;
+  $("l-obtain").textContent = T.web_obtain;
+  $("l-sort").textContent = T.web_sort;
+  $("l-found").textContent = T.web_only_found;
+  $("reset").textContent = T.web_reset;
+  $("foundBox").hidden = !D.personal;
+  options($("cat"), sorted(D.cards.map(c => c.cat)), T.web_all);
+  options($("type"), sorted(D.cards.map(c => c.type)), T.web_all);
+  options($("upd"), sorted(D.cards.map(c => c.upd)), T.web_all);
+  options($("obtain"), [["recipe", T.web_obtain_recipe], ["pack", T.web_obtain_pack], ["drop", T.web_obtain_drop], ["none", T.web_obtain_none]], T.web_all);
+  options($("sort"), [["name", T.web_sort_name], ["value", T.web_sort_value], ["food", T.web_sort_food], ["attack", T.web_sort_attack]], null);
+  render();
+}
+
+function obtainKind(c) {
+  const k = [];
+  if ((producedBy.get(c.id) || []).length) k.push("recipe");
+  if ((inPacks.get(c.id) || []).length) k.push("pack");
+  if ((droppedBy.get(c.id) || []).length) k.push("drop");
+  if (!k.length) k.push("none");
+  return k;
+}
 function recipeText(r) {
   if (!recipeKnown(r)) return T.web_unknown;
   const ing = r.req.map(q => q.label).join(" + ");
@@ -115,49 +169,42 @@ function howShort(c) {
   if (ds.length) return T.web_from + " : " + ds.slice(0, 4).map(d => d.name).join(", ");
   return T.web_none;
 }
-
-// Controls
-document.documentElement.lang = ({French:"fr",German:"de",Dutch:"nl",Italian:"it",Spanish:"es",Polish:"pl","Brazilian Portuguese":"pt-BR",Japanese:"ja",Korean:"ko","Chinese (Simplified)":"zh-Hans","Chinese (Traditional)":"zh-Hant"})[DATA.lang] || "en";
-document.title = T.web_title;
-$("title").textContent = T.web_title;
-$("generated").textContent = fmt(T.web_generated, DATA.generated);
-$("l-search").textContent = T.web_search;
-$("hint").textContent = T.web_search_hint;
-$("l-cat").textContent = T.web_category;
-$("l-found").textContent = T.web_only_found;
-const cats = [...new Set(DATA.cards.map(c => c.cat))].sort((a, b) => a.localeCompare(b));
-$("cat").innerHTML = `<option value="">${T.web_all}</option>` + cats.map(c => `<option>${c}</option>`).join("");
-
 function matches(c, q) {
   if (!q) return true;
-  const parts = [c.name, c.desc, c.cat];
+  const parts = [c.name, c.desc, c.cat, c.type, c.upd];
   (producedBy.get(c.id) || []).forEach(r => { parts.push(r.idea); r.req.forEach(x => parts.push(x.label)); });
   return fold(parts.join(" ")).includes(q);
 }
-let shown = [];
+const sorters = {
+  name: (a, b) => a.name.localeCompare(b.name),
+  value: (a, b) => b.value - a.value || a.name.localeCompare(b.name),
+  food: (a, b) => (b.food ?? -1) - (a.food ?? -1) || a.name.localeCompare(b.name),
+  attack: (a, b) => (b.atk ?? -1) - (a.atk ?? -1) || a.name.localeCompare(b.name),
+};
+
 function render() {
-  const q = fold($("q").value.trim()), cat = $("cat").value;
-  shown = DATA.cards
-    .filter(c => (!onlyFound() || c.found) && (!cat || c.cat === cat) && matches(c, q))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const q = fold($("q").value.trim()), cat = $("cat").value, type = $("type").value, upd = $("upd").value, ob = $("obtain").value;
+  const shown = D.cards
+    .filter(c => (!onlyFound() || c.found) && (!cat || c.cat === cat) && (!type || c.type === type) && (!upd || c.upd === upd)
+              && (!ob || obtainKind(c).includes(ob)) && matches(c, q))
+    .sort(sorters[$("sort").value] || sorters.name);
   const grid = $("grid");
   grid.innerHTML = "";
   const frag = document.createDocumentFragment();
   shown.forEach((c, i) => {
     const li = document.createElement("li");
     const b = document.createElement("button");
-    b.className = "card" + (c.found ? "" : " unknown");
+    b.className = "card" + (D.personal && !c.found ? " unknown" : "");
     b.type = "button";
-    b.dataset.id = c.id;
     const how = howShort(c);
     b.innerHTML = `<span class="n"></span><span class="c"></span><span class="sr" id="h${i}"></span>`;
-    b.querySelector(".n").textContent = c.name + (c.cities ? " (" + T.web_cities + ")" : "");
-    b.querySelector(".c").textContent = c.cat;
+    b.querySelector(".n").textContent = c.name;
+    b.querySelector(".c").textContent = c.cat + (c.upd ? " · " + c.upd : "");
     b.querySelector(".sr").textContent = how;
     b.setAttribute("aria-describedby", "h" + i);
     b.addEventListener("click", () => openCard(c.id, b));
-    b.addEventListener("mouseenter", e => showTip(how, b));
-    b.addEventListener("focus", e => showTip(how, b));
+    b.addEventListener("mouseenter", () => showTip(how, b));
+    b.addEventListener("focus", () => showTip(how, b));
     b.addEventListener("mouseleave", hideTip);
     b.addEventListener("blur", hideTip);
     li.appendChild(b);
@@ -177,14 +224,12 @@ function showTip(text, el) {
 }
 function hideTip() { $("tip").style.display = "none"; }
 
-// Details
 let returnFocus = null;
 function cardLink(id) {
   const b = document.createElement("button");
   b.className = "link"; b.type = "button";
   b.textContent = nameOf(id);
-  if (byId.has(id)) b.addEventListener("click", () => openCard(id));
-  else b.disabled = true;
+  if (byId.has(id)) b.addEventListener("click", () => openCard(id)); else b.disabled = true;
   return b;
 }
 function section(body, title, items, build) {
@@ -204,6 +249,7 @@ function recipeItem(li, r) {
   if (r.output.length) { li.append(" → "); r.output.forEach((id, i) => { if (i) li.append(", "); li.append(cardLink(id)); }); }
   const t = time(r.time);
   if (t) li.append(` (${T.web_time} ${t})`);
+  if (r.group) li.append(` — ${T.web_group} : ${r.group}`);
 }
 function openCard(id, from) {
   const c = byId.get(id); if (!c) return;
@@ -214,11 +260,13 @@ function openCard(id, from) {
   close.addEventListener("click", () => $("detail").close());
   body.appendChild(close);
   const h = document.createElement("h2"); h.id = "d-name"; h.tabIndex = -1;
-  h.textContent = c.name + (c.rumor ? " (" + T.web_rumor + ")" : "") + (c.cities ? " (" + T.web_cities + ")" : "");
+  h.textContent = c.name + (c.rumor ? " (" + T.web_rumor + ")" : "");
   body.appendChild(h);
   const facts = document.createElement("ul"); facts.className = "facts";
   const fact = t => { const li = document.createElement("li"); li.textContent = t; facts.appendChild(li); };
   fact(T.web_category_label + " : " + c.cat);
+  fact(T.web_type + " : " + c.type);
+  fact(T.web_content + " : " + c.upd);
   fact(T.web_value + " : " + c.value);
   if (c.food != null) fact(T.web_food + " : " + c.food);
   if (c.hp != null) { fact(T.web_health + " : " + c.hp); fact(T.web_attack + " : " + c.atk); fact(T.web_defence + " : " + c.def); }
@@ -237,9 +285,25 @@ $("detail").addEventListener("close", () => { if (returnFocus) returnFocus.focus
 
 let timer = null;
 $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(render, 150); });
-$("cat").addEventListener("change", render);
-$("onlyFound").addEventListener("change", render);
-render();
+["cat", "type", "upd", "obtain", "sort", "onlyFound"].forEach(id => $(id).addEventListener("change", render));
+$("reset").addEventListener("click", () => {
+  $("q").value = ""; ["cat", "type", "upd", "obtain"].forEach(id => $(id).value = ""); $("sort").value = "name";
+  render(); $("q").focus();
+});
+
+async function loadSite() {
+  const langs = await (await fetch("data/languages.json")).json();
+  const sel = $("lang");
+  langs.forEach(l => sel.add(new Option(l.name, l.file)));
+  $("langBox").hidden = false;
+  const want = new URLSearchParams(location.search).get("lang") || navigator.language || "en";
+  const pick = langs.find(l => l.code === want) || langs.find(l => want.toLowerCase().startsWith(l.code.toLowerCase().split("-")[0])) || langs.find(l => l.code === "en") || langs[0];
+  sel.value = pick.file;
+  const load = async file => { $("count").textContent = "…"; start(await (await fetch(file)).json()); };
+  sel.addEventListener("change", () => load(sel.value));
+  await load(pick.file);
+}
+if (EMBED) start(EMBED); else loadSite();
 $("q").focus();
 </script>
 </body>
