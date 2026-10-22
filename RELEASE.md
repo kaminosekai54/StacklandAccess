@@ -22,9 +22,9 @@ Le dossier ne doit contenir que les fichiers du mod (pas de `bin`, `obj`, ni cod
 
 ## 3. Site de la liste des cartes (GitHub Pages)
 
-1. Dans le jeu, appuyer sur **Maj+F6** : le site est créé dans `Documents\Stacklands cards site` (toutes les langues).
-2. `powershell -ExecutionPolicy Bypass -File tools\update-site.ps1` : copie le site dans `docs/`.
-3. Commit et push, puis sur GitHub : Settings > Pages > Branch `main`, dossier `/docs`.
+1. Dans le jeu, appuyer sur **Maj+F6** : le site est créé dans `Documents\Stacklands cards site` (toutes les langues). S'il n'a pas changé depuis le dernier export, le jeu le dit et ne refait rien.
+2. Double-cliquer sur **`publier-site.bat`** (à la racine du projet) : il vérifie l'export (et prévient s'il est plus ancien que le mod installé), le copie dans `docs/`, fait le commit et demande avant le push. Options du script `tools\publish-site.ps1` : `-Oui` (aucune question), `-SansPush`.
+3. Première fois seulement, sur GitHub : Settings > Pages > Branch `main`, dossier `/docs`.
 4. Le site est en ligne à `https://<compte>.github.io/StacklandAccess/`. Refaire 1 à 3 après une mise à jour du jeu.
 
 ## 4. GitHub
