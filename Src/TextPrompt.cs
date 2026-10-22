@@ -13,6 +13,10 @@ namespace StacklandAccessNS
     {
         public static bool Active { get; private set; }
 
+        /// <summary>For the visual menu: the field's name, and its text (stars for a password).</summary>
+        public static string Label => label ?? "";
+        public static string DisplayText => hidden ? new string('*', text.Length) : text.ToString();
+
         private static string label;
         private static readonly StringBuilder text = new StringBuilder();
         private static bool hidden;

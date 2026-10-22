@@ -27,6 +27,8 @@ On joue uniquement au clavier, et tout est lu par votre lecteur d'écran (NVDA, 
 
 Au démarrage du jeu, vous entendez « Stackland Access prêt. F1 pour l'aide. »
 
+La première fois, une fenêtre du jeu demande si vous voulez la narration. « Non » coupe tout ce que le mod dit et joue (pour un joueur voyant) ; Ctrl+F2 la remet.
+
 ## Premiers pas
 
 1. Dans le menu principal, utilisez les flèches haut et bas et Entrée pour lancer une partie.
@@ -39,6 +41,8 @@ Au démarrage du jeu, vous entendez « Stackland Access prêt. F1 pour l'aide. �
 
 Les lettres suivent les caractères imprimés sur le clavier : elles fonctionnent aussi en AZERTY.
 
+Toutes les touches ci-dessous se changent dans les options (F7), sauf les flèches, Entrée, Échap, Début, Fin, Page préc., Page suiv. et Tab. Cette page donne les touches par défaut.
+
 ### Partout
 
 - **F1** : aide (liste des touches).
@@ -46,6 +50,8 @@ Les lettres suivent les caractères imprimés sur le clavier : elles fonctionnen
 - **F3** : activer ou couper l'annonce des nouvelles cartes.
 - **F4** : activer ou couper l'empilement automatique.
 - **F6** : créer une page web avec toutes les cartes du jeu et l'ouvrir dans votre navigateur (voir [Liste des cartes](#liste-des-cartes)).
+- **F7** : options du mod (fonctions activées ou non, touches).
+- **Ctrl+F2** : narration activée ou non.
 - **F8** : panneau multijoueur (seulement avec le mod Stacklands Together).
 
 ### Menus
@@ -191,7 +197,15 @@ La connexion se fait depuis le menu principal ; l'hôte lance ensuite ou charge 
 
 ## Réglages
 
-Dans **Options > Mods > Stackland Access**, chacun peut être activé ou désactivé :
+**F7** ouvre les options du mod, partout dans le jeu :
+- **Fonctions** : Entrée active ou désactive chacune (liste ci-dessous), ou change le délai de l'alerte de fin de lune.
+- **Touches** (trois pages : partout, plateau, listes et menus) : Entrée sur une action, puis appuyez sur sa nouvelle touche, avec Ctrl ou Maj si vous voulez ; Échap annule. Si la touche servait déjà, l'autre action prend l'ancienne touche. I donne la touche par défaut. La dernière ligne remet toutes les touches par défaut (Entrée deux fois).
+
+Les touches sont enregistrées dans `StacklandAccess_keys.txt`, à côté des sauvegardes du jeu.
+
+Les réglages activé/désactivé sont aussi dans **Options > Mods > Stackland Access** :
+- la narration (voix et sons du mod) ;
+- l'affichage des menus du mod à l'écran ;
 - l'annonce des nouvelles cartes ;
 - l'annonce des combats ;
 - chaque coup en combat ;
@@ -202,6 +216,8 @@ Dans **Options > Mods > Stackland Access**, chacun peut être activé ou désact
 - le tri des piles par nom ;
 - le son « villageois libre » ;
 - les actions des autres joueurs (hôte multijoueur).
+
+Les menus du mod (listes, options, champs de texte) s'affichent aussi à l'écran dans le style du jeu, avec des boutons cliquables, pour les personnes qui regardent. Le jeu continue de tourner pendant qu'ils sont ouverts.
 
 Vous pouvez remplacer ce son par votre propre fichier WAV : `Mods\StacklandAccess\Sounds\villager_free.wav`.
 

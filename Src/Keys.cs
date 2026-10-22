@@ -9,28 +9,13 @@ namespace StacklandAccessNS
     /// <summary>Keyboard helpers and removal of game bindings that clash with the mod keys.</summary>
     public static class Keys
     {
-        /// <summary>Non-letter keys used by the mod (physical keys).</summary>
+        /// <summary>Fixed navigation keys used by the mod (physical keys). The other keys come from <see cref="Bindings"/>.</summary>
         public static readonly string[] ReservedPaths =
         {
             "<Keyboard>/upArrow", "<Keyboard>/downArrow", "<Keyboard>/leftArrow", "<Keyboard>/rightArrow",
             "<Keyboard>/pageUp", "<Keyboard>/pageDown", "<Keyboard>/home", "<Keyboard>/end",
-            "<Keyboard>/enter", "<Keyboard>/numpadEnter", "<Keyboard>/backspace", "<Keyboard>/delete",
-            "<Keyboard>/f1", "<Keyboard>/f2", "<Keyboard>/f3", "<Keyboard>/f4",
-            "<Keyboard>/numpadMinus", "<Keyboard>/numpadPlus", "<Keyboard>/f5", "<Keyboard>/f6",
-            "<Keyboard>/numpad0", "<Keyboard>/numpad1", "<Keyboard>/numpad2", "<Keyboard>/numpad3", "<Keyboard>/numpad4",
+            "<Keyboard>/enter", "<Keyboard>/numpadEnter",
         };
-
-        /// <summary>Symbols used by the mod (game speed), matched by printed character like the letters.</summary>
-        public const string ModSymbols = "-=+";
-
-        public static bool SpeedDown => Down(Key.NumpadMinus) || Letter('-');
-        public static bool SpeedUp => Down(Key.NumpadPlus) || Letter('+') || Letter('=');
-
-        /// <summary>
-        /// Letters used by the mod. They are matched by the character printed on the key
-        /// (so Q is the Q key on an AZERTY keyboard too), not by the physical position.
-        /// </summary>
-        public const string ModLetters = "irtqlncpbhfxgmaokujye";
 
         private static readonly Dictionary<char, KeyControl> letterCache = new Dictionary<char, KeyControl>();
         private static string cachedLayout;
@@ -114,9 +99,29 @@ namespace StacklandAccessNS
         public static bool EnterDown => Down(Key.Enter) || Down(Key.NumpadEnter);
 
         private static bool bindingsDone;
+        /// <summary>Game bindings turned off by the mod, with the player's own rebinding to put back (null: none).</summary>
+        private static readonly List<(UnityEngine.InputSystem.InputAction action, int index, string previous)> overridden = new List<(UnityEngine.InputSystem.InputAction, int, string)>();
+
+        /// <summary>The mod keys changed: give the game back its keys and turn off the ones the mod now uses.</summary>
+        public static void RefreshConflictingBindings()
+        {
+            foreach (var (action, index, previous) in overridden)
+            {
+                try
+                {
+                    if (previous == null) action.RemoveBindingOverride(index);
+                    else action.ApplyBindingOverride(index, previous);
+                }
+                catch (System.Exception ex) { Log.Once(ex); }
+            }
+            overridden.Clear();
+            bindingsDone = false;
+            letterCache.Clear();
+            DisableConflictingBindings();
+        }
 
         /// <summary>
-        /// Logs every keyboard binding of the game and disables the ones on keys reserved by the mod
+        /// Logs every keyboard binding of the game and disables the ones on keys used by the mod
         /// (camera movement on the arrows, etc). Overrides are not saved, the game's own rebinding is untouched.
         /// </summary>
         public static void DisableConflictingBindings()
@@ -126,11 +131,7 @@ namespace StacklandAccessNS
             if (ic == null || ic.PlayerInput == null || ic.PlayerInput.actions == null) return;
             bindingsDone = true;
             var reserved = new HashSet<string>(ReservedPaths);
-            foreach (char c in ModLetters + ModSymbols)
-            {
-                var k = LetterKey(c);
-                if (k != null) reserved.Add("<Keyboard>/" + k.name);
-            }
+            foreach (var path in Bindings.UsedPaths()) reserved.Add(path);
             var log = new StringBuilder("[StacklandAccess] Game keyboard bindings:\n");
             foreach (var action in ic.PlayerInput.actions)
             {
@@ -144,7 +145,7 @@ namespace StacklandAccessNS
                     log.Append("  ").Append(action.name).Append(" = ").Append(path).Append(clash ? "  -> disabled by mod\n" : "\n");
                     if (clash)
                     {
-                        // Keep "cancel" on Escape and "submit" logic intact: we only remove our own keys.
+                        overridden.Add((action, i, b.overridePath));
                         action.ApplyBindingOverride(i, "");
                     }
                 }

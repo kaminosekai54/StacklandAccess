@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0 – Options, key remapping and visual menus
+
+- F7 opens the mod's options, anywhere in the game: turn each feature on or off, and change every key (except the navigation keys). A key already used goes to the other action. Keys are saved in `StacklandAccess_keys.txt`, next to the game's saves.
+- The mod's menus (lists, options, text fields of the multiplayer panel) are also drawn on screen with the game's own panel, fonts and buttons, for sighted people watching; the buttons can be clicked. The game is not paused. Can be turned off in the options.
+- First launch: a window of the game asks whether to turn on the narration. "No" turns off everything the mod says and plays; Ctrl+F2 (or the options) turns it back on.
+
 ## 0.6.0 – Multiplayer with Stacklands Together
 
 Compatibility with the [Stacklands Together](https://steamcommunity.com/sharedfiles/filedetails/?id=3778278988) multiplayer mod (tested against version 0.7.32, without a real game session yet).

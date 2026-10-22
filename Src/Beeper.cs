@@ -27,6 +27,7 @@ namespace StacklandAccessNS
 
         public static void Play()
         {
+            if (!Speech.Enabled) return;
             try
             {
                 if (freeClip == null) freeClip = LoadWav("villager_free.wav") ?? MakeFreeClip();

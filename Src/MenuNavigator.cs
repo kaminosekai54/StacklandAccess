@@ -470,7 +470,7 @@ namespace StacklandAccessNS
                     string txt = ScreenText();
                     Speech.Say(txt != "" ? txt : Loc.T("no_items"));
                 }
-                if (Keys.Letter('r')) Speech.Say(ScreenText());
+                if (Bindings.Pressed("menu_read")) Speech.Say(ScreenText());
                 return;
             }
             if (Keys.Repeat(Key.DownArrow) || (Keys.Down(Key.Tab) && !Keys.Shift)) MoveFocus(+1);
@@ -480,8 +480,8 @@ namespace StacklandAccessNS
             else if (Keys.EnterDown) ActivateFocused();
             else if (Keys.Repeat(Key.RightArrow)) Adjust(+1);
             else if (Keys.Repeat(Key.LeftArrow)) Adjust(-1);
-            else if (Keys.Letter('i')) Speech.Say(Info(focused));
-            else if (Keys.Letter('r')) Speech.Say(Loc.T("screen_text", ScreenText()));
+            else if (Bindings.Pressed("menu_info")) Speech.Say(Info(focused));
+            else if (Bindings.Pressed("menu_read")) Speech.Say(Loc.T("screen_text", ScreenText()));
         }
 
         private void MoveFocus(int delta)

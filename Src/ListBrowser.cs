@@ -34,31 +34,27 @@ namespace StacklandAccessNS
         private List<Page> pages = new List<Page>();
         private int pageIndex;
         private int index;
-        private char closeLetter;
-        private Key closeKey = Key.None;
+        /// <summary>Key binding (see <see cref="Bindings"/>) that closes the list: the one that opened it.</summary>
+        private string closeAction;
+
+        /// <summary>Changes each time what the list shows changes (for the visual menu).</summary>
+        public int Version { get; private set; }
+
+        public IReadOnlyList<Page> Pages => pages;
 
         private List<Entry> entries => pages[pageIndex].Entries;
 
         public bool IsOpen { get; private set; }
 
-        public void Open(string listName, List<Entry> list, char toggleLetter, int startIndex = 0, bool briefIntro = false)
+        public void Open(string listName, List<Entry> list, string toggleAction, int startIndex = 0, bool briefIntro = false)
         {
-            closeLetter = toggleLetter;
-            closeKey = Key.None;
+            closeAction = toggleAction;
             OpenPages(new List<Page> { new Page(listName, list) }, startIndex, briefIntro);
         }
 
-        public void Open(string listName, List<Entry> list, Key toggleKey, int startIndex = 0)
+        public void OpenPages(List<Page> newPages, string toggleAction, int startIndex = 0, bool briefIntro = false)
         {
-            closeLetter = '\0';
-            closeKey = toggleKey;
-            OpenPages(new List<Page> { new Page(listName, list) }, startIndex, false);
-        }
-
-        public void OpenPages(List<Page> newPages, char toggleLetter, int startIndex = 0, bool briefIntro = false)
-        {
-            closeLetter = toggleLetter;
-            closeKey = Key.None;
+            closeAction = toggleAction;
             OpenPages(newPages, startIndex, briefIntro);
         }
 
@@ -66,10 +62,10 @@ namespace StacklandAccessNS
         public int Index => index;
 
         /// <summary>Opens (or refreshes) the pages at a given page and line, reading only that line.</summary>
-        public void OpenPagesAt(List<Page> newPages, int page, int line, bool speak = true)
+        public void OpenPagesAt(List<Page> newPages, int page, int line, bool speak = true, string toggleAction = null)
         {
-            closeLetter = '\0';
-            closeKey = Key.None;
+            closeAction = toggleAction;
+            Version++;
             pages = newPages.Where(p => p != null).ToList();
             if (pages.Count == 0) { IsOpen = false; return; }
             IsOpen = true;
@@ -80,6 +76,7 @@ namespace StacklandAccessNS
 
         private void OpenPages(List<Page> newPages, int startIndex, bool brief)
         {
+            Version++;
             pages = newPages.Where(p => p != null).ToList();
             if (pages.Count == 0 || (pages.Count == 1 && pages[0].Entries.Count == 0))
             {
@@ -102,6 +99,7 @@ namespace StacklandAccessNS
         {
             if (!IsOpen) return;
             IsOpen = false;
+            Version++;
             if (announce) Speech.Say(Loc.T("list_closed"));
         }
 
@@ -118,6 +116,7 @@ namespace StacklandAccessNS
             int np = Mathf.Clamp(pageIndex + dir, 0, pages.Count - 1);
             pageIndex = np;
             index = 0;
+            Version++;
             var page = pages[pageIndex];
             Speech.Say(TextCleaner.Join(Loc.N("page_name", page.Entries.Count, page.Name, page.Entries.Count), CurrentLine()));
         }
@@ -125,9 +124,16 @@ namespace StacklandAccessNS
         public void HandleInput()
         {
             if (!IsOpen) return;
-            if (Keys.Down(Key.Escape) || (closeKey != Key.None && Keys.Down(closeKey)) || (closeLetter != '\0' && Keys.Letter(closeLetter))) { Close(); return; }
+            if (Keys.Down(Key.Escape) || (closeAction != null && Bindings.Pressed(closeAction))) { Close(); return; }
             if (Keys.Down(Key.RightArrow)) { ChangePage(+1); return; }
             if (Keys.Down(Key.LeftArrow)) { ChangePage(-1); return; }
+            if (VisualMenu.TakeClick(out int clicked, out int pageMove))
+            {
+                if (pageMove != 0) { ChangePage(pageMove); return; }
+                if (clicked < 0) { Close(); return; }
+                if (clicked < entries.Count) { index = clicked; Version++; Activate(); }
+                return;
+            }
             if (entries.Count == 0) { if (Keys.EnterDown || Keys.Down(Key.UpArrow) || Keys.Down(Key.DownArrow)) Speech.Say(CurrentLine()); return; }
             if (Keys.Repeat(Key.DownArrow)) index++;
             else if (Keys.Repeat(Key.UpArrow)) index--;
@@ -135,18 +141,8 @@ namespace StacklandAccessNS
             else if (Keys.Down(Key.End)) index = entries.Count - 1;
             else if (Keys.Down(Key.PageDown)) index += 10;
             else if (Keys.Down(Key.PageUp)) index -= 10;
-            else if (Keys.EnterDown)
-            {
-                var e = entries[index];
-                if (e.OnActivate != null)
-                {
-                    if (!e.KeepOpen) IsOpen = false;
-                    e.OnActivate();
-                }
-                else Speech.Say(string.IsNullOrWhiteSpace(e.Detail) ? e.Title : TextCleaner.Join(e.Title, e.Detail));
-                return;
-            }
-            else if (Keys.Letter('i') && (entries[index].Info != null || !string.IsNullOrWhiteSpace(entries[index].Detail)))
+            else if (Keys.EnterDown) { Activate(); return; }
+            else if (Bindings.Pressed("list_info") && (entries[index].Info != null || !string.IsNullOrWhiteSpace(entries[index].Detail)))
             {
                 var e = entries[index];
                 string info = e.Info != null ? e.Info() : e.Detail;
@@ -155,7 +151,19 @@ namespace StacklandAccessNS
             }
             else return;
             index = Mathf.Clamp(index, 0, entries.Count - 1);
+            Version++;
             Speech.Say(CurrentLine());
+        }
+
+        private void Activate()
+        {
+            var e = entries[index];
+            if (e.OnActivate != null)
+            {
+                if (!e.KeepOpen) { IsOpen = false; Version++; }
+                e.OnActivate();
+            }
+            else Speech.Say(string.IsNullOrWhiteSpace(e.Detail) ? e.Title : TextCleaner.Join(e.Title, e.Detail));
         }
 
         // ------------------------------------------------------------------ list builders
@@ -282,6 +290,7 @@ namespace StacklandAccessNS
             var list = Loc.T("help_lines").Split('|').Select(l => new Entry(l)).ToList();
             list.Add(new Entry(Loc.T("help_conn")));
             list.Add(new Entry(Loc.T("help_export")));
+            list.Add(new Entry(Loc.T("help_options")));
             if (Together.Installed) list.Add(new Entry(Loc.T("help_mp")));
             return list;
         }

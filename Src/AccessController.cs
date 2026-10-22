@@ -35,7 +35,9 @@ namespace StacklandAccessNS
         private bool greeted;
         private bool errorSpoken;
 
-        private bool StateCapturesEscape => TextPrompt.Active || list.IsOpen || board.IsHolding || board.IsMoving || menu.IsEditing;
+        private bool StateCapturesEscape => TextPrompt.Active || Bindings.Capturing || list.IsOpen || board.IsHolding || board.IsMoving || menu.IsEditing;
+
+        public static bool VisualMenusEnabled = true;
 
         /// <summary>True when Escape must not reach the game this frame (see Patches).</summary>
         public static bool CapturesEscape
@@ -92,6 +94,11 @@ namespace StacklandAccessNS
 
             events.Update();
             Together.Update(list);
+            FirstLaunch.Update();
+            VisualMenu.Update(list);
+
+            // Waiting for a new key in the options: every key goes there.
+            if (Bindings.Capturing) { Bindings.UpdateCapture(); return; }
 
             // A text field of the mod (multiplayer panel) takes every key.
             if (TextPrompt.Active) { TextPrompt.Update(); return; }
@@ -99,15 +106,20 @@ namespace StacklandAccessNS
             if (TransitionScreen.InTransition) return;
 
             // Global keys
-            if (Keys.Down(Key.F2)) { Speech.Say(Speech.LastSpoken); return; }
-            if (Keys.Down(Key.F4))
+            if (Bindings.Pressed("toggle_narration"))
+            {
+                StacklandAccess.SetNarration(!Speech.Enabled);
+                return;
+            }
+            if (Bindings.Pressed("repeat")) { Speech.Say(Speech.LastSpoken); return; }
+            if (Bindings.Pressed("toggle_autostack"))
             {
                 AutoStackEnabled = !AutoStackEnabled;
                 StacklandAccess.SaveSetting("auto_stack", AutoStackEnabled);
                 Speech.Say(Loc.T(AutoStackEnabled ? "autostack_on" : "autostack_off"));
                 return;
             }
-            if (Keys.Down(Key.F3))
+            if (Bindings.Pressed("toggle_new_cards"))
             {
                 AnnounceNewCards = !AnnounceNewCards;
                 StacklandAccess.SaveSetting("announce_new_cards", AnnounceNewCards);
@@ -119,16 +131,21 @@ namespace StacklandAccessNS
             bool boardMode = !gc.ModalIsOpen && wm != null && wm.CurrentBoard != null &&
                              (gc.CurrentScreen is GameScreen || (gc.CurrentScreen is CutsceneScreen && wm.RemovingCards));
 
-            if (Keys.Down(Key.F6) && !menu.IsEditing)
+            if (!menu.IsEditing)
             {
-                // Shift+F6: public website, all languages.
-                CardExport.Run(site: Keys.Shift);
-                return;
-            }
-            if (Keys.Down(Key.F1) && !menu.IsEditing)
-            {
-                list.Open(Loc.T("list_help"), ListBrowser.Help(), Key.F1);
-                return;
+                // Public website, all languages.
+                if (Bindings.Pressed("export_site")) { CardExport.Run(site: true); return; }
+                if (Bindings.Pressed("export")) { CardExport.Run(site: false); return; }
+                if (Bindings.Pressed("help"))
+                {
+                    list.Open(Loc.T("list_help"), ListBrowser.Help(), "help");
+                    return;
+                }
+                if (Bindings.Pressed("options") && !list.IsOpen)
+                {
+                    OptionsMenu.Open(list);
+                    return;
+                }
             }
 
             if (list.IsOpen)
@@ -212,39 +229,40 @@ namespace StacklandAccessNS
 
         private bool HandleBoardShortcuts(WorldManager wm)
         {
-            if (Keys.Ctrl && Keys.Letter('p'))
+            if (Bindings.Pressed("villagers"))
             {
-                list.Open(Loc.T("list_villagers"), ListBrowser.Villagers(board), 'p');
+                list.Open(Loc.T("list_villagers"), ListBrowser.Villagers(board), "villagers");
                 return true;
             }
-            if (Keys.Down(Key.F5))
+            bool restackCategory = Bindings.Pressed("restack_category");
+            if (restackCategory || Bindings.Pressed("restack"))
             {
                 if (!wm.CanInteract) { Speech.Say(Loc.T("not_now")); return true; }
-                // Ctrl+F5: only the category being browsed.
-                BoardNavigator.Category? only = Keys.Ctrl ? board.CurrentCategory : (BoardNavigator.Category?)null;
+                // Only the category being browsed.
+                BoardNavigator.Category? only = restackCategory ? board.CurrentCategory : (BoardNavigator.Category?)null;
                 int moved = AutoStacker.RestackAll(board, only);
                 string where = only.HasValue && only.Value != BoardNavigator.Category.All ? BoardNavigator.CategoryName(only.Value) : "";
                 Speech.Say(TextCleaner.Join(where, moved > 0 ? Loc.N("restacked", moved, moved) : Loc.T("restacked_none")));
                 return true;
             }
             // Numeric keypad: 0 pause, 1 to 4 the speeds (0.5, 1, 2, 5).
-            if (Keys.Down(Key.Numpad0)) { SetSpeed(wm, 0); return true; }
-            if (Keys.Down(Key.Numpad1)) { SetSpeed(wm, 1); return true; }
-            if (Keys.Down(Key.Numpad2)) { SetSpeed(wm, 2); return true; }
-            if (Keys.Down(Key.Numpad3)) { SetSpeed(wm, 3); return true; }
-            if (Keys.Down(Key.Numpad4)) { SetSpeed(wm, 4); return true; }
-            if (Keys.SpeedUp) { ChangeSpeed(wm, +1); return true; }
-            if (Keys.SpeedDown) { ChangeSpeed(wm, -1); return true; }
-            if (Keys.Letter('r')) { Speech.Say(ResourcesText(wm)); return true; }
-            if (Keys.Letter('t')) { Speech.Say(TimeText(wm)); return true; }
-            if (Keys.Letter('q'))
+            if (Bindings.Pressed("speed_pause")) { SetSpeed(wm, 0); return true; }
+            if (Bindings.Pressed("speed_1")) { SetSpeed(wm, 1); return true; }
+            if (Bindings.Pressed("speed_2")) { SetSpeed(wm, 2); return true; }
+            if (Bindings.Pressed("speed_3")) { SetSpeed(wm, 3); return true; }
+            if (Bindings.Pressed("speed_4")) { SetSpeed(wm, 4); return true; }
+            if (Bindings.Pressed("speed_up")) { ChangeSpeed(wm, +1); return true; }
+            if (Bindings.Pressed("speed_down")) { ChangeSpeed(wm, -1); return true; }
+            if (Bindings.Pressed("resources")) { Speech.Say(ResourcesText(wm)); return true; }
+            if (Bindings.Pressed("time")) { Speech.Say(TimeText(wm)); return true; }
+            if (Bindings.Pressed("quests"))
             {
                 var entries = ListBrowser.Quests(out int start);
-                list.Open(Loc.T("list_quests"), entries, 'q', start);
+                list.Open(Loc.T("list_quests"), entries, "quests", start);
                 return true;
             }
-            if (Keys.Letter('l')) { list.OpenPages(Recipes.Pages(board), 'l'); return true; }
-            if (Keys.Letter('n')) { list.Open(Loc.T("list_history"), ListBrowser.History(), 'n'); return true; }
+            if (Bindings.Pressed("recipes")) { list.OpenPages(Recipes.Pages(board), "recipes"); return true; }
+            if (Bindings.Pressed("history")) { list.Open(Loc.T("list_history"), ListBrowser.History(), "history"); return true; }
             return false;
         }
 

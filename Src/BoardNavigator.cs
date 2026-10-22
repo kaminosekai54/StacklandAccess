@@ -181,29 +181,29 @@ namespace StacklandAccessNS
             else if (Keys.Repeat(Key.UpArrow)) MoveInStack(+1);
             else if (Keys.Repeat(Key.DownArrow)) MoveInStack(-1);
             else if (Keys.EnterDown) Activate();
-            else if (Keys.Down(Key.Backspace)) DropAlone();
+            else if (Bindings.Pressed("drop_alone")) DropAlone();
             else if (Keys.Down(Key.Escape) && IsHolding) { Held = null; Speech.Say(Loc.T("pick_cancel")); }
-            else if (Keys.Down(Key.Delete)) Sell();
-            else if (Keys.Letter('c')) ClickCard();
-            else if (Keys.Letter('i')) OpenDetails();
-            else if (Keys.Letter('m')) GoToHeld();
-            else if (Keys.Letter('e'))
+            else if (Bindings.Pressed("sell")) Sell();
+            else if (Bindings.Pressed("click")) ClickCard();
+            else if (Bindings.Pressed("details")) OpenDetails();
+            else if (Bindings.Pressed("go_held")) GoToHeld();
+            else if (Bindings.Pressed("connections"))
             {
                 Sync();
                 Connections.Open(List, this, current is GameCard cg ? cg.GetRootCard() : null);
             }
-            else if (Keys.Letter('p')) Jump(Category.People);
-            else if (Keys.Letter('b')) Jump(Category.Shop);
-            else if (Keys.Letter('h')) Jump(Category.Buildings);
-            else if (Keys.Letter('f')) Jump(Category.Food);
-            else if (Keys.Letter('g')) Jump(Category.Resources);
-            else if (Keys.Letter('x')) Jump(Category.Enemies);
-            else if (Keys.Letter('a')) Jump(Category.Animals);
-            else if (Keys.Letter('o')) Jump(Category.Equipment);
-            else if (Keys.Letter('k')) Jump(Category.Ideas);
-            else if (Keys.Letter('u')) Jump(Category.Locations);
-            else if (Keys.Letter('j')) Jump(Category.Other);
-            else if (Keys.Letter('y')) Jump(Category.All);
+            else if (Bindings.Pressed("cat_people")) Jump(Category.People);
+            else if (Bindings.Pressed("cat_shop")) Jump(Category.Shop);
+            else if (Bindings.Pressed("cat_buildings")) Jump(Category.Buildings);
+            else if (Bindings.Pressed("cat_food")) Jump(Category.Food);
+            else if (Bindings.Pressed("cat_resources")) Jump(Category.Resources);
+            else if (Bindings.Pressed("cat_enemies")) Jump(Category.Enemies);
+            else if (Bindings.Pressed("cat_animals")) Jump(Category.Animals);
+            else if (Bindings.Pressed("cat_equipment")) Jump(Category.Equipment);
+            else if (Bindings.Pressed("cat_ideas")) Jump(Category.Ideas);
+            else if (Bindings.Pressed("cat_locations")) Jump(Category.Locations);
+            else if (Bindings.Pressed("cat_other")) Jump(Category.Other);
+            else if (Bindings.Pressed("cat_all")) Jump(Category.All);
         }
 
         // ------------------------------------------------------------------ moving a stack on the board
@@ -243,8 +243,8 @@ namespace StacklandAccessNS
             else if (Keys.Repeat(Key.LeftArrow)) delta.x = -wm.GridWidth * 1.4f;
             else if (Keys.Repeat(Key.UpArrow)) delta.z = wm.GridHeight * 1.4f;
             else if (Keys.Repeat(Key.DownArrow)) delta.z = -wm.GridHeight * 1.4f;
-            else if (Keys.Letter('i')) { Speech.Say(Surroundings(moving)); return; }
-            else if (Keys.Letter('e')) { Speech.Say(MovingConnections(moving)); return; }
+            else if (Bindings.Pressed("details")) { Speech.Say(Surroundings(moving)); return; }
+            else if (Bindings.Pressed("connections")) { Speech.Say(MovingConnections(moving)); return; }
             if (delta == Vector3.zero) return;
             Vector3 wanted = moving.transform.position + delta;
             moving.transform.position = wanted;
@@ -390,7 +390,7 @@ namespace StacklandAccessNS
             var pages = new List<ListBrowser.Page> { new ListBrowser.Page(Loc.T("details") + " " + CardInfo.Name(target), CardInfo.DetailLines(target)) };
             if (target is GameCard gc && (gc.CardData.HasInventory || (gc.EquipmentChildren != null && gc.EquipmentChildren.Count > 0) || gc.WorkerChildren.Count > 0))
                 pages.Add(new ListBrowser.Page(Loc.T("inventory"), InventoryEntries(gc), Loc.T("inventory_empty")));
-            List.OpenPages(pages, 'i', 0, briefIntro: true);
+            List.OpenPages(pages, "details", 0, briefIntro: true);
         }
 
         /// <summary>Equipped items (and workers in a building): Enter takes the item in hand, I gives its details.</summary>

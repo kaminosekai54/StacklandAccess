@@ -45,6 +45,9 @@ namespace StacklandAccessNS
 
         public static string LastSpoken { get; private set; } = "";
 
+        /// <summary>Narration on or off (setting "narration"). Off: the mod makes no sound at all, speech or beeps.</summary>
+        public static bool Enabled = true;
+
         public static void Init(string modPath)
         {
             if (loaded || failed) return;
@@ -87,6 +90,7 @@ namespace StacklandAccessNS
             text = TextCleaner.Clean(text);
             if (string.IsNullOrWhiteSpace(text)) return;
             LastSpoken = text;
+            if (!Enabled) return;
             if (!loaded)
             {
                 Debug.Log("[StacklandAccess] (no speech) " + text);
@@ -114,7 +118,7 @@ namespace StacklandAccessNS
         public static void SayImportant(string text)
         {
             text = TextCleaner.Clean(text);
-            if (string.IsNullOrWhiteSpace(text)) return;
+            if (string.IsNullOrWhiteSpace(text) || !Enabled) return;
             Say(text, interrupt: false);
             pendingImportant = text;
             pendingImportantTime = Time.unscaledTime;

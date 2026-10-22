@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace StacklandAccessNS
@@ -20,6 +21,12 @@ namespace StacklandAccessNS
         private ConfigEntry<bool> cfgSortByName;
         private ConfigEntry<bool> cfgBeep;
         private ConfigEntry<bool> cfgOthers;
+        private ConfigEntry<bool> cfgNarration;
+        private ConfigEntry<bool> cfgVisual;
+        private ConfigEntry<bool> cfgFirstLaunchDone;
+
+        /// <summary>The on/off settings by key, for the options menu (F7).</summary>
+        private readonly Dictionary<string, ConfigEntry<bool>> bools = new Dictionary<string, ConfigEntry<bool>>();
 
         public override void Ready()
         {
@@ -63,6 +70,23 @@ namespace StacklandAccessNS
             cfgSortByName = Config.GetEntry<bool>("sort_by_name", true);
             cfgBeep = Config.GetEntry<bool>("beep_villager_free", true);
             cfgOthers = Config.GetEntry<bool>("announce_other_players", true);
+            cfgNarration = Config.GetEntry<bool>("narration", true);
+            cfgVisual = Config.GetEntry<bool>("visual_menus", true);
+            cfgFirstLaunchDone = Config.GetEntry<bool>("first_launch_done", false);
+            cfgFirstLaunchDone.UI.Hidden = true;
+            cfgNarration.UI.Name = Loc.T("cfg_narration");
+            cfgVisual.UI.Name = Loc.T("cfg_visual");
+            bools["narration"] = cfgNarration;
+            bools["visual_menus"] = cfgVisual;
+            bools["announce_new_cards"] = cfgNewCards;
+            bools["announce_combat"] = cfgCombat;
+            bools["announce_hits"] = cfgHits;
+            bools["announce_actions"] = cfgActions;
+            bools["camera_follow"] = cfgCamera;
+            bools["auto_stack"] = cfgAutoStack;
+            bools["sort_by_name"] = cfgSortByName;
+            bools["beep_villager_free"] = cfgBeep;
+            bools["announce_other_players"] = cfgOthers;
             cfgNewCards.UI.Name = Loc.T("cfg_new_cards");
             cfgCombat.UI.Name = Loc.T("cfg_combat");
             cfgHits.UI.Name = Loc.T("cfg_hits");
@@ -88,6 +112,73 @@ namespace StacklandAccessNS
             AccessController.SortByName = cfgSortByName.Value;
             AccessController.BeepIdleVillager = cfgBeep.Value;
             AccessController.AnnounceOtherPlayers = cfgOthers.Value;
+            AccessController.VisualMenusEnabled = cfgVisual.Value;
+            Speech.Enabled = cfgNarration.Value;
+        }
+
+        /// <summary>Names of the on/off settings, in the order of the options menu.</summary>
+        public static readonly string[] BoolKeys =
+        {
+            "narration", "visual_menus", "announce_new_cards", "announce_combat", "announce_hits", "announce_actions",
+            "announce_other_players", "beep_villager_free", "camera_follow", "auto_stack", "sort_by_name",
+        };
+
+        public static bool GetBool(string key)
+        {
+            var i = Instance;
+            return i != null && i.bools.TryGetValue(key, out var e) && e.Value;
+        }
+
+        /// <summary>Changes an on/off setting, saves it and applies it now.</summary>
+        public static void SetBool(string key, bool value)
+        {
+            var i = Instance;
+            if (i == null || !i.bools.TryGetValue(key, out var e)) return;
+            try
+            {
+                e.Value = value;
+                i.Config.Save();
+                i.ApplyConfig();
+            }
+            catch (System.Exception ex) { Log.Once(ex); }
+        }
+
+        public static string BoolName(string key)
+        {
+            var i = Instance;
+            if (i == null || !i.bools.TryGetValue(key, out var e)) return key;
+            return e.UI.Name ?? key;
+        }
+
+        public static int MoonSeconds
+        {
+            get { var i = Instance; return i != null && i.cfgMoon != null ? i.cfgMoon.Value : 20; }
+            set
+            {
+                var i = Instance;
+                if (i == null || i.cfgMoon == null) return;
+                try { i.cfgMoon.Value = value; i.Config.Save(); i.ApplyConfig(); } catch (System.Exception ex) { Log.Once(ex); }
+            }
+        }
+
+        /// <summary>Narration on or off; said in both cases so the player knows what happened.</summary>
+        public static void SetNarration(bool on)
+        {
+            if (!on) Speech.Say(Loc.T("narration_off"));
+            SetBool("narration", on);
+            if (Instance == null) Speech.Enabled = on;
+            if (on) Speech.Say(Loc.T("narration_on"));
+        }
+
+        public static bool FirstLaunchDone
+        {
+            get { var i = Instance; return i == null || i.cfgFirstLaunchDone == null || i.cfgFirstLaunchDone.Value; }
+            set
+            {
+                var i = Instance;
+                if (i == null || i.cfgFirstLaunchDone == null) return;
+                try { i.cfgFirstLaunchDone.Value = value; i.Config.Save(); } catch (System.Exception ex) { Log.Once(ex); }
+            }
         }
 
         /// <summary>Keeps the config file in sync when a setting is changed by a shortcut.</summary>
@@ -95,12 +186,7 @@ namespace StacklandAccessNS
         {
             var i = Instance;
             if (i == null) return;
-            try
-            {
-                if (key == "announce_new_cards" && i.cfgNewCards != null) { i.cfgNewCards.Value = value; i.Config.Save(); }
-                if (key == "auto_stack" && i.cfgAutoStack != null) { i.cfgAutoStack.Value = value; i.Config.Save(); }
-            }
-            catch (System.Exception ex) { Log.Once(ex); }
+            SetBool(key, value);
         }
 
         private float configTimer;

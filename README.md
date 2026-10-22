@@ -27,6 +27,8 @@ You play with the keyboard only, and everything is spoken by your screen reader 
 
 When the game starts, you hear "Stackland Access ready. F1 for help."
 
+The first time, a window of the game asks whether you want the narration. "No" turns off everything the mod says and plays (for a sighted player); Ctrl+F2 turns it back on.
+
 ## First steps
 
 1. In the main menu, use the Up and Down arrows and Enter to start a game.
@@ -39,6 +41,8 @@ When the game starts, you hear "Stackland Access ready. F1 for help."
 
 Letters follow the characters printed on your keyboard, so they also work on AZERTY keyboards.
 
+Every key below can be changed in the options (F7), except the arrows, Enter, Escape, Home, End, Page Up, Page Down and Tab. This page lists the default keys.
+
 ### Everywhere
 
 - **F1**: help (list of keys).
@@ -46,6 +50,8 @@ Letters follow the characters printed on your keyboard, so they also work on AZE
 - **F3**: turn announcements of new cards on or off.
 - **F4**: turn automatic stacking on or off.
 - **F6**: create a web page with every card of the game and open it in your browser (see [Card list](#card-list)).
+- **F7**: options of the mod (features on or off, keys).
+- **Ctrl+F2**: narration on or off.
 - **F8**: multiplayer panel (only with the Stacklands Together mod).
 
 ### Menus
@@ -191,7 +197,15 @@ Connect from the main menu; the host then starts or loads the world. In a sessio
 
 ## Settings
 
-Go to **Options > Mods > Stackland Access** to turn each of these on or off:
+Press **F7** for the mod's options, anywhere in the game:
+- **Features**: Enter turns each one on or off (list below), or changes the end-of-moon warning delay.
+- **Keys** (three pages: everywhere, board, lists and menus): Enter on an action, then press its new key, with Ctrl or Shift if you want; Escape cancels. If the key was already used, the other action takes the old key. I gives the default key. The last line puts back all the default keys (press Enter twice).
+
+The keys are saved in `StacklandAccess_keys.txt`, next to the game's saves.
+
+The on/off settings are also in **Options > Mods > Stackland Access**:
+- narration (speech and sounds of the mod);
+- the mod's menus shown on screen;
 - announcements of new cards;
 - combat announcements;
 - each combat hit;
@@ -202,6 +216,8 @@ Go to **Options > Mods > Stackland Access** to turn each of these on or off:
 - stacks sorted by name;
 - the "villager free" sound;
 - other players' actions (multiplayer host).
+
+The mod's menus (lists, options, text fields) are also drawn on screen in the game's style, with buttons you can click, for the people watching. The game keeps running while they are open.
 
 You can replace the sound with your own WAV file: `Mods\StacklandAccess\Sounds\villager_free.wav`.
 
