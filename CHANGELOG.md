@@ -16,7 +16,9 @@
   - filters: category, card type, content (base game, island, dark forest, spirits, Cities…), tech age, how to get it; sort by name, value, food, attack or tech age; tech age badge on each card;
   - tech tree, "Age of Empires" style, next to the details of a card: the card in the middle, what it is made with above, what is made with it below; used up as a material straight down with a solid line, used as a tool (a stove for a quiche) smaller on a diagonal with a dashed line; hovering or focusing a card gives its information and recipes, a click opens its own tree;
   - tables of every villager type and every creature and enemy: health, attack, defence, combat type, attack speed, hit chance, special effects, food per moon, equipment;
-  - undiscovered cards hidden by default.
+  - in the details, cards are shown as their small picture instead of a text link, with "×3" under a card needed three times; hovering or focusing says "Brick ×3" and its information, a click opens it;
+  - undiscovered cards hidden by default;
+  - pictures and data are extracted again only when the game's content changed (game update, DLC, a mod adding cards or recipes); otherwise the existing pictures are kept, and Shift+F6 says the website is already up to date.
 - **Shift+F6** makes the same page as a public website in every language of the game, without save data, ready for GitHub Pages.
 
 ### Improved

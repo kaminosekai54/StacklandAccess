@@ -40,14 +40,21 @@ namespace StacklandAccessNS
                 if (string.IsNullOrEmpty(docs) || !Directory.Exists(docs)) docs = modPath;
                 string html = File.ReadAllText(template);
 
+                string tsv = modPath != null ? Path.Combine(modPath, Loc.TsvFileName) : null;
+                string content = Fingerprint(wm, html, tsv != null && File.Exists(tsv) ? File.ReadAllText(tsv) : "");
+
                 if (!site)
                 {
                     Speech.Say(Loc.T("export_working"));
                     string imgFolder = Loc.T("export_file_name") + "_img";
-                    var images = new CardImages(Path.Combine(docs, imgFolder));
+                    // Pictures are extracted again only when the game's content changed (update, DLC, mod adding cards...).
+                    string imgPath = Path.Combine(docs, imgFolder);
+                    bool changed = ReadMark(imgPath) != content;
+                    var images = new CardImages(imgPath, rewrite: changed);
                     string json;
                     try { json = Json(BuildData(wm, withSave: true, images, imgFolder + "/")); }
                     finally { images.Dispose(); }
+                    WriteMark(imgPath, content);
                     string file = Path.Combine(docs, Loc.T("export_file_name") + ".html");
                     File.WriteAllText(file, html.Replace(DataMarker, json), new System.Text.UTF8Encoding(false));
                     Speech.Say(Loc.T("export_done", file));
@@ -57,9 +64,17 @@ namespace StacklandAccessNS
 
                 string dir = Path.Combine(docs, SiteFolder);
                 string dataDir = Path.Combine(dir, "data");
+                // The website has no save data: if the game's content did not change, it is already up to date.
+                if (ReadMark(dir) == content && File.Exists(Path.Combine(dir, "index.html")) && File.Exists(Path.Combine(dataDir, "languages.json")))
+                {
+                    Speech.Say(Loc.T("export_site_same", dir));
+                    Application.OpenURL(new Uri(dir).AbsoluteUri);
+                    return;
+                }
+                bool siteChanged = ReadMark(Path.Combine(dir, "img")) != content;
                 Directory.CreateDirectory(dataDir);
                 var languages = new List<object>();
-                var siteImages = new CardImages(Path.Combine(dir, "img"));
+                var siteImages = new CardImages(Path.Combine(dir, "img"), rewrite: siteChanged);
                 Speech.Say(Loc.T("export_working"));
                 var loc = SokLoc.instance;
                 string original = loc != null ? loc.CurrentLanguage : null;
@@ -84,6 +99,8 @@ namespace StacklandAccessNS
                 File.WriteAllText(Path.Combine(dataDir, "languages.json"), JsonConvert.SerializeObject(languages), new System.Text.UTF8Encoding(false));
                 File.WriteAllText(Path.Combine(dir, "index.html"), html.Replace(DataMarker, "null"), new System.Text.UTF8Encoding(false));
                 File.WriteAllText(Path.Combine(dir, ".nojekyll"), "");
+                WriteMark(Path.Combine(dir, "img"), content);
+                WriteMark(dir, content);
                 Speech.Say(Loc.T("export_site_done", dir, languages.Count));
                 Application.OpenURL(new Uri(dir).AbsoluteUri);
             }
@@ -91,6 +108,51 @@ namespace StacklandAccessNS
             {
                 Log.Once(ex);
                 Speech.Say(Loc.T("export_failed"));
+            }
+        }
+
+        private const string MarkFile = ".stacklandaccess-content";
+
+        private static string ReadMark(string folder)
+        {
+            try { string f = Path.Combine(folder, MarkFile); return File.Exists(f) ? File.ReadAllText(f).Trim() : ""; }
+            catch { return ""; }
+        }
+
+        private static void WriteMark(string folder, string content)
+        {
+            try { Directory.CreateDirectory(folder); File.WriteAllText(Path.Combine(folder, MarkFile), content); }
+            catch (Exception ex) { Log.Once(ex); }
+        }
+
+        /// <summary>
+        /// Short summary of everything the page is made from: game and mod versions, loaded mods, every card, idea,
+        /// recipe and pack, the page template and the mod's texts. It changes when a game update, a DLC or a mod
+        /// adds or changes content; then the data and pictures are extracted again.
+        /// </summary>
+        private static string Fingerprint(WorldManager wm, string template, string texts)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append(Application.version).Append('|').Append(StacklandAccess.ModVersion).Append('|');
+            try
+            {
+                foreach (var m in (ModManager.LoadedMods ?? new List<Mod>()).OrderBy(m => m?.Manifest?.Id))
+                    if (m?.Manifest != null) sb.Append(m.Manifest.Id).Append('@').Append(m.Manifest.Version).Append(';');
+            }
+            catch { }
+            foreach (var cd in wm.CardDataPrefabs.Where(c => c != null).OrderBy(c => c.Id, StringComparer.Ordinal))
+            {
+                sb.Append(cd.Id).Append(',').Append(cd.Value).Append(',').Append(cd.Icon != null ? cd.Icon.name : "").Append(';');
+            }
+            foreach (var bp in wm.BlueprintPrefabs.Where(b => b?.Subprints != null).OrderBy(b => b.Id, StringComparer.Ordinal))
+                foreach (var sp in bp.Subprints.Where(x => x != null))
+                    sb.Append(bp.Id).Append(':').Append(string.Join("+", sp.RequiredCards ?? new string[0])).Append('>').Append(sp.ResultCard).Append(';');
+            foreach (var p in wm.BoosterPackDatas ?? new List<BoosterpackData>()) if (p != null) sb.Append(p.BoosterId).Append(';');
+            sb.Append(template).Append('|').Append(texts);
+            using (var sha = System.Security.Cryptography.SHA1.Create())
+            {
+                var hash = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(sb.ToString()));
+                return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
             }
         }
 

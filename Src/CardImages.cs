@@ -13,10 +13,15 @@ namespace StacklandAccessNS
         private readonly Dictionary<Texture, Texture2D> readable = new Dictionary<Texture, Texture2D>();
         private readonly Dictionary<(Sprite, Color32), string> saved = new Dictionary<(Sprite, Color32), string>();
         private readonly string folder;
+        /// <summary>False when the game's content has not changed since the last export: existing pictures are kept.</summary>
+        private readonly bool rewrite;
 
-        public CardImages(string folder)
+        public int Written { get; private set; }
+
+        public CardImages(string folder, bool rewrite = true)
         {
             this.folder = folder;
+            this.rewrite = rewrite;
             Directory.CreateDirectory(folder);
         }
 
@@ -45,6 +50,13 @@ namespace StacklandAccessNS
             if (sprite == null || sprite.texture == null) return null;
             Color32 key = tint ?? new Color(0, 0, 0, 0);
             if (saved.TryGetValue((sprite, key), out var existing)) return existing;
+            string file = Safe(name) + ".png";
+            // Same game content as last time: the picture on disk is already right, nothing to extract.
+            if (!rewrite && File.Exists(Path.Combine(folder, file)))
+            {
+                saved[(sprite, key)] = file;
+                return file;
+            }
             try
             {
                 var src = Readable(sprite.texture);
@@ -60,8 +72,8 @@ namespace StacklandAccessNS
                 var cut = new Texture2D(w, h, TextureFormat.RGBA32, false);
                 cut.SetPixels(pixels);
                 cut.Apply();
-                string file = Safe(name) + ".png";
                 File.WriteAllBytes(Path.Combine(folder, file), cut.EncodeToPNG());
+                Written++;
                 Object.Destroy(cut);
                 saved[(sprite, key)] = file;
                 return file;

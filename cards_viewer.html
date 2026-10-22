@@ -68,6 +68,15 @@ dialog.wide { width: min(1500px, calc(100% - 24px)); }
 .dlg-grid { display: grid; grid-template-columns: minmax(280px, 400px) 1fr; gap: 18px; align-items: start; }
 .dlg-left { max-height: calc(100vh - 90px); overflow: auto; padding-right: 6px; }
 .tree-box { min-width: 0; }
+.mini { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; gap: 1px; margin: 2px 1px;
+        padding: 0; border: 0; background: none; color: var(--ink); font: inherit; cursor: pointer; }
+.mini .face { width: 40px; height: 52px; border-radius: 7px; border: 2px solid var(--line); background: var(--panel);
+              display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; overflow: hidden; }
+.mini .face img { max-width: 32px; max-height: 32px; }
+.mini .qty { font-size: .78rem; font-weight: 700; line-height: 1; }
+.mini:hover .face, .mini:focus-visible .face { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,.3); }
+.icons { display: flex; flex-wrap: wrap; gap: 4px; }
+li.recipe { line-height: 2.2; }
 .tree-box h3 { margin: 0 0 4px; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; font-size: .9rem; margin: 0 0 8px; }
 .legend svg { vertical-align: middle; }
@@ -479,12 +488,58 @@ function showTip(text, el) {
 function hideTip() { $("tip").style.display = "none"; }
 
 let returnFocus = null;
+/**
+ * A card shown as its small picture (in the game's colours) instead of a text link, with "×3" under it for
+ * several of the same card. Hovering or focusing says its name and count ("Brick ×3") and its information;
+ * a click opens it.
+ */
+function cardIcon(id, count = 1, label = null) {
+  const k = byId.get(id);
+  const name = label || nameOf(id);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "mini";
+  const spoken = count > 1 ? `${name} ×${count}` : name;
+  b.setAttribute("aria-label", spoken);
+  const face = document.createElement("span"); face.className = "face"; face.setAttribute("aria-hidden", "true");
+  if (k && k.colors) {
+    const bg = toPalette(k.colors[0]);
+    face.style.background = bg; face.style.borderColor = bg; face.style.color = inkFor(bg);
+  }
+  if (k && k.img) {
+    const img = document.createElement("img"); img.alt = ""; img.src = encodeURI(D.imgBase + k.img);
+    img.onerror = () => { img.remove(); face.textContent = name.slice(0, 2); };
+    face.appendChild(img);
+  } else face.textContent = name.slice(0, 2);
+  b.appendChild(face);
+  if (count > 1) { const q = document.createElement("span"); q.className = "qty"; q.setAttribute("aria-hidden", "true"); q.textContent = "×" + count; b.appendChild(q); }
+  const tip = k ? TextJoin(spoken, infoLine(k), howShort(k)) : spoken;
+  b.addEventListener("mouseenter", () => showTip(tip, b));
+  b.addEventListener("focus", () => showTip(tip, b));
+  b.addEventListener("mouseleave", hideTip);
+  b.addEventListener("blur", hideTip);
+  if (k) b.addEventListener("click", () => { hideTip(); openCard(id); }); else b.disabled = true;
+  return b;
+}
+/** Same cards counted together, keeping their order: [{id, label, count}]. */
+function grouped(list) {
+  const out = [];
+  list.forEach(x => { const f = out.find(o => o.id === x.id); if (f) f.count++; else out.push({ id: x.id, label: x.label, count: 1 }); });
+  return out;
+}
 function cardLink(id) {
   const b = document.createElement("button");
   b.className = "link"; b.type = "button";
   b.textContent = nameOf(id);
   if (byId.has(id)) b.addEventListener("click", () => openCard(id)); else b.disabled = true;
   return b;
+}
+/** A heading and a row of card pictures. */
+function iconSection(body, title, ids) {
+  const h = document.createElement("h3"); h.textContent = title; body.appendChild(h);
+  if (!ids.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = T.web_none; body.appendChild(p); return; }
+  const row = document.createElement("div"); row.className = "icons";
+  grouped(ids.map(id => ({ id }))).forEach(p => row.appendChild(cardIcon(p.id, p.count)));
+  body.appendChild(row);
 }
 function section(body, title, items, build) {
   const h = document.createElement("h3"); h.textContent = title; body.appendChild(h);
@@ -495,12 +550,15 @@ function section(body, title, items, build) {
 }
 function recipeItem(li, r) {
   if (!recipeKnown(r)) { li.textContent = T.web_unknown; return; }
+  li.className = "recipe";
   if (r.idea) li.append(r.idea + " : ");
-  r.req.forEach((q, i) => {
-    if (i) li.append(" + ");
-    if (q.ids.length === 1) li.append(cardLink(q.ids[0])); else li.append(q.label);
-  });
-  if (r.output.length) { li.append(" → "); r.output.forEach((id, i) => { if (i) li.append(", "); li.append(cardLink(id)); }); }
+  // "Any villager" lists every villager-like card: show the one the requirement is named after.
+  const parts = grouped(r.req.map(q => ({ id: q.ids.find(x => byId.has(x) && nameOf(x) === q.label) || q.ids.find(x => byId.has(x)) || q.ids[0], label: q.ids.length > 1 ? q.label : null })));
+  parts.forEach((p, i) => { if (i) li.append(" + "); li.append(cardIcon(p.id, p.count, p.label)); });
+  if (r.output.length) {
+    li.append(" → ");
+    grouped(r.output.map(id => ({ id }))).forEach((p, i) => { if (i) li.append(" "); li.append(cardIcon(p.id, p.count)); });
+  }
   const t = time(r.time);
   if (t) li.append(` (${T.web_time} ${t})`);
   if (r.group) li.append(` — ${T.web_group} : ${r.group}`);
@@ -560,13 +618,13 @@ function openCard(id, from) {
   if (c.idea) section(body, T.web_idea_recipes, ofIdea.get(id) || [], recipeItem);
   section(body, T.web_how, producedBy.get(id) || [], recipeItem);
   section(body, T.web_packs, inPacks.get(id) || [], (li, p) => {
-    li.append(cardLink("pack:" + p.id));
+    li.append(cardIcon("pack:" + p.id));
     const o = packOdds(p, id);
     li.append(` — ${p.cost} ${p.currency}${o != null ? ", " + pct(o) + " " + T.web_pack_per_draw : ""}`);
   });
-  section(body, T.web_from, droppedBy.get(id) || [], (li, d) => li.append(cardLink(d.id)));
+  iconSection(body, T.web_from, (droppedBy.get(id) || []).map(d => d.id));
   section(body, T.web_used, usedIn.get(id) || [], recipeItem);
-  if (c.drops) section(body, T.web_drops, c.drops, (li, d) => li.append(cardLink(d)));
+  if (c.drops) iconSection(body, T.web_drops, c.drops);
   drawTree(c, treeBox);
   finishDialog(h);
 }
@@ -779,7 +837,7 @@ function packDetails(p, body, facts, fact) {
     const ul = document.createElement("ul");
     [...b.cards].sort((x, y) => (y.pct ?? -1) - (x.pct ?? -1)).forEach(x => {
       const li = document.createElement("li");
-      if (x.enemy || !x.id) li.append(T.web_pack_enemy); else li.append(cardLink(x.id));
+      if (x.enemy || !x.id) li.append(T.web_pack_enemy); else li.append(cardIcon(x.id), " " + nameOf(x.id));
       const notes = [];
       if (x.pct != null) notes.push(pct(x.pct));
       if (x.max != null) notes.push(fmt(T.web_pack_max, x.max));
