@@ -171,6 +171,8 @@ Press **F6** (in a menu or on the board) to create `Stacklands - cards.html` in 
 
 Press F6 again after discovering new cards to update it.
 
+Clicking a card opens its details on the left and its tech tree on the right: the card in the middle, what it is made with above, what is made with it below. A solid line (straight down) means the card is used up as a material; a dashed line (smaller cards on a diagonal) means it is used as a tool and kept, like a stove. Hovering or focusing a card of the tree gives its information, a click opens its own tree.
+
 The "View" menu of the page also shows two tables: every type of villager, and every creature and enemy, with health, attack, defence, combat type, attack speed, hit chance, special effects (poison, stun…), food per moon and equipment.
 
 **Shift+F6** makes the same page as a public website, in every language of the game and without your save data, in `Documents\Stacklands cards site`. `tools\update-site.ps1` copies it into `docs/` for GitHub Pages.

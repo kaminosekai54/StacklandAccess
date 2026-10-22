@@ -286,10 +286,16 @@ namespace StacklandAccessNS
                 {
                     if (sp?.RequiredCards == null || sp.RequiredCards.Length == 0) continue;
                     var req = new List<object>();
+                    // Cards the recipe uses up; the others stay (a stove, a villager): tools.
+                    var removed = new List<string[]>();
+                    try { removed = sp.GetAllCardsToRemove().Select(x => (x ?? "").Split('|')).ToList(); } catch { }
                     foreach (var r in sp.RequiredCards)
                     {
                         var allowed = Recipes.AllowedIds(sp, r);
-                        req.Add(new { label = Recipes.RequirementName(r, allowed), ids = allowed.Distinct().ToArray() });
+                        int hit = removed.FindIndex(x => x.Any(allowed.Contains));
+                        bool kept = hit < 0;
+                        if (hit >= 0) removed.RemoveAt(hit);
+                        req.Add(new { label = Recipes.RequirementName(r, allowed), ids = allowed.Distinct().ToArray(), kept });
                     }
                     var output = new List<string>();
                     if (!string.IsNullOrEmpty(sp.ResultCard)) output.Add(sp.ResultCard);
@@ -478,7 +484,7 @@ namespace StacklandAccessNS
                 "web_how", "web_used", "web_packs", "web_drops", "web_from", "web_none", "web_close", "web_value", "web_food",
                 "web_health", "web_attack", "web_defence", "web_category_label", "web_unknown", "web_rumor", "web_idea", "web_time",
                 "web_generated", "web_generated_site", "web_type", "web_content", "web_obtain", "web_obtain_recipe", "web_obtain_pack",
-                "web_obtain_drop", "web_obtain_none", "web_sort", "web_sort_name", "web_sort_value", "web_sort_food", "web_sort_attack", "web_sort_age", "web_age", "web_age_n", "web_age_unknown", "web_view", "web_view_grid", "web_view_villagers", "web_view_creatures", "web_combat_type", "web_attack_speed", "web_hit_chance", "web_special", "web_eats", "web_equip", "web_yes", "web_no", "web_seconds", "web_table_name", "web_table_desc", "web_no_attack", "news_title", "news_lines",
+                "web_obtain_drop", "web_obtain_none", "web_sort", "web_sort_name", "web_sort_value", "web_sort_food", "web_sort_attack", "web_sort_age", "web_age", "web_age_n", "web_age_unknown", "web_view", "web_view_grid", "web_view_villagers", "web_view_creatures", "web_combat_type", "web_attack_speed", "web_hit_chance", "web_special", "web_eats", "web_equip", "web_yes", "web_no", "web_seconds", "web_table_name", "web_table_desc", "web_no_attack", "news_title", "news_lines", "web_tree", "web_tree_direct", "web_tree_tool", "web_tree_needs", "web_tree_needs_tool", "web_tree_more", "web_tree_none", "web_tree_open",
                 "web_language", "web_reset", "web_loading", "web_group", "web_idea_recipes", "web_pack", "web_pack_cost", "web_pack_place", "web_pack_unlock", "web_pack_unlock_start", "web_pack_unlock_quests", "web_pack_ev", "web_pack_bags", "web_pack_bag", "web_pack_fixed", "web_pack_enemy", "web_pack_needs", "web_pack_max", "web_pack_intro", "web_pack_strength", "web_packs_cat", "web_pack_per_draw",
             };
             return keys.ToDictionary(k => k, k => Loc.T(k));

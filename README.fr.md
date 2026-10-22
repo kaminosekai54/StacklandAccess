@@ -169,6 +169,8 @@ Appuyez sur **F6** (dans un menu ou sur le plateau) pour créer `Stacklands - ca
 - les paquets (catégorie Paquets) : prix, où ils sont vendus, comment les débloquer, valeur moyenne, et toutes les cartes qu'ils peuvent donner avec leur chance par tirage ;
 - des filtres : catégorie, type de carte, contenu (jeu de base, île, forêt sombre, esprits, Cités…), obtention (recette, paquet, butin) ; tri par nom, prix de vente, nourriture ou attaque.
 
+Un clic sur une carte ouvre ses détails à gauche et son arbre technologique à droite : la carte au centre, ce qui sert à la fabriquer au-dessus, ce qu'on fabrique avec en dessous. Un trait continu (tout droit vers le bas) signifie que la carte est consommée comme matériau ; un trait pointillé (cartes plus petites en diagonale) qu'elle sert d'outil et reste, comme un fourneau. Le survol ou le focus d'une carte de l'arbre donne ses informations, un clic ouvre son propre arbre.
+
 Le menu « Affichage » de la page montre aussi deux tableaux : tous les types de villageois, et toutes les créatures et ennemis, avec points de vie, attaque, défense, type de combat, vitesse d'attaque, chance de toucher, effets spéciaux (poison, étourdissement…), nourriture par lune et équipement.
 
 Appuyez de nouveau sur F6 après de nouvelles découvertes pour la mettre à jour.

@@ -63,7 +63,7 @@ Paste everything below the line into the "change notes" field of the in-game upl
 [*][b]First launch:[/b] you choose whether the narration is on. "No" makes the mod completely silent, for a sighted player; Ctrl+F2 switches it at any time.
 [*][b]What's new:[/b] after an update, a window lists the changes once (also the first line of the help, F1).
 [*][b]E, connections:[/b] energy, sewer and transport links of a stack, what they give it and where the linked cards are; connect and disconnect from the list.
-[*][b]F6, card list:[/b] a web page with every card, idea and pack of the game, made from your game and language: recipes, pack odds, drops, filters (type, content, tech age, how to get it), and tables of villager and enemy stats (health, attack, defence, attack speed, hit chance, special effects). Shift+F6 makes it as a public website in every language.
+[*][b]F6, card list:[/b] a web page with every card, idea and pack of the game, made from your game and language: recipes, pack odds, drops, filters (type, content, tech age, how to get it), a tech tree for each card (materials straight down, tools on a dashed diagonal), and tables of villager and enemy stats (health, attack, defence, attack speed, hit chance, special effects). Shift+F6 makes it as a public website in every language.
 [/list]
 [b]Improved[/b]
 [list]
@@ -82,7 +82,7 @@ Paste everything below the line into the "change notes" field of the in-game upl
 [*][b]Premier lancement :[/b] vous choisissez si la narration est activée ; Ctrl+F2 la change à tout moment.
 [*][b]Nouveautés :[/b] après une mise à jour, une fenêtre liste les changements une fois (aussi en première ligne de l'aide F1).
 [*][b]E, connexions :[/b] énergie, égout et transport d'une pile, et où sont les cartes reliées.
-[*][b]F6, liste des cartes :[/b] page web de toutes les cartes, idées et paquets du jeu : recettes, probabilités des paquets, filtres, âge technologique, tableaux des stats des villageois et des ennemis.
+[*][b]F6, liste des cartes :[/b] page web de toutes les cartes, idées et paquets du jeu : recettes, probabilités des paquets, filtres, âge technologique, arbre technologique de chaque carte, tableaux des stats des villageois et des ennemis.
 [*][b]Recettes (L) :[/b] la page production ne propose que ce qu'un bâtiment peut vraiment faire, avec une liste de choix quand il y en a plusieurs. Les recettes faites sans l'idée sont maintenant connues.
 [*][b]F5[/b] regroupe toutes les cartes identiques inoccupées ; [b]Ctrl+F5[/b] seulement la catégorie en cours.
 [/list]

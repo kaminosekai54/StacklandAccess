@@ -14,6 +14,7 @@
   - how to get each card (recipes, packs with their chance, drops), the recipes that use it, what it drops;
   - packs: price, where they are sold, how to unlock them, average value, every card they can give with its chance per draw, limits and conditions;
   - filters: category, card type, content (base game, island, dark forest, spirits, Cities…), tech age, how to get it; sort by name, value, food, attack or tech age; tech age badge on each card;
+  - tech tree, "Age of Empires" style, next to the details of a card: the card in the middle, what it is made with above, what is made with it below; used up as a material straight down with a solid line, used as a tool (a stove for a quiche) smaller on a diagonal with a dashed line; hovering or focusing a card gives its information and recipes, a click opens its own tree;
   - tables of every villager type and every creature and enemy: health, attack, defence, combat type, attack speed, hit chance, special effects, food per moon, equipment;
   - undiscovered cards hidden by default.
 - **Shift+F6** makes the same page as a public website in every language of the game, without save data, ready for GitHub Pages.
