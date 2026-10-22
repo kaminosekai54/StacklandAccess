@@ -25,6 +25,7 @@ namespace StacklandAccessNS
         private ConfigEntry<bool> cfgVisual;
         private ConfigEntry<bool> cfgController;
         private ConfigEntry<bool> cfgFirstLaunchDone;
+        private ConfigEntry<string> cfgLastVersion;
 
         /// <summary>The on/off settings by key, for the options menu (F7).</summary>
         private readonly Dictionary<string, ConfigEntry<bool>> bools = new Dictionary<string, ConfigEntry<bool>>();
@@ -78,6 +79,8 @@ namespace StacklandAccessNS
             bools["controller_support"] = cfgController;
             cfgFirstLaunchDone = Config.GetEntry<bool>("first_launch_done", false);
             cfgFirstLaunchDone.UI.Hidden = true;
+            cfgLastVersion = Config.GetEntry<string>("last_version_seen", "");
+            cfgLastVersion.UI.Hidden = true;
             cfgNarration.UI.Name = Loc.T("cfg_narration");
             cfgVisual.UI.Name = Loc.T("cfg_visual");
             bools["narration"] = cfgNarration;
@@ -177,6 +180,24 @@ namespace StacklandAccessNS
             SetBool("narration", on);
             if (Instance == null) Speech.Enabled = on;
             if (on) Speech.Say(Loc.T("narration_on"));
+        }
+
+        /// <summary>Version of the mod (manifest).</summary>
+        public static string ModVersion
+        {
+            get { try { return Instance?.Manifest?.Version ?? ""; } catch { return ""; } }
+        }
+
+        /// <summary>Last version whose release notes were shown.</summary>
+        public static string LastVersionSeen
+        {
+            get { var i = Instance; return i?.cfgLastVersion?.Value ?? ""; }
+            set
+            {
+                var i = Instance;
+                if (i == null || i.cfgLastVersion == null) return;
+                try { i.cfgLastVersion.Value = value; i.Config.Save(); } catch (System.Exception ex) { Log.Once(ex); }
+            }
         }
 
         public static bool FirstLaunchDone

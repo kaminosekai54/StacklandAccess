@@ -302,6 +302,8 @@ namespace StacklandAccessNS
         public static List<Entry> Help()
         {
             var list = Loc.T("help_lines").Split('|').Select(l => new Entry(l)).ToList();
+            // First line: what is new in this version (Enter reads it all).
+            list.Insert(0, new Entry(FirstLaunch.NewsTitle, string.Join(" ", FirstLaunch.NewsLines)));
             list.Add(new Entry(Loc.T("help_conn")));
             list.Add(new Entry(Loc.T("help_export")));
             list.Add(new Entry(Loc.T("help_options")));

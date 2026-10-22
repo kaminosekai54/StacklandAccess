@@ -27,6 +27,9 @@ label.f { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
 label.check { display: flex; align-items: center; gap: 8px; }
 input[type=search], select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); width: 100%; }
 button.plain { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); cursor: pointer; }
+#news { margin: 8px 0 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+#news summary { font-weight: 700; cursor: pointer; }
+#news ul { margin: 6px 0 2px; padding-left: 20px; }
 #hint { color: var(--muted); font-size: .9rem; margin: 0; }
 #count { font-weight: 600; margin: 8px 0; }
 .tablewrap { overflow-x: auto; }
@@ -83,6 +86,7 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
   <label class="f" id="langBox" hidden><span id="l-lang">Language</span><select id="lang"></select></label>
 </header>
 <main>
+  <details id="news" hidden><summary id="newsTitle"></summary><ul id="newsList"></ul></details>
   <div class="controls" role="search">
     <label class="f wide" for="q"><span id="l-search"></span>
       <input id="q" type="search" autocomplete="off" aria-describedby="hint">
@@ -252,6 +256,12 @@ function start(data) {
   $("l-obtain").textContent = T.web_obtain;
   $("l-age").textContent = T.web_age || "Tech age";
   $("l-sort").textContent = T.web_sort;
+  if (T.news_title && T.news_lines && D.modVersion) {
+    $("newsTitle").textContent = fmt(T.news_title, D.modVersion);
+    const ul = $("newsList"); ul.innerHTML = "";
+    T.news_lines.split("|").forEach(l => { const li = document.createElement("li"); li.textContent = l; ul.appendChild(li); });
+    $("news").hidden = false;
+  }
   $("l-view").textContent = T.web_view || "View";
   options($("view"), [["grid", T.web_view_grid || "Cards"], ["villagers", T.web_view_villagers || "Villagers (table)"], ["creatures", T.web_view_creatures || "Creatures and enemies (table)"]], null);
   $("l-found").textContent = T.web_only_found;

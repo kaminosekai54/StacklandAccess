@@ -1,16 +1,37 @@
 # Changelog
 
-## 0.7.0 – Options, key remapping and visual menus
+## 0.7.0 – Card list, options, controller
 
-- F7 opens the mod's options, anywhere in the game: turn each feature on or off, and change every key (except the navigation keys). A key already used goes to the other action. Keys are saved in `StacklandAccess_keys.txt`, next to the game's saves.
-- The mod's menus (lists, options, text fields of the multiplayer panel) are also drawn on screen with the game's own panel, fonts and buttons, for sighted people watching; the buttons can be clicked. The game is not paused. Can be turned off in the options.
-- Production buildings page (L, second page) rebuilt: one line per building that can make something right now with your cards, and nothing else (no soil on a stove, no empty chest on the university). With several choices (a stove: omelette, quiche…), Enter opens the list of choices; Escape goes back.
-- Recipes made without the idea (by chance or by trying) are now known: they appear in the recipes (L) and on the card page (F6). The mod remembers every recipe you finish (`StacklandAccess_crafted.txt`); for older crafts, a recipe counts as known when you have found its result and only that recipe gives it.
-- Controller support: the whole mod can be played with a controller (directions, A, B, X, Y, shoulders, Start, Select, sticks), with two more sets of actions while holding LT or RT. The game's own controller controls are turned off while it is on (option).
-- Card page: "View" menu with a table of every villager type and a table of every creature and enemy: health, attack, defence, combat type, attack speed, hit chance, special effects, food per moon, equipment. The details of a card show the same.
-- First launch: a window of the game asks whether to turn on the narration. "No" turns off everything the mod says and plays; Ctrl+F2 (or the options) turns it back on.
+### New
+- **F7, options of the mod**, anywhere in the game: turn each feature on or off, and change every key (except the navigation keys). A key already used goes to the other action. Keys are saved in `StacklandAccess_keys.txt`, next to the game's saves.
+- **Controller support**: the whole mod can be played with a controller (directions, A, B, X, Y, shoulders, Start, Select, sticks), with two more sets of actions while holding LT or RT. The game's own controller controls are turned off while it is on (option). F1 lists the buttons.
+- **Visual menus**: the mod's menus are also drawn on screen with the game's own panel, fonts and buttons, for sighted people watching; the buttons can be clicked and the game is not paused. Villagers top right, recipes bottom right, help top left, the others in the middle. Can be turned off in the options.
+- **First launch**: a window of the game asks whether to turn on the narration. "No" turns off everything the mod says and plays; Ctrl+F2 (or the options) turns it back on.
+- **What's new**: after an update, a window of the game lists the changes once; they are also the first line of the help (F1).
+- **E, connections and placement**: connections of a stack (energy cables, sewer pipes, transport arrows), with what they give it and where the linked cards are; connect and disconnect from the list; pages with every connection and with the cards lacking energy or sewer. In move mode, E says where the linked cards are.
+- **F6, card page**: a web page with every card, idea and pack of the game (also the ones not discovered yet, and the installed DLCs), made from your own game and language, opened in your browser:
+  - searchable grid of cards drawn like in the game (colour, icon); hovering or focusing gives the information, a click opens the full details;
+  - how to get each card (recipes, packs with their chance, drops), the recipes that use it, what it drops;
+  - packs: price, where they are sold, how to unlock them, average value, every card they can give with its chance per draw, limits and conditions;
+  - filters: category, card type, content (base game, island, dark forest, spirits, Cities…), tech age, how to get it; sort by name, value, food, attack or tech age; tech age badge on each card;
+  - tables of every villager type and every creature and enemy: health, attack, defence, combat type, attack speed, hit chance, special effects, food per moon, equipment;
+  - undiscovered cards hidden by default.
+- **Shift+F6** makes the same page as a public website in every language of the game, without save data, ready for GitHub Pages.
 
-## 0.6.0 – Multiplayer with Stacklands Together
+### Improved
+- **Recipes (L), production page**: one line per building that can make something right now with your cards, and nothing else: gardens, farms and greenhouses (one choice per plant), sawmill, brickyard, composter, fish traps, animal and breeding pens, hotpots, buildings with a single use (university, temple, altar…) and recipes made on a building (stove, smithy…). With several choices (a stove: omelette, quiche…), Enter opens the list of choices; Escape goes back.
+- **Recipes made without the idea** (by chance or by trying) are known: they appear in the recipes (L) and on the card page. The mod remembers every recipe you finish (`StacklandAccess_crafted.txt`); for older crafts, a recipe counts as known when you have found its result and only that recipe gives it.
+- L has an "All ideas and rumors" page again, and rumors you found are listed in their group (I reads them).
+- Recipes: each card is checked by the game's own rules before it is put on the pile.
+- **F5** regroups every identical idle card (resources, food, fish, equipment), also out of mixed piles; cards of a craft in progress and cards that make something together are left alone. **Ctrl+F5** does the same in the current category only.
+- Gardens, farms, greenhouses, mills, ovens, smelters and other production buildings are always in the Buildings category (H).
+- The Industrial Revolution card (Cities DLC) is announced, listed in Locations (U), and its line explains to put a villager on it to go to the city.
+
+### Known limitations
+- DLC content (for example Cities) has not been tested much yet.
+- Multiplayer support (Stacklands Together) is not part of this release yet.
+
+## Not released yet – Multiplayer with Stacklands Together
 
 Compatibility with the [Stacklands Together](https://steamcommunity.com/sharedfiles/filedetails/?id=3778278988) multiplayer mod (tested against version 0.7.32, without a real game session yet).
 
@@ -26,19 +47,6 @@ Compatibility with the [Stacklands Together](https://steamcommunity.com/sharedfi
 - As a client, combat hits replayed by the host are announced, and buying a pack sends just enough money.
 - Only the host can change the game speed; the speed keys say so on a client. Automatic stacking is paused during a session, so it never moves other players' cards.
 - No flood of "new card" announcements while the host's world is copied to your game.
-- Recipes: each card is checked by the game's own rules before it is put on the pile, also in single player.
-- Production buildings page (L): gardens, farms and greenhouses (one line per plant you can grow, with the harvest and the time), fish traps, animal pens, breeding pens and hotpots. Enter puts the cards on the building.
-- F5 now regroups every identical idle card (resources, food, fish, equipment), also out of mixed piles; cards of a craft in progress and cards that make something together are left alone. Ctrl+F5 does the same in the current category only.
-- Production buildings page (L) also lists the buildings with a single use (university, academy, laboratory…) and the recipes that use a building on your board (temple, smithy, lighthouse…). It only offers what really produces something with the cards you have: no villager on a campfire, no recipe with missing cards, no building with nothing to put on it.
-- L has an "All ideas and rumors" page again, and rumors you found are listed in their group (I reads them).
-- The Industrial Revolution card (Cities DLC) is announced, listed in Locations (U), and its line explains to put a villager on it to go to the city.
-- Card page: every card and every idea of the game (also the ones not discovered yet, and the installed DLCs); ideas are cards of the grid with their recipe.
-- Card page: packs are in the grid too (category Packs): price and currency, where they are sold, how to unlock them, average value, and every card they can give with its chance per draw, limits and conditions (curses, cards to find first); each card lists its packs with its chance.
-- Card page: cards are drawn like in the game, with the game's colour logic shown in a soft palette (each game colour gets its own palette colour) and their icon (extracted from the game; ideas use the game's idea icon); hovering or focusing a card gives its information, a click opens the full details with a larger card.
-- Card page filters: card type, content (base game, island, dark forest, spirits, Cities…), how to get it; sort by sell value, food or attack. Shift+F6 makes a public website in every language (no save data), ready for GitHub Pages.
-- F6: creates and opens a web page with every card of the game (searchable grid, how to get each card, recipes, packs, drops, recipes that use it), made from your own game and language; undiscovered cards hidden by default.
-- E: connections of a stack (energy cables, sewer pipes, transport arrows), with what they give it and where the linked cards are; connect and disconnect from the list; pages with every connection and with the cards lacking energy or sewer. In move mode, E says where the linked cards are.
-- Gardens, farms, greenhouses, mills, ovens, smelters and other production buildings are always in the Buildings category (H).
 
 ## 0.5.0 – First public release
 
