@@ -137,8 +137,10 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
   <div class="tablewrap" id="tableWrap" hidden></div>
 </main>
 <div id="tip" aria-hidden="true"></div>
+<div id="live" class="sr" aria-live="polite"></div>
 <dialog id="detail" aria-labelledby="d-name">
   <div class="dlg" id="d-body"></div>
+  <div id="liveD" class="sr" aria-live="polite"></div>
 </dialog>
 <script>
 // Personal page: the data is written here by the game (F6). Public site: null, data/*.json is loaded instead.
@@ -427,7 +429,7 @@ function render() {
     b.appendChild(sr);
     b.setAttribute("aria-describedby", "h" + i);
     b.addEventListener("click", () => openCard(c.id, b));
-    b.addEventListener("mouseenter", () => showTip(how, b));
+    b.addEventListener("mouseenter", () => hoverTip(c.name + ". " + how, b));
     b.addEventListener("focus", () => showTip(how, b));
     b.addEventListener("mouseleave", hideTip);
     b.addEventListener("blur", hideTip);
@@ -476,6 +478,21 @@ function renderTable(rows, view) {
   t.appendChild(tb);
   wrap.appendChild(t);
 }
+/**
+ * Mouse hover for screen reader users: the tooltip is only visual, so the same text is sent to a live region
+ * (the one inside the card window when it is open, as the rest of the page is hidden from screen readers then).
+ * Keyboard focus does not need it: the focused element already says its name and description.
+ */
+let lastSpoken = null, liveTimer = null;
+function speak(text, el) {
+  if (el === lastSpoken) return;
+  lastSpoken = el;
+  const live = $("detail").open ? $("liveD") : $("live");
+  live.textContent = "";
+  clearTimeout(liveTimer);
+  liveTimer = setTimeout(() => { live.textContent = text; }, 60);
+}
+function hoverTip(text, el) { showTip(text, el); speak(text, el); }
 function showTip(text, el) {
   const tip = $("tip"), r = el.getBoundingClientRect();
   tip.textContent = text;
@@ -485,7 +502,7 @@ function showTip(text, el) {
   tip.style.left = Math.max(8, x) + "px";
   tip.style.top = y + "px";
 }
-function hideTip() { $("tip").style.display = "none"; }
+function hideTip() { $("tip").style.display = "none"; lastSpoken = null; }
 
 let returnFocus = null;
 /**
@@ -513,7 +530,7 @@ function cardIcon(id, count = 1, label = null) {
   b.appendChild(face);
   if (count > 1) { const q = document.createElement("span"); q.className = "qty"; q.setAttribute("aria-hidden", "true"); q.textContent = "×" + count; b.appendChild(q); }
   const tip = k ? TextJoin(spoken, infoLine(k), howShort(k)) : spoken;
-  b.addEventListener("mouseenter", () => showTip(tip, b));
+  b.addEventListener("mouseenter", () => hoverTip(tip, b));
   b.addEventListener("focus", () => showTip(tip, b));
   b.addEventListener("mouseleave", hideTip);
   b.addEventListener("blur", hideTip);
@@ -737,7 +754,7 @@ function drawTree(c, box) {
     const sr = document.createElement("span"); sr.className = "sr"; sr.id = "t" + (++treeIds); sr.textContent = TextJoin(infoLine(k), howShort(k));
     b.appendChild(sr); b.setAttribute("aria-describedby", sr.id);
     if (cls.includes("center")) b.setAttribute("aria-current", "true");
-    b.addEventListener("mouseenter", () => showTip(how, b));
+    b.addEventListener("mouseenter", () => hoverTip(how, b));
     b.addEventListener("focus", () => showTip(how, b));
     b.addEventListener("mouseleave", hideTip);
     b.addEventListener("blur", hideTip);
