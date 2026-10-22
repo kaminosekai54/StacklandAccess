@@ -141,15 +141,7 @@ namespace StacklandAccessNS
                 if (sp == null || sp.RequiredCards == null || sp.RequiredCards.Length == 0) continue;
                 var plan = Assign(bp, sp, pool);
                 if (blocked) plan.Missing.Add(Loc.T("recipe_blocked"));
-                else if (bp.HasMaxAmountOnBoard && !string.IsNullOrEmpty(sp.ResultCard))
-                {
-                    try
-                    {
-                        if (WorldManager.instance.GetCardCount(sp.ResultCard) >= bp.MaxAmountOnBoard)
-                            plan.Missing.Add(Loc.T("recipe_max", bp.MaxAmountOnBoard));
-                    }
-                    catch (System.Exception ex) { Log.Once(ex); }
-                }
+                else Check(bp, sp, plan);
                 if (plan.Possible) return plan;
                 if (best == null || plan.Missing.Count < best.Missing.Count) best = plan;
             }
@@ -173,19 +165,27 @@ namespace StacklandAccessNS
             return list;
         }
 
-        /// <summary>
-        /// Recipes that use a building on the board (temple, smithy, lighthouse...): one line per recipe,
-        /// for the production buildings page. Growth (garden, farm...) has its own lines there.
-        /// </summary>
-        public static List<ListBrowser.Entry> BuildingRecipes(BoardNavigator board)
+        /// <summary>A recipe that can be made now on a building that stays (stove, smithy, temple...).</summary>
+        internal class BuildingPlan
         {
-            var result = new List<(string building, bool ok, string text, ListBrowser.Entry entry)>();
+            public GameCard Building;
+            public Blueprint Blueprint;
+            public Plan Plan;
+        }
+
+        /// <summary>
+        /// Recipes that can be made right now with a building of the board that is not used up by the recipe
+        /// (a stove cooks, a smithy forges). Growth (garden, farm...) is handled by the production page itself.
+        /// </summary>
+        internal static List<BuildingPlan> BuildingPlans()
+        {
+            var result = new List<BuildingPlan>();
             var wm = WorldManager.instance;
-            if (wm == null) return new List<ListBrowser.Entry>();
-            var buildings = BoardNavigator.AllObjects().OfType<GameCard>().SelectMany(r => r.GetAllCardsInStack())
+            if (wm == null) return result;
+            var buildingIds = new HashSet<string>(BoardNavigator.AllObjects().OfType<GameCard>().SelectMany(r => r.GetAllCardsInStack())
                 .Where(c => c != null && !c.Destroyed && c.CardData != null && BoardNavigator.CategoryOf(c) == BoardNavigator.Category.Buildings)
-                .GroupBy(c => c.CardData.Id).ToDictionary(g => g.Key, g => g.First());
-            if (buildings.Count == 0) return new List<ListBrowser.Entry>();
+                .Select(c => c.CardData.Id));
+            if (buildingIds.Count == 0) return result;
             var pool = Pool();
             bool cities = wm.CurrentBoard != null && wm.CurrentBoard.Id == "cities";
             foreach (var bp in wm.BlueprintPrefabs)
@@ -195,32 +195,53 @@ namespace StacklandAccessNS
                 if (data == null || (data.CardUpdateType == CardUpdateType.Cities) != cities) continue;
                 foreach (var sp in bp.Subprints)
                 {
-                    if (sp?.RequiredCards == null) continue;
-                    string buildingId = null;
-                    foreach (var req in sp.RequiredCards)
-                    {
-                        buildingId = AllowedIds(sp, req).FirstOrDefault(id => buildings.ContainsKey(id));
-                        if (buildingId != null) break;
-                    }
-                    if (buildingId == null) continue;
+                    if (sp?.RequiredCards == null || sp.RequiredCards.Length == 0) continue;
+                    // Which building of the board this recipe is made on.
+                    var here = new HashSet<string>(sp.RequiredCards.Where(r => r != null).SelectMany(r => AllowedIds(sp, r)).Where(buildingIds.Contains));
+                    if (here.Count == 0) continue;
+                    // A recipe that uses the building up (soil for a farm) is a construction, not production.
+                    var removed = new HashSet<string>((sp.CardsToRemove ?? new string[0]).Where(r => r != null).SelectMany(r => AllowedIds(sp, r)));
+                    if (here.All(removed.Contains)) continue;
                     Plan plan = null;
                     try { plan = Assign(bp, sp, pool); } catch (System.Exception ex) { Log.Once(ex); }
-                    if (plan == null) continue;
-                    string bname = CardInfo.Name(buildings[buildingId]);
-                    string idea = TextCleaner.Clean(bp.KnowledgeName);
-                    string status = plan.Possible ? Loc.T("recipe_possible") : Loc.T("recipe_missing", string.Join(", ", plan.Missing));
-                    string title = TextCleaner.Join(bname + " : " + idea + " : " + Ingredients(sp), Duration(sp), status);
-                    var p = plan;
-                    var b = bp;
-                    var entry = new ListBrowser.Entry(title) { Info = () => ResultInfo(b) };
-                    if (p.Possible) entry.OnActivate = () => Build(p, board);
-                    result.Add((bname, p.Possible, title, entry));
+                    if (plan == null || !plan.Possible || plan.AlreadyInPlace) continue;
+                    Check(bp, sp, plan);
+                    if (!plan.Possible) continue;
+                    var building = plan.Cards.FirstOrDefault(c => here.Contains(c.CardData.Id) && !removed.Contains(c.CardData.Id));
+                    if (building == null) continue;
+                    result.Add(new BuildingPlan { Building = building, Blueprint = bp, Plan = plan });
                 }
             }
-            var cmp = System.StringComparer.CurrentCultureIgnoreCase;
-            return result.GroupBy(x => x.text).Select(g => g.First())
-                .OrderBy(x => x.building, cmp).ThenBy(x => x.ok ? 0 : 1).ThenBy(x => x.text, cmp).Select(x => x.entry).ToList();
+            return result;
         }
+
+        /// <summary>Same rules as the game: the idea may be blocked right now, or already at its maximum on the board.</summary>
+        private static void Check(Blueprint bp, Subprint sp, Plan plan)
+        {
+            bool blocked = false;
+            try { blocked = !bp.CanCurrentlyBeMade; } catch (System.Exception ex) { Log.Once(ex); }
+            if (blocked) { plan.Missing.Add(Loc.T("recipe_blocked")); return; }
+            if (bp.HasMaxAmountOnBoard && !string.IsNullOrEmpty(sp.ResultCard))
+            {
+                try
+                {
+                    if (WorldManager.instance.GetCardCount(sp.ResultCard) >= bp.MaxAmountOnBoard)
+                        plan.Missing.Add(Loc.T("recipe_max", bp.MaxAmountOnBoard));
+                }
+                catch (System.Exception ex) { Log.Once(ex); }
+            }
+        }
+
+        /// <summary>What a recipe gives, for the production lines: "Omelette", or the idea name.</summary>
+        internal static string ResultName(Blueprint bp, Subprint sp)
+        {
+            if (!string.IsNullOrEmpty(sp.ResultCard)) return PrefabName(sp.ResultCard);
+            var extra = sp.ExtraResultCards?.Where(x => !string.IsNullOrEmpty(x)).ToList();
+            if (extra != null && extra.Count > 0) return (extra.Count > 1 ? extra.Count + " " : "") + PrefabName(extra[0]);
+            return TextCleaner.Clean(bp.KnowledgeName);
+        }
+
+        internal static string Info(Blueprint bp) => ResultInfo(bp);
 
         public static List<Blueprint> KnownBlueprints()
         {
@@ -231,7 +252,9 @@ namespace StacklandAccessNS
             try { Subprint.GetSpecialCardIds(); } catch (System.Exception ex) { Log.Once(ex); }
             foreach (var bp in wm.BlueprintPrefabs)
             {
-                if (bp == null || bp.HideFromIdeasTab || !wm.HasFoundCard(bp.Id)) continue;
+                if (bp == null) continue;
+                // Ideas found, and recipes made without the idea (hidden ones too: the player has made them).
+                if (!KnownRecipes.IsKnown(bp)) continue;
                 var c = wm.GameDataLoader.GetCardFromId(bp.Id);
                 if (c == null || (c.CardUpdateType == CardUpdateType.Cities) != cities) continue;
                 list.Add(bp);
@@ -264,6 +287,9 @@ namespace StacklandAccessNS
         /// Pages of the L key: recipes possible now, production buildings, then one page per idea group
         /// (possible ideas first, then the others, each in alphabetical order).
         /// </summary>
+        /// <summary>Index of the production page in <see cref="Pages"/>.</summary>
+        public const int ProductionPage = 1;
+
         public static List<ListBrowser.Page> Pages(BoardNavigator board)
         {
             var pool = Pool();

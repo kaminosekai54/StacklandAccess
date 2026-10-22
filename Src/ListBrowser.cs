@@ -62,9 +62,13 @@ namespace StacklandAccessNS
         public int Index => index;
 
         /// <summary>Opens (or refreshes) the pages at a given page and line, reading only that line.</summary>
-        public void OpenPagesAt(List<Page> newPages, int page, int line, bool speak = true, string toggleAction = null)
+        /// <summary>Run by Escape instead of closing (a list of choices goes back to the list it came from).</summary>
+        private System.Action onBack;
+
+        public void OpenPagesAt(List<Page> newPages, int page, int line, bool speak = true, string toggleAction = null, System.Action onBack = null)
         {
             closeAction = toggleAction;
+            this.onBack = onBack;
             Version++;
             pages = newPages.Where(p => p != null).ToList();
             if (pages.Count == 0) { IsOpen = false; return; }
@@ -76,6 +80,7 @@ namespace StacklandAccessNS
 
         private void OpenPages(List<Page> newPages, int startIndex, bool brief)
         {
+            onBack = null;
             Version++;
             pages = newPages.Where(p => p != null).ToList();
             if (pages.Count == 0 || (pages.Count == 1 && pages[0].Entries.Count == 0))
@@ -124,13 +129,19 @@ namespace StacklandAccessNS
         public void HandleInput()
         {
             if (!IsOpen) return;
+            if (Keys.Down(Key.Escape) && onBack != null) { var back = onBack; onBack = null; back(); return; }
             if (Keys.Down(Key.Escape) || (closeAction != null && Bindings.Pressed(closeAction))) { Close(); return; }
             if (Keys.Down(Key.RightArrow)) { ChangePage(+1); return; }
             if (Keys.Down(Key.LeftArrow)) { ChangePage(-1); return; }
             if (VisualMenu.TakeClick(out int clicked, out int pageMove))
             {
                 if (pageMove != 0) { ChangePage(pageMove); return; }
-                if (clicked < 0) { Close(); return; }
+                if (clicked < 0)
+                {
+                    if (onBack != null) { var back = onBack; onBack = null; back(); }
+                    else Close();
+                    return;
+                }
                 if (clicked < entries.Count) { index = clicked; Version++; Activate(); }
                 return;
             }

@@ -56,6 +56,8 @@ namespace StacklandAccessNS
                     if (c == null || c.Destroyed || !c.FaceUp || c.IsEquipped || c.IsWorking) continue;
                     if ((!people && c.CardData.MyCardType == CardType.Humans) || c.CardData is Blueprint) continue;
                     if (!c.CanBeDragged() || c.BeingDragged) continue;
+                    // An empty coin chest gives nothing to the building that takes coins.
+                    if (c.CardData is Chest chest && chest.CoinCount <= 0) continue;
                     if (Accepts(building.CardData, c.CardData)) list.Add(c);
                 }
             }
@@ -63,9 +65,29 @@ namespace StacklandAccessNS
             return list.OrderBy(c => c.Parent == null && c.Child == null ? 0 : c.Child == null ? 1 : 2).ToList();
         }
 
+        /// <summary>One thing a building can make now.</summary>
+        private class Option
+        {
+            public string Title;
+            public System.Action Run;
+            public System.Func<string> Info;
+        }
+
+        /// <summary>
+        /// The production page: one line per building that can make something right now with the cards of the board.
+        /// Enter makes it; with several choices (a stove: omelette, quiche...), Enter opens the list of choices.
+        /// </summary>
         public static List<ListBrowser.Entry> Entries(BoardNavigator board)
         {
-            var entries = new List<ListBrowser.Entry>();
+            var options = new Dictionary<GameCard, List<Option>>();
+            var order = new List<GameCard>();
+            void Add(GameCard building, Option o)
+            {
+                if (!options.TryGetValue(building, out var l)) { options[building] = l = new List<Option>(); order.Add(building); }
+                if (l.Any(x => x.Title == o.Title)) return;
+                l.Add(o);
+            }
+
             foreach (var card in BoardNavigator.AllObjects().OfType<GameCard>().SelectMany(r => r.GetAllCardsInStack()))
             {
                 if (card == null || card.Destroyed || card.CardData == null) continue;
@@ -77,23 +99,69 @@ namespace StacklandAccessNS
                 if (inputs.Count < kind.PerCycle) continue;
                 string output = kind.Output != null ? Name(kind.Output) : (building.CardData is Farmland f && !string.IsNullOrEmpty(f.HarvestCardId) ? Name(f.HarvestCardId) : "");
                 string inputNames = string.Join(", ", inputs.Select(c => CardInfo.Name(c)).Distinct());
-                string status = CardInfo.StackStatus(building.GetRootCard());
-                string title = TextCleaner.Join(
-                    CardInfo.Name(building),
-                    Loc.T("prod_rule", kind.PerCycle, output),
-                    inputs.Count > 0 ? Loc.T("prod_available", inputs.Count, inputNames) : Loc.T("prod_none"),
-                    status);
-                entries.Add(new ListBrowser.Entry(title)
+                Add(building, new Option
                 {
-                    OnActivate = () => Feed(building, kind, board),
+                    Title = TextCleaner.Join(Loc.T("prod_rule", kind.PerCycle, output), Loc.T("prod_available", inputs.Count, inputNames)),
+                    Run = () => Feed(building, kind, board),
                     Info = () => CardInfo.Details(building),
                 });
             }
-            entries.AddRange(OtherEntries(board));
-            entries.AddRange(SingleUseEntries(board));
-            // Only the building recipes that can be made with the cards on the board.
-            entries.AddRange(Recipes.BuildingRecipes(board).Where(e => e.OnActivate != null));
+            foreach (var (building, o) in OtherOptions(board)) Add(building, o);
+            foreach (var (building, o) in SingleUseOptions(board)) Add(building, o);
+            foreach (var bp in Recipes.BuildingPlans())
+            {
+                var plan = bp.Plan;
+                var b = bp.Blueprint;
+                string idea = TextCleaner.Clean(b.KnowledgeName);
+                string result = Recipes.ResultName(b, plan.Subprint);
+                string title = TextCleaner.Join(result == idea ? result : idea + " → " + result, Recipes.Ingredients(plan.Subprint), Recipes.Duration(plan.Subprint));
+                Add(bp.Building, new Option { Title = title, Run = () => Recipes.Build(plan, board), Info = () => Recipes.Info(b) });
+            }
+
+            var cmp = System.StringComparer.CurrentCultureIgnoreCase;
+            var entries = new List<ListBrowser.Entry>();
+            var log = new System.Text.StringBuilder("[StacklandAccess] Production page:");
+            foreach (var building in order.OrderBy(b => CardInfo.Name(b), cmp))
+            {
+                var list = options[building].OrderBy(o => o.Title, cmp).ToList();
+                var b = building;
+                string name = CardInfo.Name(b);
+                string status = CardInfo.StackStatus(b.GetRootCard());
+                log.Append("\n  ").Append(name).Append(" (").Append(b.CardData.GetType().Name).Append("): ").Append(string.Join(" | ", list.Select(o => o.Title)));
+                if (list.Count == 1)
+                {
+                    var o = list[0];
+                    entries.Add(new ListBrowser.Entry(TextCleaner.Join(name + " : " + o.Title, status)) { OnActivate = o.Run, Info = o.Info });
+                    continue;
+                }
+                string choices = string.Join(", ", list.Select(o => FirstPart(o.Title)));
+                entries.Add(new ListBrowser.Entry(TextCleaner.Join(name + " : " + Loc.N("prod_choices", list.Count, list.Count), choices, status))
+                {
+                    KeepOpen = true,
+                    OnActivate = () => OpenChoices(board, b, list),
+                    Info = () => CardInfo.Details(b),
+                });
+            }
+            Debug.Log(log.ToString());
             return entries;
+        }
+
+        private static string FirstPart(string title)
+        {
+            int i = title.IndexOf(". ", System.StringComparison.Ordinal);
+            return i > 0 ? title.Substring(0, i) : title;
+        }
+
+        /// <summary>The choices of one building; Escape goes back to the production page.</summary>
+        private static void OpenChoices(BoardNavigator board, GameCard building, List<Option> list)
+        {
+            var browser = board.List;
+            if (browser == null) return;
+            int line = browser.Index;
+            var entries = list.Select(o => new ListBrowser.Entry(o.Title) { OnActivate = o.Run, Info = o.Info }).ToList();
+            browser.OpenPagesAt(new List<ListBrowser.Page> { new ListBrowser.Page(Loc.T("prod_choose", CardInfo.Name(building)), entries) }, 0, 0,
+                speak: true, toggleAction: "recipes",
+                onBack: () => browser.OpenPagesAt(Recipes.Pages(board), Recipes.ProductionPage, line, speak: true, toggleAction: "recipes"));
         }
 
         // ------------------------------------------------------------------ growing and feeding buildings
@@ -125,10 +193,10 @@ namespace StacklandAccessNS
             return list;
         }
 
-        /// <summary>Gardens, farms and greenhouses (one line per plant available), fish traps, animal pens, breeding pens, hotpots.</summary>
-        private static List<ListBrowser.Entry> OtherEntries(BoardNavigator board)
+        /// <summary>Gardens, farms and greenhouses (one choice per plant available), fish traps, animal pens, breeding pens, hotpots.</summary>
+        private static List<(GameCard, Option)> OtherOptions(BoardNavigator board)
         {
-            var entries = new List<ListBrowser.Entry>();
+            var result = new List<(GameCard, Option)>();
             foreach (var card in BoardNavigator.AllObjects().OfType<GameCard>().SelectMany(r => r.GetAllCardsInStack()))
             {
                 if (card == null || card.Destroyed || card.CardData == null) continue;
@@ -137,7 +205,6 @@ namespace StacklandAccessNS
                 int amount = FeedAmount(d);
                 if (!grow && amount < 0) continue;
                 var building = card;
-                string status = CardInfo.StackStatus(building.GetRootCard());
                 var inputs = Inputs(building);
                 if (grow)
                 {
@@ -147,33 +214,31 @@ namespace StacklandAccessNS
                         var seeds = inputs.Where(c => c.CardData.Id == seed).ToList();
                         if (seeds.Count == 0) continue;
                         var extra = sp.ExtraResultCards ?? new string[0];
-                        string result = extra.Length == 0 ? "" : (extra.Length > 1 ? extra.Length + " " : "") + Name(extra[0]);
-                        string title = TextCleaner.Join(Loc.T("prod_plant", CardInfo.Name(building), Name(seed), result, CardInfo.Seconds(sp.Time)),
-                            Loc.T("prod_count", seeds.Count), status);
-                        entries.Add(new ListBrowser.Entry(title)
+                        string res = extra.Length == 0 ? "" : (extra.Length > 1 ? extra.Length + " " : "") + Name(extra[0]);
+                        result.Add((building, new Option
                         {
-                            OnActivate = () => Put(building, seed, 1, board),
+                            Title = TextCleaner.Join(Loc.T("prod_plant_short", Name(seed), res, CardInfo.Seconds(sp.Time)), Loc.T("prod_count", seeds.Count)),
+                            Run = () => Put(building, seed, 1, board),
                             Info = () => CardInfo.Details(building),
-                        });
+                        }));
                     }
+                    continue;
                 }
-                else
+                // Animal and breeding pens: animals only (the pen also takes wheat, eggs or soil, which make nothing there).
+                if (d is AnimalPen || d is BreedingPen) inputs = inputs.Where(c => c.CardData is Animal).ToList();
+                foreach (var group in inputs.GroupBy(c => c.CardData.Id))
                 {
-                    foreach (var group in inputs.GroupBy(c => c.CardData.Id))
+                    if (amount > 1 && group.Count() < amount) continue;
+                    string id = group.Key;
+                    result.Add((building, new Option
                     {
-                        if (amount > 1 && group.Count() < amount) continue;
-                        string id = group.Key;
-                        string title = TextCleaner.Join(Loc.T("prod_put", CardInfo.Name(building), CardInfo.Name(group.First())),
-                            Loc.T("prod_count", group.Count()), status);
-                        entries.Add(new ListBrowser.Entry(title)
-                        {
-                            OnActivate = () => Put(building, id, amount, board),
-                            Info = () => CardInfo.Details(building),
-                        });
-                    }
+                        Title = TextCleaner.Join(Loc.T("prod_put_short", CardInfo.Name(group.First())), Loc.T("prod_count", group.Count())),
+                        Run = () => Put(building, id, amount, board),
+                        Info = () => CardInfo.Details(building),
+                    }));
                 }
             }
-            return entries;
+            return result;
         }
 
         /// <summary>
@@ -224,12 +289,12 @@ namespace StacklandAccessNS
         }
 
         /// <summary>
-        /// Other buildings with a single use: what they accept from the board, one line per kind of card
-        /// (people one at a time, other cards as many as the building takes).
+        /// Buildings that work with their own rule (university, temple, altar...): one choice per kind of card
+        /// they turn into something (people one at a time, other cards as many as the building takes).
         /// </summary>
-        private static List<ListBrowser.Entry> SingleUseEntries(BoardNavigator board)
+        private static List<(GameCard, Option)> SingleUseOptions(BoardNavigator board)
         {
-            var entries = new List<ListBrowser.Entry>();
+            var result = new List<(GameCard, Option)>();
             foreach (var card in BoardNavigator.AllObjects().OfType<GameCard>().SelectMany(r => r.GetAllCardsInStack()))
             {
                 if (card == null || card.Destroyed || card.CardData == null) continue;
@@ -238,22 +303,21 @@ namespace StacklandAccessNS
                 if (Kinds.Any(k => k.Type.IsInstanceOfType(d)) || IsGrowBuilding(d) || FeedAmount(d) >= 0) continue;
                 if (!HasOwnRule(d)) continue;
                 var building = card;
-                string status = CardInfo.StackStatus(building.GetRootCard());
-                // Workers only staff a building; cards of an idea recipe come from the recipe list.
+                // Workers only staff a building; cards of an idea recipe come from the recipes.
                 var inputs = Inputs(building, true).Where(c => !(c.CardData is Worker) && !InRecipe(d.Id, c.CardData.Id)).ToList();
                 foreach (var group in inputs.GroupBy(c => c.CardData.Id))
                 {
                     string id = group.Key;
                     int amount = group.First().CardData.MyCardType == CardType.Humans ? 1 : 0;
-                    string title = TextCleaner.Join(Loc.T("prod_put", CardInfo.Name(building), CardInfo.Name(group.First())), Loc.T("prod_count", group.Count()), status);
-                    entries.Add(new ListBrowser.Entry(title)
+                    result.Add((building, new Option
                     {
-                        OnActivate = () => Put(building, id, amount, board, true),
+                        Title = TextCleaner.Join(Loc.T("prod_put_short", CardInfo.Name(group.First())), Loc.T("prod_count", group.Count())),
+                        Run = () => Put(building, id, amount, board, true),
                         Info = () => CardInfo.Details(building),
-                    });
+                    }));
                 }
             }
-            return entries;
+            return result;
         }
 
         /// <summary>Puts cards of one kind on the building: a given number, or as many as it accepts (amount 0).</summary>

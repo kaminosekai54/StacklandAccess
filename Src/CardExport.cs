@@ -297,7 +297,7 @@ namespace StacklandAccessNS
                         ideaId = bp.Id,
                         group,
                         upd = UpdateName(update),
-                        found = withSave ? (bool?)wm.HasFoundCard(bp.Id) : null,
+                        found = withSave ? (bool?)KnownRecipes.IsKnown(bp) : null,
                         hidden = bp.HideFromIdeasTab,
                         req,
                         output,
