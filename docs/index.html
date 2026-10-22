@@ -27,8 +27,17 @@ label.f { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
 label.check { display: flex; align-items: center; gap: 8px; }
 input[type=search], select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); width: 100%; }
 button.plain { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); cursor: pointer; }
+#news { margin: 8px 0 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+#news summary { font-weight: 700; cursor: pointer; }
+#news ul { margin: 6px 0 2px; padding-left: 20px; }
 #hint { color: var(--muted); font-size: .9rem; margin: 0; }
 #count { font-weight: 600; margin: 8px 0; }
+.tablewrap { overflow-x: auto; }
+table.stats { border-collapse: collapse; width: 100%; background: var(--panel); font-size: .92rem; }
+table.stats caption { text-align: left; font-weight: 700; padding: 6px 0; }
+table.stats th, table.stats td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+table.stats thead th { background: var(--chip); position: sticky; top: 0; }
+table.stats td.num { text-align: right; white-space: nowrap; }
 .grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .card { --bg: var(--panel); --bd: var(--line); --ic: var(--ink); --tx: var(--ink);
         width: 100%; height: 100%; min-height: 200px; display: flex; flex-direction: column; align-items: stretch; gap: 6px;
@@ -55,6 +64,36 @@ button.plain { font: inherit; padding: 8px 12px; border: 1px solid var(--line); 
        font-size: .9rem; pointer-events: none; display: none; }
 dialog { border: 1px solid var(--line); border-radius: 12px; padding: 0; width: min(760px, calc(100% - 32px)); max-height: calc(100% - 32px);
          background: var(--panel); color: var(--ink); }
+dialog.wide { width: min(1500px, calc(100% - 24px)); }
+.dlg-grid { display: grid; grid-template-columns: minmax(280px, 400px) 1fr; gap: 18px; align-items: start; }
+.dlg-left { max-height: calc(100vh - 90px); overflow: auto; padding-right: 6px; }
+.tree-box { min-width: 0; }
+.mini { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; gap: 1px; margin: 2px 1px;
+        padding: 0; border: 0; background: none; color: var(--ink); font: inherit; cursor: pointer; }
+.mini .face { width: 40px; height: 52px; border-radius: 7px; border: 2px solid var(--line); background: var(--panel);
+              display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; overflow: hidden; }
+.mini .face img { max-width: 32px; max-height: 32px; }
+.mini .qty { font-size: .78rem; font-weight: 700; line-height: 1; }
+.mini:hover .face, .mini:focus-visible .face { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,.3); }
+.icons { display: flex; flex-wrap: wrap; gap: 4px; }
+li.recipe { line-height: 2.2; }
+.tree-box h3 { margin: 0 0 4px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; font-size: .9rem; margin: 0 0 8px; }
+.legend svg { vertical-align: middle; }
+.tree { position: relative; overflow: auto; max-height: calc(100vh - 150px); min-height: 320px; border: 1px solid var(--line);
+        border-radius: 10px; background: var(--bg); }
+.tree svg.links { position: absolute; left: 0; top: 0; pointer-events: none; }
+.tree .node { position: absolute; padding: 0 0 4px; min-height: 0; gap: 2px; border-width: 3px; border-radius: 9px; }
+.tree .node .n { min-height: 2.2em; font-size: .78rem; padding: 2px 4px; }
+.tree .node .pic { min-height: 0; height: auto; flex: 1; }
+.tree .node .m { display: none; }
+.tree .node .age { display: none; }
+.tree .node.center { box-shadow: 0 0 0 4px var(--focus); }
+.tree .node.center .n { font-size: .9rem; }
+.tree .node.small .n { font-size: .66rem; min-height: 2em; }
+.tree .more { position: absolute; font: inherit; font-size: .85rem; border: 1px dashed var(--line); border-radius: 8px; background: var(--panel);
+              color: var(--ink); cursor: pointer; padding: 4px 8px; }
+@media (max-width: 900px) { .dlg-grid { grid-template-columns: 1fr; } .dlg-left { max-height: none; } }
 dialog::backdrop { background: rgba(0,0,0,.45); }
 .dlg { padding: 16px 20px 20px; }
 .dlg h2 { margin: 0 0 4px; }
@@ -77,6 +116,7 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
   <label class="f" id="langBox" hidden><span id="l-lang">Language</span><select id="lang"></select></label>
 </header>
 <main>
+  <details id="news" hidden><summary id="newsTitle"></summary><ul id="newsList"></ul></details>
   <div class="controls" role="search">
     <label class="f wide" for="q"><span id="l-search"></span>
       <input id="q" type="search" autocomplete="off" aria-describedby="hint">
@@ -86,6 +126,7 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
     <label class="f" for="upd"><span id="l-upd"></span><select id="upd"></select></label>
     <label class="f" for="ageSel"><span id="l-age"></span><select id="ageSel"></select></label>
     <label class="f" for="obtain"><span id="l-obtain"></span><select id="obtain"></select></label>
+    <label class="f" for="view"><span id="l-view"></span><select id="view"></select></label>
     <label class="f" for="sort"><span id="l-sort"></span><select id="sort"></select></label>
     <label class="check" id="foundBox" hidden><input id="onlyFound" type="checkbox" checked> <span id="l-found"></span></label>
     <button class="plain" type="button" id="reset"></button>
@@ -93,10 +134,13 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
   <p id="hint"></p>
   <p id="count" role="status" aria-live="polite">…</p>
   <ul class="grid" id="grid"></ul>
+  <div class="tablewrap" id="tableWrap" hidden></div>
 </main>
 <div id="tip" aria-hidden="true"></div>
+<div id="live" class="sr" aria-live="polite"></div>
 <dialog id="detail" aria-labelledby="d-name">
   <div class="dlg" id="d-body"></div>
+  <div id="liveD" class="sr" aria-live="polite"></div>
 </dialog>
 <script>
 // Personal page: the data is written here by the game (F6). Public site: null, data/*.json is loaded instead.
@@ -244,6 +288,14 @@ function start(data) {
   $("l-obtain").textContent = T.web_obtain;
   $("l-age").textContent = T.web_age || "Tech age";
   $("l-sort").textContent = T.web_sort;
+  if (T.news_title && T.news_lines && D.modVersion) {
+    $("newsTitle").textContent = fmt(T.news_title, D.modVersion);
+    const ul = $("newsList"); ul.innerHTML = "";
+    T.news_lines.split("|").forEach(l => { const li = document.createElement("li"); li.textContent = l; ul.appendChild(li); });
+    $("news").hidden = false;
+  }
+  $("l-view").textContent = T.web_view || "View";
+  options($("view"), [["grid", T.web_view_grid || "Cards"], ["villagers", T.web_view_villagers || "Villagers (table)"], ["creatures", T.web_view_creatures || "Creatures and enemies (table)"]], null);
   $("l-found").textContent = T.web_only_found;
   $("reset").textContent = T.web_reset;
   $("foundBox").hidden = !D.personal;
@@ -355,6 +407,15 @@ function render() {
     .sort(sorters[$("sort").value] || sorters.name);
   const grid = $("grid");
   grid.innerHTML = "";
+  const view = $("view").value || "grid";
+  grid.hidden = view !== "grid";
+  $("tableWrap").hidden = view === "grid";
+  if (view !== "grid") {
+    const rows = shown.filter(c => c.combat && (view === "villagers" ? c.combat.villager : !c.combat.villager));
+    renderTable(rows, view);
+    $("count").textContent = fmt(rows.length === 1 ? T.web_count_one : T.web_count, rows.length);
+    return;
+  }
   const frag = document.createDocumentFragment();
   shown.forEach((c, i) => {
     const li = document.createElement("li");
@@ -368,7 +429,7 @@ function render() {
     b.appendChild(sr);
     b.setAttribute("aria-describedby", "h" + i);
     b.addEventListener("click", () => openCard(c.id, b));
-    b.addEventListener("mouseenter", () => showTip(how, b));
+    b.addEventListener("mouseenter", () => hoverTip(c.name + ". " + how, b));
     b.addEventListener("focus", () => showTip(how, b));
     b.addEventListener("mouseleave", hideTip);
     b.addEventListener("blur", hideTip);
@@ -378,6 +439,60 @@ function render() {
   grid.appendChild(frag);
   $("count").textContent = fmt(shown.length === 1 ? T.web_count_one : T.web_count, shown.length);
 }
+const secs = v => { let n = String(v); try { n = Number(v).toLocaleString(D.code || "en"); } catch (e) {} return fmt(T.web_seconds || "{0} s", n); };
+function withWord(v, word) { return word ? `${v} (${word})` : String(v); }
+function renderTable(rows, view) {
+  const wrap = $("tableWrap");
+  wrap.innerHTML = "";
+  const villagers = view === "villagers";
+  const t = document.createElement("table"); t.className = "stats";
+  const cap = document.createElement("caption");
+  cap.textContent = villagers ? (T.web_view_villagers || "Villagers") : (T.web_view_creatures || "Creatures");
+  t.appendChild(cap);
+  const cols = [T.web_table_name || "Name", T.web_combat_type || "Combat type", T.web_health, T.web_attack, T.web_defence,
+    T.web_attack_speed || "Attack speed", T.web_hit_chance || "Hit chance"];
+  if (villagers) cols.push(T.web_eats || "Food per moon", T.web_equip || "Equipment");
+  cols.push(T.web_special || "Special effects", T.web_table_desc || "Description");
+  const thead = document.createElement("thead"), hr = document.createElement("tr");
+  cols.forEach(c => { const th = document.createElement("th"); th.scope = "col"; th.textContent = c; hr.appendChild(th); });
+  thead.appendChild(hr); t.appendChild(thead);
+  const tb = document.createElement("tbody");
+  rows.forEach(c => {
+    const k = c.combat, tr = document.createElement("tr");
+    const th = document.createElement("th"); th.scope = "row";
+    const b = document.createElement("button"); b.className = "link"; b.type = "button"; b.textContent = c.name;
+    b.addEventListener("click", () => openCard(c.id, b));
+    th.appendChild(b); tr.appendChild(th);
+    const cell = (v, num) => { const td = document.createElement("td"); if (num) td.className = "num"; td.textContent = v ?? "—"; tr.appendChild(td); };
+    cell(k.canAttack === false ? (T.web_no_attack || "Does not attack") : (k.type || "—"));
+    cell(c.hp, true);
+    cell(withWord(c.atk, k.atkText), true);
+    cell(withWord(c.def, k.defText), true);
+    cell(k.canAttack === false ? "—" : withWord(secs(k.speed), k.speedText), true);
+    cell(k.canAttack === false ? "—" : withWord(k.hit + " %", k.hitText), true);
+    if (villagers) { cell(k.eats != null ? k.eats : "—", true); cell(k.equip ? T.web_yes || "Yes" : T.web_no || "No"); }
+    cell(k.special ? k.special.join(" ; ") : "—");
+    cell(c.desc || "");
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+  wrap.appendChild(t);
+}
+/**
+ * Mouse hover for screen reader users: the tooltip is only visual, so the same text is sent to a live region
+ * (the one inside the card window when it is open, as the rest of the page is hidden from screen readers then).
+ * Keyboard focus does not need it: the focused element already says its name and description.
+ */
+let lastSpoken = null, liveTimer = null;
+function speak(text, el) {
+  if (el === lastSpoken) return;
+  lastSpoken = el;
+  const live = $("detail").open ? $("liveD") : $("live");
+  live.textContent = "";
+  clearTimeout(liveTimer);
+  liveTimer = setTimeout(() => { live.textContent = text; }, 60);
+}
+function hoverTip(text, el) { showTip(text, el); speak(text, el); }
 function showTip(text, el) {
   const tip = $("tip"), r = el.getBoundingClientRect();
   tip.textContent = text;
@@ -387,15 +502,61 @@ function showTip(text, el) {
   tip.style.left = Math.max(8, x) + "px";
   tip.style.top = y + "px";
 }
-function hideTip() { $("tip").style.display = "none"; }
+function hideTip() { $("tip").style.display = "none"; lastSpoken = null; }
 
 let returnFocus = null;
+/**
+ * A card shown as its small picture (in the game's colours) instead of a text link, with "×3" under it for
+ * several of the same card. Hovering or focusing says its name and count ("Brick ×3") and its information;
+ * a click opens it.
+ */
+function cardIcon(id, count = 1, label = null) {
+  const k = byId.get(id);
+  const name = label || nameOf(id);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "mini";
+  const spoken = count > 1 ? `${name} ×${count}` : name;
+  b.setAttribute("aria-label", spoken);
+  const face = document.createElement("span"); face.className = "face"; face.setAttribute("aria-hidden", "true");
+  if (k && k.colors) {
+    const bg = toPalette(k.colors[0]);
+    face.style.background = bg; face.style.borderColor = bg; face.style.color = inkFor(bg);
+  }
+  if (k && k.img) {
+    const img = document.createElement("img"); img.alt = ""; img.src = encodeURI(D.imgBase + k.img);
+    img.onerror = () => { img.remove(); face.textContent = name.slice(0, 2); };
+    face.appendChild(img);
+  } else face.textContent = name.slice(0, 2);
+  b.appendChild(face);
+  if (count > 1) { const q = document.createElement("span"); q.className = "qty"; q.setAttribute("aria-hidden", "true"); q.textContent = "×" + count; b.appendChild(q); }
+  const tip = k ? TextJoin(spoken, infoLine(k), howShort(k)) : spoken;
+  b.addEventListener("mouseenter", () => hoverTip(tip, b));
+  b.addEventListener("focus", () => showTip(tip, b));
+  b.addEventListener("mouseleave", hideTip);
+  b.addEventListener("blur", hideTip);
+  if (k) b.addEventListener("click", () => { hideTip(); openCard(id); }); else b.disabled = true;
+  return b;
+}
+/** Same cards counted together, keeping their order: [{id, label, count}]. */
+function grouped(list) {
+  const out = [];
+  list.forEach(x => { const f = out.find(o => o.id === x.id); if (f) f.count++; else out.push({ id: x.id, label: x.label, count: 1 }); });
+  return out;
+}
 function cardLink(id) {
   const b = document.createElement("button");
   b.className = "link"; b.type = "button";
   b.textContent = nameOf(id);
   if (byId.has(id)) b.addEventListener("click", () => openCard(id)); else b.disabled = true;
   return b;
+}
+/** A heading and a row of card pictures. */
+function iconSection(body, title, ids) {
+  const h = document.createElement("h3"); h.textContent = title; body.appendChild(h);
+  if (!ids.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = T.web_none; body.appendChild(p); return; }
+  const row = document.createElement("div"); row.className = "icons";
+  grouped(ids.map(id => ({ id }))).forEach(p => row.appendChild(cardIcon(p.id, p.count)));
+  body.appendChild(row);
 }
 function section(body, title, items, build) {
   const h = document.createElement("h3"); h.textContent = title; body.appendChild(h);
@@ -406,12 +567,15 @@ function section(body, title, items, build) {
 }
 function recipeItem(li, r) {
   if (!recipeKnown(r)) { li.textContent = T.web_unknown; return; }
+  li.className = "recipe";
   if (r.idea) li.append(r.idea + " : ");
-  r.req.forEach((q, i) => {
-    if (i) li.append(" + ");
-    if (q.ids.length === 1) li.append(cardLink(q.ids[0])); else li.append(q.label);
-  });
-  if (r.output.length) { li.append(" → "); r.output.forEach((id, i) => { if (i) li.append(", "); li.append(cardLink(id)); }); }
+  // "Any villager" lists every villager-like card: show the one the requirement is named after.
+  const parts = grouped(r.req.map(q => ({ id: q.ids.find(x => byId.has(x) && nameOf(x) === q.label) || q.ids.find(x => byId.has(x)) || q.ids[0], label: q.ids.length > 1 ? q.label : null })));
+  parts.forEach((p, i) => { if (i) li.append(" + "); li.append(cardIcon(p.id, p.count, p.label)); });
+  if (r.output.length) {
+    li.append(" → ");
+    grouped(r.output.map(id => ({ id }))).forEach((p, i) => { if (i) li.append(" "); li.append(cardIcon(p.id, p.count)); });
+  }
   const t = time(r.time);
   if (t) li.append(` (${T.web_time} ${t})`);
   if (r.group) li.append(` — ${T.web_group} : ${r.group}`);
@@ -419,7 +583,15 @@ function recipeItem(li, r) {
 function openCard(id, from) {
   const c = byId.get(id); if (!c) return;
   if (from) returnFocus = from;
-  const body = $("d-body"); body.innerHTML = "";
+  const outer = $("d-body"); outer.innerHTML = "";
+  // Left: the usual details. Right: the tech tree of the card (not for packs).
+  const body = document.createElement("div"); body.className = "dlg-left";
+  const treeBox = document.createElement("section"); treeBox.className = "tree-box";
+  const withTree = !c.isPack;
+  outer.className = "dlg" + (withTree ? " dlg-grid" : "");
+  $("detail").classList.toggle("wide", withTree);
+  outer.appendChild(body);
+  if (withTree) outer.appendChild(treeBox);
   const close = document.createElement("button");
   close.className = "close"; close.type = "button"; close.textContent = T.web_close;
   close.addEventListener("click", () => $("detail").close());
@@ -441,23 +613,226 @@ function openCard(id, from) {
   fact(T.web_value + " : " + c.value);
   if (c.food != null) fact(T.web_food + " : " + c.food);
   if (!c.isPack && ageOf(c) < Infinity) fact((T.web_age || "Tech age") + " : " + ageOf(c));
-  if (c.hp != null) { fact(T.web_health + " : " + c.hp); fact(T.web_attack + " : " + c.atk); fact(T.web_defence + " : " + c.def); }
+  if (c.hp != null) {
+    const k = c.combat || {};
+    fact(T.web_health + " : " + c.hp);
+    fact(T.web_attack + " : " + withWord(c.atk, k.atkText));
+    fact(T.web_defence + " : " + withWord(c.def, k.defText));
+    if (k.canAttack !== false && k.speed != null) {
+      if (k.type) fact((T.web_combat_type || "Combat type") + " : " + k.type);
+      fact((T.web_attack_speed || "Attack speed") + " : " + withWord(secs(k.speed), k.speedText));
+      fact((T.web_hit_chance || "Hit chance") + " : " + withWord(k.hit + " %", k.hitText));
+    } else if (k.canAttack === false) fact(T.web_no_attack || "Does not attack");
+    if (k.eats != null) fact((T.web_eats || "Food per moon") + " : " + k.eats);
+    if (k.villager) fact((T.web_equip || "Equipment") + " : " + (k.equip ? T.web_yes || "Yes" : T.web_no || "No"));
+  }
   right.appendChild(facts);
   if (c.group) fact(T.web_group + " : " + c.group);
   if (c.desc) { const p = document.createElement("p"); p.textContent = c.desc; right.appendChild(p); }
+  if (c.combat && c.combat.typeDesc && c.combat.canAttack !== false) { const p = document.createElement("p"); p.className = "muted"; p.textContent = (c.combat.type ? c.combat.type + " : " : "") + c.combat.typeDesc; right.appendChild(p); }
+  if (c.combat && c.combat.special) section(body, T.web_special || "Special effects", c.combat.special, (li, t) => li.textContent = t);
   if (c.isPack) { packDetails(c.pack, body, facts, fact); finishDialog(h); return; }
   if (c.idea) section(body, T.web_idea_recipes, ofIdea.get(id) || [], recipeItem);
   section(body, T.web_how, producedBy.get(id) || [], recipeItem);
   section(body, T.web_packs, inPacks.get(id) || [], (li, p) => {
-    li.append(cardLink("pack:" + p.id));
+    li.append(cardIcon("pack:" + p.id));
     const o = packOdds(p, id);
     li.append(` — ${p.cost} ${p.currency}${o != null ? ", " + pct(o) + " " + T.web_pack_per_draw : ""}`);
   });
-  section(body, T.web_from, droppedBy.get(id) || [], (li, d) => li.append(cardLink(d.id)));
+  iconSection(body, T.web_from, (droppedBy.get(id) || []).map(d => d.id));
   section(body, T.web_used, usedIn.get(id) || [], recipeItem);
-  if (c.drops) section(body, T.web_drops, c.drops, (li, d) => li.append(cardLink(d)));
+  if (c.drops) iconSection(body, T.web_drops, c.drops);
+  drawTree(c, treeBox);
   finishDialog(h);
 }
+
+// ------------------------------------------------------------------ tech tree
+// Centre: the card. Above: what it is made with. Below: what is made with it.
+// Used up by the recipe (a material): straight down, solid line. Kept (a tool, like a stove): smaller, diagonal, dashed line.
+const TREE = { center: [118, 160], mat: [92, 126], tool: [70, 96], small: [62, 84], gap: 14, maxRow: 24, maxTools: 12, maxSub: 4, step: 100, slope: 0.4 };
+function knownRecipes(list) { return (list || []).filter(recipeKnown); }
+/** Cards made with this one: [{id, tool}] (a card both used up and kept counts as used up). */
+function madeWith(id) {
+  const out = new Map();
+  knownRecipes(usedIn.get(id)).forEach(r => {
+    const q = r.req.find(x => x.ids.includes(id));
+    const tool = !!(q && q.kept);
+    r.output.forEach(o => {
+      if (o === id || !byId.has(o)) return;
+      if (!out.has(o) || (out.get(o) && !tool)) out.set(o, tool);
+    });
+  });
+  return [...out].map(([oid, tool]) => ({ id: oid, tool }));
+}
+/** What the card is made with (first known recipe): [{id, tool}]. */
+function madeFrom(c) {
+  const rs = knownRecipes(c.idea ? ofIdea.get(c.id) : producedBy.get(c.id));
+  if (!rs.length) return { parts: [], others: 0 };
+  const r = rs[0], seen = new Set();
+  const parts = [];
+  r.req.forEach(q => {
+    // "Any villager" lists every villager-like card: take the one named by the requirement.
+    const pid = q.ids.find(x => byId.has(x) && nameOf(x) === q.label) || q.ids.find(x => byId.has(x));
+    if (!pid || pid === c.id || seen.has(pid)) return;
+    seen.add(pid);
+    parts.push({ id: pid, tool: !!q.kept });
+  });
+  return { parts, others: rs.length - 1 };
+}
+function sortByName(list) { return list.sort((a, b) => nameOf(a.id).localeCompare(nameOf(b.id))); }
+
+function drawTree(c, box) {
+  const h = document.createElement("h3"); h.textContent = T.web_tree || "Tech tree"; box.appendChild(h);
+  const legend = document.createElement("p"); legend.className = "legend";
+  const sample = dash => `<svg width="46" height="10" aria-hidden="true"><line x1="2" y1="5" x2="44" y2="5" stroke="currentColor" stroke-width="2.5"${dash ? ' stroke-dasharray="6 5"' : ""}/></svg>`;
+  legend.innerHTML = `<span>${sample(false)} ${esc(T.web_tree_direct || "used directly")}</span><span>${sample(true)} ${esc(T.web_tree_tool || "used as a tool")}</span>`;
+  legend.insertAdjacentHTML("beforeend", `<span class="muted">${esc(T.web_tree_open || "")}</span>`);
+  box.appendChild(legend);
+  const tree = document.createElement("div"); tree.className = "tree";
+  tree.setAttribute("role", "group"); tree.setAttribute("aria-label", T.web_tree || "Tech tree");
+  box.appendChild(tree);
+
+  const from = madeFrom(c);
+  const parMat = from.parts.filter(p => !p.tool), parTool = from.parts.filter(p => p.tool);
+  let kids = c.idea ? knownRecipes(ofIdea.get(c.id)).flatMap(r => r.output).filter((v, i, a) => a.indexOf(v) === i && byId.has(v)).map(id => ({ id, tool: false }))
+                    : madeWith(c.id);
+  kids = sortByName(kids);
+  let mats = kids.filter(k => !k.tool), tools = kids.filter(k => k.tool);
+  const moreMats = Math.max(0, mats.length - TREE.maxRow), moreTools = Math.max(0, tools.length - TREE.maxTools);
+  mats = mats.slice(0, TREE.maxRow); tools = tools.slice(0, TREE.maxTools);
+  // Second level: what the material children are used up in.
+  mats.forEach(m => { m.sub = sortByName(madeWith(m.id).filter(x => !x.tool && x.id !== c.id)).slice(0, TREE.maxSub); });
+
+  const G = TREE.gap;
+  const subW = m => Math.max(TREE.mat[0], m.sub.length * (TREE.small[0] + G) - G);
+  const matsW = mats.reduce((s, m) => s + subW(m) + G, 0) - (mats.length ? G : 0);
+  const parW = parMat.length * (TREE.mat[0] + G) - G;
+  const perSideTools = Math.ceil(tools.length / 2), perSidePar = Math.ceil(parTool.length / 2);
+  const toolReach = n => n ? 110 + (n - 1) * TREE.step + TREE.tool[0] : 0;
+  // Height taken by a diagonal of n tool cards starting at startX from the centre.
+  const toolDrop = (n, startX) => n ? Math.max(0, TREE.slope * (startX + (n - 1) * TREE.step + TREE.tool[0] - TREE.center[0] / 2)) + 10 + TREE.tool[1] - 22 : 0;
+  const half = Math.max(matsW / 2, parW / 2, toolReach(perSideTools), parW / 2 + 40 + toolReach(perSidePar), TREE.center[0] / 2 + 40, 200);
+  const W = Math.ceil(half * 2 + 40), cx = W / 2;
+
+  // Vertical bands
+  let y = 16;
+  const parTop = y;
+  const parToolStart = Math.max(110, parW / 2 + 40);
+  const parToolBand = toolDrop(perSidePar, parToolStart);
+  const parRowH = parMat.length ? TREE.mat[1] : 0;
+  const centerTop = parTop + Math.max(parRowH ? parRowH + 50 : 0, parToolBand + 10);
+  const centerBottom = centerTop + TREE.center[1];
+  const toolBand = toolDrop(perSideTools, 110);
+  const busY = centerBottom + Math.max(36, toolBand + 24);
+  const matTop = busY + 26;
+  const subTop = matTop + TREE.mat[1] + 46;
+  const H = (mats.some(m => m.sub.length) ? subTop + TREE.small[1] : mats.length ? matTop + TREE.mat[1] : centerBottom + toolBand) + 40;
+
+  tree.style.width = "100%";
+  const inner = document.createElement("div"); inner.style.position = "relative"; inner.style.width = W + "px"; inner.style.height = H + "px";
+  tree.appendChild(inner);
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "links"); svg.setAttribute("width", W); svg.setAttribute("height", H);
+  svg.style.color = "var(--ink)";
+  inner.appendChild(svg);
+  const line = (d, dashed) => {
+    const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", d); p.setAttribute("fill", "none"); p.setAttribute("stroke", "currentColor");
+    p.setAttribute("stroke-width", dashed ? "2" : "2.5"); p.setAttribute("opacity", ".75");
+    if (dashed) p.setAttribute("stroke-dasharray", "6 5");
+    svg.appendChild(p);
+  };
+  const node = (id, x, y, size, cls, relation) => {
+    const k = byId.get(id); if (!k) return;
+    const b = document.createElement("button"); b.type = "button";
+    b.className = "card node " + cls + (D.personal && !k.found ? " unknown" : "");
+    b.style.left = Math.round(x - size[0] / 2) + "px"; b.style.top = Math.round(y) + "px";
+    b.style.width = size[0] + "px"; b.style.height = size[1] + "px";
+    cardFace(k, b);
+    const how = TextJoin(k.name, relation, infoLine(k), howShort(k));
+    b.setAttribute("aria-label", TextJoin(k.name, relation));
+    const sr = document.createElement("span"); sr.className = "sr"; sr.id = "t" + (++treeIds); sr.textContent = TextJoin(infoLine(k), howShort(k));
+    b.appendChild(sr); b.setAttribute("aria-describedby", sr.id);
+    if (cls.includes("center")) b.setAttribute("aria-current", "true");
+    b.addEventListener("mouseenter", () => hoverTip(how, b));
+    b.addEventListener("focus", () => showTip(how, b));
+    b.addEventListener("mouseleave", hideTip);
+    b.addEventListener("blur", hideTip);
+    b.addEventListener("click", () => { hideTip(); if (id !== c.id) openCard(id); });
+    inner.appendChild(b);
+  };
+  const more = (n, x, y) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "more";
+    b.textContent = fmt(T.web_tree_more || "+{0} more", n);
+    b.style.left = Math.round(x) + "px"; b.style.top = Math.round(y) + "px";
+    b.addEventListener("click", () => { const u = [...document.querySelectorAll("#d-body h3")].find(e => e.textContent === T.web_used); if (u) u.scrollIntoView({ block: "start" }); });
+    inner.appendChild(b);
+  };
+
+  // Above: what it is made with.
+  if (parMat.length) {
+    const rowY = parTop, xs = parMat.map((p, i) => cx - parW / 2 + i * (TREE.mat[0] + G) + TREE.mat[0] / 2);
+    const bus = centerTop - 22;
+    line(`M${cx},${centerTop} V${bus}`, false);
+    if (xs.length > 1) line(`M${xs[0]},${bus} H${xs[xs.length - 1]}`, false);
+    xs.forEach((x, i) => { line(`M${x},${bus} V${rowY + TREE.mat[1]}`, false); node(parMat[i].id, x, rowY, TREE.mat, "", T.web_tree_needs || "ingredient"); });
+  }
+  // Tools: on a dashed diagonal leaving the side of the centre card; each card hangs from it on a short dashed branch,
+  // always on the far side of the diagonal so lines and cards never cross.
+  const diagonal = (list, up, relation, startX) => {
+    [1, -1].forEach(side => {
+      const mine = list.filter((t, i) => (i % 2 ? -1 : 1) === side);
+      if (!mine.length) return;
+      const w = TREE.tool[0], h = TREE.tool[1];
+      const x0 = cx + side * TREE.center[0] / 2, y0 = up ? centerTop + 22 : centerBottom - 22;
+      const qy = x => y0 + (up ? -1 : 1) * TREE.slope * Math.abs(x - x0);
+      let lastX = x0;
+      mine.forEach((t, k) => {
+        const x = cx + side * (startX + k * TREE.step + w / 2);
+        const outer = x + side * w / 2;
+        const y = up ? qy(outer) - 10 - h : qy(outer) + 10;
+        line(`M${x},${qy(x)} L${x},${up ? y + h : y}`, true);
+        node(t.id, x, y, TREE.tool, "small", relation);
+        lastX = x;
+      });
+      line(`M${x0},${y0} L${lastX},${qy(lastX)}`, true);
+    });
+  };
+  diagonal(parTool, true, T.web_tree_needs_tool || "tool", parToolStart);
+  // Centre
+  node(c.id, cx, centerTop, TREE.center, "center", "");
+  // Below: tools on the diagonals, materials straight down on a bus.
+  diagonal(tools, false, T.web_tree_tool || "used as a tool", 110);
+  if (moreTools) more(moreTools, cx + 120, centerBottom + toolBand + 4);
+  if (mats.length) {
+    let x0 = cx - matsW / 2;
+    const xs = mats.map(m => { const w = subW(m), x = x0 + w / 2; x0 += w + G; return x; });
+    line(`M${cx},${centerBottom} V${busY}`, false);
+    if (xs.length > 1) line(`M${xs[0]},${busY} H${xs[xs.length - 1]}`, false);
+    mats.forEach((m, i) => {
+      const x = xs[i];
+      line(`M${x},${busY} V${matTop}`, false);
+      node(m.id, x, matTop, TREE.mat, "", T.web_tree_direct || "used directly");
+      if (!m.sub.length) return;
+      const sw = m.sub.length * (TREE.small[0] + G) - G, sbus = subTop - 20;
+      line(`M${x},${matTop + TREE.mat[1]} V${sbus}`, false);
+      const sxs = m.sub.map((s, j) => x - sw / 2 + j * (TREE.small[0] + G) + TREE.small[0] / 2);
+      if (sxs.length > 1) line(`M${sxs[0]},${sbus} H${sxs[sxs.length - 1]}`, false);
+      m.sub.forEach((s, j) => { line(`M${sxs[j]},${sbus} V${subTop}`, false); node(s.id, sxs[j], subTop, TREE.small, "small", T.web_tree_direct || "used directly"); });
+    });
+    if (moreMats) more(moreMats, xs[xs.length - 1] + TREE.mat[0] / 2 + 10, matTop + 40);
+  }
+  if (!kids.length && !from.parts.length) {
+    const p = document.createElement("p"); p.className = "muted"; p.style.padding = "8px";
+    p.textContent = T.web_tree_none || "Not used in any known recipe.";
+    tree.insertBefore(p, inner);
+  }
+  // Show the centre of the tree.
+  requestAnimationFrame(() => { tree.scrollLeft = Math.max(0, cx - tree.clientWidth / 2); });
+}
+let treeIds = 0;
+const TextJoin = (...p) => p.filter(Boolean).join(". ");
+const esc = t => String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
 function finishDialog(h) {
   const dlg = $("detail");
   if (!dlg.open) dlg.showModal();
@@ -479,7 +854,7 @@ function packDetails(p, body, facts, fact) {
     const ul = document.createElement("ul");
     [...b.cards].sort((x, y) => (y.pct ?? -1) - (x.pct ?? -1)).forEach(x => {
       const li = document.createElement("li");
-      if (x.enemy || !x.id) li.append(T.web_pack_enemy); else li.append(cardLink(x.id));
+      if (x.enemy || !x.id) li.append(T.web_pack_enemy); else li.append(cardIcon(x.id), " " + nameOf(x.id));
       const notes = [];
       if (x.pct != null) notes.push(pct(x.pct));
       if (x.max != null) notes.push(fmt(T.web_pack_max, x.max));
@@ -494,7 +869,7 @@ $("detail").addEventListener("close", () => { if (returnFocus) returnFocus.focus
 
 let timer = null;
 $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(render, 150); });
-["cat", "type", "upd", "obtain", "ageSel", "sort", "onlyFound"].forEach(id => $(id).addEventListener("change", render));
+["cat", "type", "upd", "obtain", "ageSel", "view", "sort", "onlyFound"].forEach(id => $(id).addEventListener("change", render));
 $("reset").addEventListener("click", () => {
   $("q").value = ""; ["cat", "type", "upd", "obtain", "ageSel"].forEach(id => $(id).value = ""); $("sort").value = "name";
   render(); $("q").focus();
