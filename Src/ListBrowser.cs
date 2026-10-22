@@ -37,6 +37,9 @@ namespace StacklandAccessNS
         /// <summary>Key binding (see <see cref="Bindings"/>) that closes the list: the one that opened it.</summary>
         private string closeAction;
 
+        /// <summary>The key binding that opened the list (for the visual menu's position).</summary>
+        public string Source => closeAction;
+
         /// <summary>Changes each time what the list shows changes (for the visual menu).</summary>
         public int Version { get; private set; }
 

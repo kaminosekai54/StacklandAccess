@@ -16,6 +16,7 @@ namespace StacklandAccessNS
         private const int MaxChars = 110;
 
         private static GameObject canvasGo;
+        private static GameObject veil;
         private static RectTransform panel;
         private static TextMeshProUGUI title, body;
         private static readonly List<GameObject> rows = new List<GameObject>();
@@ -59,8 +60,8 @@ namespace StacklandAccessNS
                 if (key == shown && panel != null && panel.gameObject.activeSelf) return;
                 shown = key;
                 if (!Ensure()) return;
-                if (TextPrompt.Active) BuildPrompt();
-                else BuildList(list);
+                if (TextPrompt.Active) { BuildPrompt(); Place(null); }
+                else { BuildList(list); Place(list.Source); }
                 panel.gameObject.SetActive(true);
                 canvasGo.SetActive(true);
                 LayoutRebuilder.ForceRebuildLayoutImmediate(panel);
@@ -82,6 +83,31 @@ namespace StacklandAccessNS
         }
 
         // ------------------------------------------------------------------ contents
+
+        /// <summary>
+        /// Where the panel goes: villagers top right, recipes and production bottom right, help top left,
+        /// everything else in the middle. The board stays visible around it.
+        /// </summary>
+        private static void Place(string source)
+        {
+            Vector2 corner;
+            switch (source)
+            {
+                case "villagers": corner = new Vector2(1f, 1f); break;
+                case "recipes": corner = new Vector2(1f, 0f); break;
+                case "help": corner = new Vector2(0f, 1f); break;
+                default: corner = new Vector2(0.5f, 0.5f); break;
+            }
+            panel.anchorMin = panel.anchorMax = corner;
+            panel.pivot = corner;
+            // A small margin from the screen edges (none in the middle).
+            float m = 24f;
+            panel.anchoredPosition = new Vector2(corner.x == 0f ? m : corner.x == 1f ? -m : 0f, corner.y == 0f ? m : corner.y == 1f ? -m : 0f);
+            // In a corner the panel is narrower, so the board stays visible.
+            panel.sizeDelta = new Vector2(corner == new Vector2(0.5f, 0.5f) ? 860f : 640f, panel.sizeDelta.y);
+            // The dark veil is only for the centred menus.
+            if (veil != null) veil.SetActive(corner == new Vector2(0.5f, 0.5f));
+        }
 
         private static void BuildList(ListBrowser list)
         {
@@ -208,7 +234,7 @@ namespace StacklandAccessNS
             canvasGo.AddComponent<GraphicRaycaster>();
 
             // Dark veil, like the game's pop-ups (it also keeps clicks off the board under the menu).
-            var veil = new GameObject("Veil", typeof(RectTransform));
+            veil = new GameObject("Veil", typeof(RectTransform));
             veil.transform.SetParent(canvasGo.transform, false);
             var vr = (RectTransform)veil.transform;
             vr.anchorMin = Vector2.zero; vr.anchorMax = Vector2.one; vr.offsetMin = vr.offsetMax = Vector2.zero;
