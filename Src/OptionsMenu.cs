@@ -97,7 +97,7 @@ namespace StacklandAccessNS
             foreach (var a in Bindings.All.Where(x => contexts.Contains(x.Context)))
             {
                 var action = a;
-                entries.Add(new ListBrowser.Entry(TextCleaner.Join(action.Name, action.KeysSpoken))
+                entries.Add(new ListBrowser.Entry(TextCleaner.Join(action.Name, action.KeysSpoken, action.PadSpoken))
                 {
                     KeepOpen = true,
                     OnActivate = () => Bindings.BeginCapture(action.Id, msg => Refresh(msg)),

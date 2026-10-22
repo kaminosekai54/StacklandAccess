@@ -29,6 +29,12 @@ input[type=search], select { font: inherit; padding: 8px 10px; border: 1px solid
 button.plain { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); cursor: pointer; }
 #hint { color: var(--muted); font-size: .9rem; margin: 0; }
 #count { font-weight: 600; margin: 8px 0; }
+.tablewrap { overflow-x: auto; }
+table.stats { border-collapse: collapse; width: 100%; background: var(--panel); font-size: .92rem; }
+table.stats caption { text-align: left; font-weight: 700; padding: 6px 0; }
+table.stats th, table.stats td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+table.stats thead th { background: var(--chip); position: sticky; top: 0; }
+table.stats td.num { text-align: right; white-space: nowrap; }
 .grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .card { --bg: var(--panel); --bd: var(--line); --ic: var(--ink); --tx: var(--ink);
         width: 100%; height: 100%; min-height: 200px; display: flex; flex-direction: column; align-items: stretch; gap: 6px;
@@ -86,6 +92,7 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
     <label class="f" for="upd"><span id="l-upd"></span><select id="upd"></select></label>
     <label class="f" for="ageSel"><span id="l-age"></span><select id="ageSel"></select></label>
     <label class="f" for="obtain"><span id="l-obtain"></span><select id="obtain"></select></label>
+    <label class="f" for="view"><span id="l-view"></span><select id="view"></select></label>
     <label class="f" for="sort"><span id="l-sort"></span><select id="sort"></select></label>
     <label class="check" id="foundBox" hidden><input id="onlyFound" type="checkbox" checked> <span id="l-found"></span></label>
     <button class="plain" type="button" id="reset"></button>
@@ -93,6 +100,7 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
   <p id="hint"></p>
   <p id="count" role="status" aria-live="polite">…</p>
   <ul class="grid" id="grid"></ul>
+  <div class="tablewrap" id="tableWrap" hidden></div>
 </main>
 <div id="tip" aria-hidden="true"></div>
 <dialog id="detail" aria-labelledby="d-name">
@@ -244,6 +252,8 @@ function start(data) {
   $("l-obtain").textContent = T.web_obtain;
   $("l-age").textContent = T.web_age || "Tech age";
   $("l-sort").textContent = T.web_sort;
+  $("l-view").textContent = T.web_view || "View";
+  options($("view"), [["grid", T.web_view_grid || "Cards"], ["villagers", T.web_view_villagers || "Villagers (table)"], ["creatures", T.web_view_creatures || "Creatures and enemies (table)"]], null);
   $("l-found").textContent = T.web_only_found;
   $("reset").textContent = T.web_reset;
   $("foundBox").hidden = !D.personal;
@@ -355,6 +365,15 @@ function render() {
     .sort(sorters[$("sort").value] || sorters.name);
   const grid = $("grid");
   grid.innerHTML = "";
+  const view = $("view").value || "grid";
+  grid.hidden = view !== "grid";
+  $("tableWrap").hidden = view === "grid";
+  if (view !== "grid") {
+    const rows = shown.filter(c => c.combat && (view === "villagers" ? c.combat.villager : !c.combat.villager));
+    renderTable(rows, view);
+    $("count").textContent = fmt(rows.length === 1 ? T.web_count_one : T.web_count, rows.length);
+    return;
+  }
   const frag = document.createDocumentFragment();
   shown.forEach((c, i) => {
     const li = document.createElement("li");
@@ -377,6 +396,45 @@ function render() {
   });
   grid.appendChild(frag);
   $("count").textContent = fmt(shown.length === 1 ? T.web_count_one : T.web_count, shown.length);
+}
+const secs = v => { let n = String(v); try { n = Number(v).toLocaleString(D.code || "en"); } catch (e) {} return fmt(T.web_seconds || "{0} s", n); };
+function withWord(v, word) { return word ? `${v} (${word})` : String(v); }
+function renderTable(rows, view) {
+  const wrap = $("tableWrap");
+  wrap.innerHTML = "";
+  const villagers = view === "villagers";
+  const t = document.createElement("table"); t.className = "stats";
+  const cap = document.createElement("caption");
+  cap.textContent = villagers ? (T.web_view_villagers || "Villagers") : (T.web_view_creatures || "Creatures");
+  t.appendChild(cap);
+  const cols = [T.web_table_name || "Name", T.web_combat_type || "Combat type", T.web_health, T.web_attack, T.web_defence,
+    T.web_attack_speed || "Attack speed", T.web_hit_chance || "Hit chance"];
+  if (villagers) cols.push(T.web_eats || "Food per moon", T.web_equip || "Equipment");
+  cols.push(T.web_special || "Special effects", T.web_table_desc || "Description");
+  const thead = document.createElement("thead"), hr = document.createElement("tr");
+  cols.forEach(c => { const th = document.createElement("th"); th.scope = "col"; th.textContent = c; hr.appendChild(th); });
+  thead.appendChild(hr); t.appendChild(thead);
+  const tb = document.createElement("tbody");
+  rows.forEach(c => {
+    const k = c.combat, tr = document.createElement("tr");
+    const th = document.createElement("th"); th.scope = "row";
+    const b = document.createElement("button"); b.className = "link"; b.type = "button"; b.textContent = c.name;
+    b.addEventListener("click", () => openCard(c.id, b));
+    th.appendChild(b); tr.appendChild(th);
+    const cell = (v, num) => { const td = document.createElement("td"); if (num) td.className = "num"; td.textContent = v ?? "—"; tr.appendChild(td); };
+    cell(k.canAttack === false ? (T.web_no_attack || "Does not attack") : (k.type || "—"));
+    cell(c.hp, true);
+    cell(withWord(c.atk, k.atkText), true);
+    cell(withWord(c.def, k.defText), true);
+    cell(k.canAttack === false ? "—" : withWord(secs(k.speed), k.speedText), true);
+    cell(k.canAttack === false ? "—" : withWord(k.hit + " %", k.hitText), true);
+    if (villagers) { cell(k.eats != null ? k.eats : "—", true); cell(k.equip ? T.web_yes || "Yes" : T.web_no || "No"); }
+    cell(k.special ? k.special.join(" ; ") : "—");
+    cell(c.desc || "");
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+  wrap.appendChild(t);
 }
 function showTip(text, el) {
   const tip = $("tip"), r = el.getBoundingClientRect();
@@ -441,10 +499,24 @@ function openCard(id, from) {
   fact(T.web_value + " : " + c.value);
   if (c.food != null) fact(T.web_food + " : " + c.food);
   if (!c.isPack && ageOf(c) < Infinity) fact((T.web_age || "Tech age") + " : " + ageOf(c));
-  if (c.hp != null) { fact(T.web_health + " : " + c.hp); fact(T.web_attack + " : " + c.atk); fact(T.web_defence + " : " + c.def); }
+  if (c.hp != null) {
+    const k = c.combat || {};
+    fact(T.web_health + " : " + c.hp);
+    fact(T.web_attack + " : " + withWord(c.atk, k.atkText));
+    fact(T.web_defence + " : " + withWord(c.def, k.defText));
+    if (k.canAttack !== false && k.speed != null) {
+      if (k.type) fact((T.web_combat_type || "Combat type") + " : " + k.type);
+      fact((T.web_attack_speed || "Attack speed") + " : " + withWord(secs(k.speed), k.speedText));
+      fact((T.web_hit_chance || "Hit chance") + " : " + withWord(k.hit + " %", k.hitText));
+    } else if (k.canAttack === false) fact(T.web_no_attack || "Does not attack");
+    if (k.eats != null) fact((T.web_eats || "Food per moon") + " : " + k.eats);
+    if (k.villager) fact((T.web_equip || "Equipment") + " : " + (k.equip ? T.web_yes || "Yes" : T.web_no || "No"));
+  }
   right.appendChild(facts);
   if (c.group) fact(T.web_group + " : " + c.group);
   if (c.desc) { const p = document.createElement("p"); p.textContent = c.desc; right.appendChild(p); }
+  if (c.combat && c.combat.typeDesc && c.combat.canAttack !== false) { const p = document.createElement("p"); p.className = "muted"; p.textContent = (c.combat.type ? c.combat.type + " : " : "") + c.combat.typeDesc; right.appendChild(p); }
+  if (c.combat && c.combat.special) section(body, T.web_special || "Special effects", c.combat.special, (li, t) => li.textContent = t);
   if (c.isPack) { packDetails(c.pack, body, facts, fact); finishDialog(h); return; }
   if (c.idea) section(body, T.web_idea_recipes, ofIdea.get(id) || [], recipeItem);
   section(body, T.web_how, producedBy.get(id) || [], recipeItem);
@@ -494,7 +566,7 @@ $("detail").addEventListener("close", () => { if (returnFocus) returnFocus.focus
 
 let timer = null;
 $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(render, 150); });
-["cat", "type", "upd", "obtain", "ageSel", "sort", "onlyFound"].forEach(id => $(id).addEventListener("change", render));
+["cat", "type", "upd", "obtain", "ageSel", "view", "sort", "onlyFound"].forEach(id => $(id).addEventListener("change", render));
 $("reset").addEventListener("click", () => {
   $("q").value = ""; ["cat", "type", "upd", "obtain", "ageSel"].forEach(id => $(id).value = ""); $("sort").value = "name";
   render(); $("q").focus();

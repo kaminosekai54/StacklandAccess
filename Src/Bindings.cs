@@ -127,9 +127,12 @@ namespace StacklandAccessNS
             public string NameKey;
             public Spec[] Defaults;
             public List<Spec> Specs;
+            /// <summary>Controller button (fixed).</summary>
+            public Pad.Input Pad;
 
             public string Name => Loc.T(NameKey);
             public string KeysSpoken => Specs.Count == 0 ? Loc.T("key_none") : string.Join(Loc.T("key_or"), Specs.Select(s => s.Spoken()));
+            public string PadSpoken => Pad.IsNone ? "" : Loc.T("key_pad", Pad.Spoken());
         }
 
         private static readonly List<Action> actions = new List<Action>();
@@ -139,7 +142,7 @@ namespace StacklandAccessNS
 
         private static void Add(string id, Context ctx, string nameKey, params string[] defaults)
         {
-            var a = new Action { Id = id, Context = ctx, NameKey = nameKey, Defaults = defaults.Select(Spec.Short).ToArray() };
+            var a = new Action { Id = id, Context = ctx, NameKey = nameKey, Defaults = defaults.Select(Spec.Short).ToArray(), Pad = StacklandAccessNS.Pad.Default(id) };
             a.Specs = a.Defaults.ToList();
             actions.Add(a);
             byId[id] = a;
@@ -206,7 +209,7 @@ namespace StacklandAccessNS
             var a = Get(id);
             if (a == null) return false;
             for (int i = 0; i < a.Specs.Count; i++) if (a.Specs[i].PressedThisFrame) return true;
-            return false;
+            return StacklandAccessNS.Pad.Pressed(a.Pad);
         }
 
         public static string Spoken(string id) { var a = Get(id); return a == null ? "" : a.KeysSpoken; }

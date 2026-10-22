@@ -302,6 +302,7 @@ namespace StacklandAccessNS
             list.Add(new Entry(Loc.T("help_conn")));
             list.Add(new Entry(Loc.T("help_export")));
             list.Add(new Entry(Loc.T("help_options")));
+            list.Add(new Entry(Loc.T("help_pad")));
             if (Together.Installed) list.Add(new Entry(Loc.T("help_mp")));
             return list;
         }

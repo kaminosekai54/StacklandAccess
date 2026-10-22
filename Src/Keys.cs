@@ -53,10 +53,11 @@ namespace StacklandAccessNS
 
         public static Keyboard Kb => Keyboard.current;
 
+        /// <summary>Pressed this frame, on the keyboard or the controller (see <see cref="Pad"/>).</summary>
         public static bool Down(Key k)
         {
             var kb = Keyboard.current;
-            return kb != null && kb[k].wasPressedThisFrame;
+            return (kb != null && kb[k].wasPressedThisFrame) || Pad.NavKey(k, false);
         }
 
         /// <summary>Pressed this frame, or held long enough to auto repeat.</summary>
@@ -65,6 +66,7 @@ namespace StacklandAccessNS
 
         public static bool Repeat(Key k)
         {
+            if (Pad.NavKey(k, true)) return true;
             var kb = Keyboard.current;
             if (kb == null) return false;
             var c = kb[k];
@@ -101,6 +103,9 @@ namespace StacklandAccessNS
         private static bool bindingsDone;
         /// <summary>Game bindings turned off by the mod, with the player's own rebinding to put back (null: none).</summary>
         private static readonly List<(UnityEngine.InputSystem.InputAction action, int index, string previous)> overridden = new List<(UnityEngine.InputSystem.InputAction, int, string)>();
+
+        private static bool IsControllerPath(string path) =>
+            path.StartsWith("<Gamepad>") || path.StartsWith("<Joystick>") || path.Contains("Controller") || path.Contains("Gamepad") || path.StartsWith("<DualShock") || path.StartsWith("<XInput");
 
         /// <summary>The mod keys changed: give the game back its keys and turn off the ones the mod now uses.</summary>
         public static void RefreshConflictingBindings()
@@ -140,8 +145,11 @@ namespace StacklandAccessNS
                 {
                     var b = action.bindings[i];
                     string path = b.effectivePath ?? b.path;
-                    if (string.IsNullOrEmpty(path) || !path.StartsWith("<Keyboard>")) continue;
-                    bool clash = reserved.Contains(path);
+                    if (string.IsNullOrEmpty(path)) continue;
+                    bool pad = IsControllerPath(path);
+                    if (!path.StartsWith("<Keyboard>") && !pad) continue;
+                    // With controller support, the mod drives the game with the controller: the game's own controller bindings are off.
+                    bool clash = pad ? Pad.Enabled : reserved.Contains(path);
                     log.Append("  ").Append(action.name).Append(" = ").Append(path).Append(clash ? "  -> disabled by mod\n" : "\n");
                     if (clash)
                     {

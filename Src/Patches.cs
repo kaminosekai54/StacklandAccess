@@ -12,7 +12,8 @@ namespace StacklandAccessNS
         [HarmonyPrefix]
         public static bool CancelTriggered_Prefix(ref bool __result)
         {
-            if (AccessController.CapturesEscape && Keys.Down(Key.Escape))
+            // B with a trigger held is a mod action (drop alone, sell), not "back".
+            if ((AccessController.CapturesEscape && Keys.Down(Key.Escape)) || (Pad.AnyLayerHeld && Pad.PressedAnyLayer(Pad.Button.B)))
             {
                 __result = false;
                 return false;
@@ -24,7 +25,8 @@ namespace StacklandAccessNS
         [HarmonyPrefix]
         public static bool PauseTriggered_Prefix(ref bool __result)
         {
-            if (AccessController.CapturesEscape && Keys.Down(Key.Escape))
+            // Start opens the mod's options.
+            if ((AccessController.CapturesEscape && Keys.Down(Key.Escape)) || Pad.PressedAnyLayer(Pad.Button.Start))
             {
                 __result = false;
                 return false;
@@ -37,7 +39,7 @@ namespace StacklandAccessNS
         [HarmonyPrefix]
         public static bool SubmitTriggered_Prefix(ref bool __result)
         {
-            if (Keys.Down(Key.Enter) || Keys.Down(Key.NumpadEnter))
+            if (Keys.Down(Key.Enter) || Keys.Down(Key.NumpadEnter) || Pad.PressedAnyLayer(Pad.Button.A))
             {
                 __result = false;
                 return false;

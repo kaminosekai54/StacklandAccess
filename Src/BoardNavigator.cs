@@ -170,7 +170,7 @@ namespace StacklandAccessNS
             if (Held != null && Held.Destroyed) Held = null;
 
             if (IsMoving) { HandleMoveMode(); return; }
-            if (Keys.EnterDown && Keys.Ctrl) { StartMoveMode(); return; }
+            if ((Keys.EnterDown && Keys.Ctrl) || Pad.MoveModePressed) { StartMoveMode(); return; }
 
             if (Keys.Repeat(Key.RightArrow)) Move(+1);
             else if (Keys.Repeat(Key.LeftArrow)) Move(-1);

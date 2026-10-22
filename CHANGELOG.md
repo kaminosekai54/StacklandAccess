@@ -6,6 +6,8 @@
 - The mod's menus (lists, options, text fields of the multiplayer panel) are also drawn on screen with the game's own panel, fonts and buttons, for sighted people watching; the buttons can be clicked. The game is not paused. Can be turned off in the options.
 - Production buildings page (L, second page) rebuilt: one line per building that can make something right now with your cards, and nothing else (no soil on a stove, no empty chest on the university). With several choices (a stove: omelette, quiche…), Enter opens the list of choices; Escape goes back.
 - Recipes made without the idea (by chance or by trying) are now known: they appear in the recipes (L) and on the card page (F6). The mod remembers every recipe you finish (`StacklandAccess_crafted.txt`); for older crafts, a recipe counts as known when you have found its result and only that recipe gives it.
+- Controller support: the whole mod can be played with a controller (directions, A, B, X, Y, shoulders, Start, Select, sticks), with two more sets of actions while holding LT or RT. The game's own controller controls are turned off while it is on (option).
+- Card page: "View" menu with a table of every villager type and a table of every creature and enemy: health, attack, defence, combat type, attack speed, hit chance, special effects, food per moon, equipment. The details of a card show the same.
 - First launch: a window of the game asks whether to turn on the narration. "No" turns off everything the mod says and plays; Ctrl+F2 (or the options) turns it back on.
 
 ## 0.6.0 – Multiplayer with Stacklands Together

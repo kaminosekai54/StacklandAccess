@@ -148,6 +148,15 @@ Le mod ne prend jamais des cartes déjà utilisées par une autre fabrication.
 
 Avec NVDA, gardez le Verr. Num activé pour utiliser le pavé numérique.
 
+### Manette
+
+Le mod se joue aussi à la manette (option « support manette », activée par défaut ; les commandes manette du jeu sont alors coupées pour ne pas se gêner).
+
+- Croix ou stick gauche : flèches. **A** : Entrée. **B** : Échap. **X** : informations (I). **Y** : recettes (L).
+- **LB / RB** : catégorie précédente ou suivante, ou page d'une liste. **Start** : options. **Select** : aide. **L3** : répéter. **R3** : ressources (dans les menus : lire l'écran).
+- En tenant **LT** : A déplace la pile (Ctrl+Entrée), X clique, Y quêtes, B pose la carte seule, haut l'heure, bas l'historique, gauche les villageois, droite les connexions, LB / RB premier ou dernier.
+- En tenant **RT** : A va à la carte tenue, B vend, X regroupe les cartes identiques, Y regroupe la catégorie, gauche / droite plus lent ou plus rapide, bas pause, haut vitesse normale, Start narration activée ou non.
+
 ## Liste des cartes
 
 Appuyez sur **F6** (dans un menu ou sur le plateau) pour créer `Stacklands - cartes.html` dans votre dossier Documents et l'ouvrir dans votre navigateur. La page est fabriquée à partir de votre propre jeu, dans sa langue :
@@ -159,6 +168,8 @@ Appuyez sur **F6** (dans un menu ou sur le plateau) pour créer `Stacklands - ca
 
 - les paquets (catégorie Paquets) : prix, où ils sont vendus, comment les débloquer, valeur moyenne, et toutes les cartes qu'ils peuvent donner avec leur chance par tirage ;
 - des filtres : catégorie, type de carte, contenu (jeu de base, île, forêt sombre, esprits, Cités…), obtention (recette, paquet, butin) ; tri par nom, prix de vente, nourriture ou attaque.
+
+Le menu « Affichage » de la page montre aussi deux tableaux : tous les types de villageois, et toutes les créatures et ennemis, avec points de vie, attaque, défense, type de combat, vitesse d'attaque, chance de toucher, effets spéciaux (poison, étourdissement…), nourriture par lune et équipement.
 
 Appuyez de nouveau sur F6 après de nouvelles découvertes pour la mettre à jour.
 

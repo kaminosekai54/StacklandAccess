@@ -148,6 +148,15 @@ The mod never takes cards that are already used by another recipe.
 
 With NVDA, keep Num Lock on to use the numeric keypad.
 
+### Controller
+
+The mod can be played with a controller (option "controller support", on by default; the game's own controller controls are then turned off so the two do not fight).
+
+- Cross or left stick: arrows. **A**: Enter. **B**: Escape. **X**: information (I). **Y**: recipes (L).
+- **LB / RB**: previous or next category, or page in a list. **Start**: options. **Select**: help. **L3**: repeat. **R3**: resources (in menus: read the screen).
+- Hold **LT**: A moves the stack (Ctrl+Enter), X clicks, Y quests, B puts the card down alone, Up time, Down history, Left villagers, Right connections, LB / RB first or last.
+- Hold **RT**: A goes to the held card, B sells, X regroups identical cards, Y regroups the category, Left / Right slower or faster, Down pause, Up normal speed, Start narration on or off.
+
 ## Card list
 
 Press **F6** (in a menu or on the board) to create `Stacklands - cards.html` in your Documents folder and open it in your browser. The page is made from your own game, in its language:
@@ -161,6 +170,8 @@ Press **F6** (in a menu or on the board) to create `Stacklands - cards.html` in 
 - filters: category, card type, content (base game, island, dark forest, spirits, Cities…), how to get it (recipe, pack, drop); sort by name, sell value, food or attack.
 
 Press F6 again after discovering new cards to update it.
+
+The "View" menu of the page also shows two tables: every type of villager, and every creature and enemy, with health, attack, defence, combat type, attack speed, hit chance, special effects (poison, stun…), food per moon and equipment.
 
 **Shift+F6** makes the same page as a public website, in every language of the game and without your save data, in `Documents\Stacklands cards site`. `tools\update-site.ps1` copies it into `docs/` for GitHub Pages.
 

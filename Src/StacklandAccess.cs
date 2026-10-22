@@ -23,6 +23,7 @@ namespace StacklandAccessNS
         private ConfigEntry<bool> cfgOthers;
         private ConfigEntry<bool> cfgNarration;
         private ConfigEntry<bool> cfgVisual;
+        private ConfigEntry<bool> cfgController;
         private ConfigEntry<bool> cfgFirstLaunchDone;
 
         /// <summary>The on/off settings by key, for the options menu (F7).</summary>
@@ -72,6 +73,9 @@ namespace StacklandAccessNS
             cfgOthers = Config.GetEntry<bool>("announce_other_players", true);
             cfgNarration = Config.GetEntry<bool>("narration", true);
             cfgVisual = Config.GetEntry<bool>("visual_menus", true);
+            cfgController = Config.GetEntry<bool>("controller_support", true);
+            cfgController.UI.Name = Loc.T("cfg_controller");
+            bools["controller_support"] = cfgController;
             cfgFirstLaunchDone = Config.GetEntry<bool>("first_launch_done", false);
             cfgFirstLaunchDone.UI.Hidden = true;
             cfgNarration.UI.Name = Loc.T("cfg_narration");
@@ -113,13 +117,18 @@ namespace StacklandAccessNS
             AccessController.BeepIdleVillager = cfgBeep.Value;
             AccessController.AnnounceOtherPlayers = cfgOthers.Value;
             AccessController.VisualMenusEnabled = cfgVisual.Value;
+            if (Pad.Enabled != cfgController.Value)
+            {
+                Pad.Enabled = cfgController.Value;
+                Keys.RefreshConflictingBindings();
+            }
             Speech.Enabled = cfgNarration.Value;
         }
 
         /// <summary>Names of the on/off settings, in the order of the options menu.</summary>
         public static readonly string[] BoolKeys =
         {
-            "narration", "visual_menus", "announce_new_cards", "announce_combat", "announce_hits", "announce_actions",
+            "narration", "visual_menus", "controller_support", "announce_new_cards", "announce_combat", "announce_hits", "announce_actions",
             "announce_other_players", "beep_villager_free", "camera_follow", "auto_stack", "sort_by_name",
         };
 

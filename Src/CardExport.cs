@@ -239,11 +239,15 @@ namespace StacklandAccessNS
                 try { desc = Clean(cd.Description); } catch { }
                 if (name == "" || name.StartsWith("---")) continue;
                 int? hp = null, atk = null, def = null;
+                object combat = null;
                 if (cd is Combatable cb && cb.BaseCombatStats != null)
                 {
-                    hp = cb.BaseCombatStats.MaxHealth;
-                    atk = cb.BaseCombatStats.AttackDamage;
-                    def = cb.BaseCombatStats.Defence;
+                    CombatStats st = cb.BaseCombatStats;
+                    try { st = cb.RealBaseCombatStats ?? st; } catch { }
+                    hp = st.MaxHealth;
+                    atk = st.AttackDamage;
+                    def = st.Defence;
+                    combat = CombatData(cb, st);
                 }
                 List<string> drops = null;
                 try { drops = cd.GetPossibleDrops()?.Distinct().ToList(); } catch { }
@@ -260,6 +264,7 @@ namespace StacklandAccessNS
                     value = cd.Value,
                     food = cd is Food f ? (int?)f.FoodValue : null,
                     hp, atk, def,
+                    combat,
                     found = withSave ? (bool?)wm.HasFoundCard(cd.Id) : null,
                     rumor = cd is Rumor,
                     drops = drops != null && drops.Count > 0 ? drops : null,
@@ -385,6 +390,36 @@ namespace StacklandAccessNS
             return new { count = bag.CardsInPack, kind, cond = condition, cards };
         }
 
+        /// <summary>Fighting details of a villager or a creature, with the game's own words for the values.</summary>
+        private static object CombatData(Combatable cb, CombatStats st)
+        {
+            string T(System.Func<string> f) { try { return Clean(f()); } catch { return null; } }
+            string kind = cb.BaseAttackType.ToString().ToLowerInvariant();
+            string typeName = cb.BaseAttackType == AttackType.None ? null : T(() => SokLoc.Translate("label_" + kind + "_title"));
+            string typeDesc = cb.BaseAttackType == AttackType.None ? null : T(() => SokLoc.Translate("label_" + kind + "_description"));
+            var special = new List<string>();
+            if (st.SpecialHits != null)
+                foreach (var h in st.SpecialHits) { var t = T(() => h.GetText()); if (!string.IsNullOrEmpty(t)) special.Add(t); }
+            int? eats = null;
+            if (cb is BaseVillager v) { try { eats = v.GetRequiredFoodCount(); } catch { } }
+            return new
+            {
+                canAttack = cb.CanAttack,
+                type = typeName,
+                typeDesc,
+                speed = System.Math.Round(st.AttackSpeed, 1),
+                speedText = T(st.GetAttackSpeedTranslation),
+                hit = (int)System.Math.Round(st.HitChance * 100f),
+                hitText = T(st.GetHitChanceTranslation),
+                atkText = T(st.GetAttackDamageTranslation),
+                defText = T(st.GetDefenceTranslation),
+                special = special.Count > 0 ? special : null,
+                equip = cb.CanHaveInventory,
+                eats,
+                villager = cb is BaseVillager,
+            };
+        }
+
         private static object PackData(WorldManager wm, BoosterpackData pack, CardImages images)
         {
             var loader = wm.GameDataLoader;
@@ -442,7 +477,7 @@ namespace StacklandAccessNS
                 "web_how", "web_used", "web_packs", "web_drops", "web_from", "web_none", "web_close", "web_value", "web_food",
                 "web_health", "web_attack", "web_defence", "web_category_label", "web_unknown", "web_rumor", "web_idea", "web_time",
                 "web_generated", "web_generated_site", "web_type", "web_content", "web_obtain", "web_obtain_recipe", "web_obtain_pack",
-                "web_obtain_drop", "web_obtain_none", "web_sort", "web_sort_name", "web_sort_value", "web_sort_food", "web_sort_attack", "web_sort_age", "web_age", "web_age_n", "web_age_unknown",
+                "web_obtain_drop", "web_obtain_none", "web_sort", "web_sort_name", "web_sort_value", "web_sort_food", "web_sort_attack", "web_sort_age", "web_age", "web_age_n", "web_age_unknown", "web_view", "web_view_grid", "web_view_villagers", "web_view_creatures", "web_combat_type", "web_attack_speed", "web_hit_chance", "web_special", "web_eats", "web_equip", "web_yes", "web_no", "web_seconds", "web_table_name", "web_table_desc", "web_no_attack",
                 "web_language", "web_reset", "web_loading", "web_group", "web_idea_recipes", "web_pack", "web_pack_cost", "web_pack_place", "web_pack_unlock", "web_pack_unlock_start", "web_pack_unlock_quests", "web_pack_ev", "web_pack_bags", "web_pack_bag", "web_pack_fixed", "web_pack_enemy", "web_pack_needs", "web_pack_max", "web_pack_intro", "web_pack_strength", "web_packs_cat", "web_pack_per_draw",
             };
             return keys.ToDictionary(k => k, k => Loc.T(k));
